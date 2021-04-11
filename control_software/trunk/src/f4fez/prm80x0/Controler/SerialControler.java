@@ -52,7 +52,6 @@ public class SerialControler extends PRMControler{
     }
 
 private void openSerialPort(String port) throws SerialPortException {
-            DriverManager.getInstance().loadDrivers();
             try {
                 CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(port);
                 if (portIdentifier.isCurrentlyOwned()) {

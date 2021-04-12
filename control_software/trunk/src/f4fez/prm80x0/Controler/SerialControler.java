@@ -52,6 +52,7 @@ public class SerialControler extends PRMControler{
     }
 
 private void openSerialPort(String port) throws SerialPortException {
+    DriverManager.getInstance().loadDrivers();
             try {
                 CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(port);
                 if (portIdentifier.isCurrentlyOwned()) {
@@ -72,7 +73,7 @@ private void openSerialPort(String port) throws SerialPortException {
                         else if (ident.contains("PRM8070"))
                             this.prmType = Controler.PRM8070;
                         else
-                            throw new SerialPortException("Unknow PRM80 device");
+                            throw new SerialPortException("Unknown PRM80 device");
                         this.majorFirmwareVersion = Integer.parseInt(ident.substring(9, 10));
                         this.minorFirmwareVersion = Integer.parseInt(ident.substring(11, 12));                        
                         this.connected = true;

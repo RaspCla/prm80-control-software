@@ -21,6 +21,7 @@ package f4fez.prm80x0.gui;
 
 import f4fez.prm80x0.*;
 import gnu.io.CommPortIdentifier;
+import gnu.io.DriverManager;
 import java.util.Enumeration;
 
 /**
@@ -34,6 +35,8 @@ public class OptionsDialog extends javax.swing.JDialog {
     /** Creates new form OptionsDialog */
     public OptionsDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
+        DriverManager.getInstance().loadDrivers();
+        
         initComponents();
         fillComboBoxWithSerialPorts();
         this.portList.setSelectedIndex(0);

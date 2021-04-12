@@ -62,10 +62,10 @@ private void openSerialPort(String port) throws SerialPortException {
                     if (commPort instanceof SerialPort) {
                         serialPort = (SerialPort) commPort;
                         serialPort.setSerialPortParams(4800, SerialPort.DATABITS_7, SerialPort.STOPBITS_1, SerialPort.PARITY_EVEN);
+                        serialPort.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);                        
                         serialIn = serialPort.getInputStream();
                         serialOut = serialPort.getOutputStream();
-                        
-                        String ident = this.sendCommand("v", "^PRM80[67]0 V[3-9].[0-9]\r\n>$");
+                        String ident = this.sendCommand("v", "^PRM80[67]0 V[3-9].[0-9] [0-9][0-9][0-9]\r\n>$");
                         if (ident == null)
                             throw new SerialPortException("PRM80 not detected");
                         if (ident.contains("PRM8060"))

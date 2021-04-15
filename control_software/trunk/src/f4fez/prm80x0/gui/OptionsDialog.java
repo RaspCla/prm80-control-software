@@ -35,7 +35,7 @@ public class OptionsDialog extends javax.swing.JDialog {
     /** Creates new form OptionsDialog */
     public OptionsDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
-        DriverManager.getInstance().loadDrivers();
+//        DriverManager.getInstance().loadDrivers();
         
         initComponents();
         fillComboBoxWithSerialPorts();

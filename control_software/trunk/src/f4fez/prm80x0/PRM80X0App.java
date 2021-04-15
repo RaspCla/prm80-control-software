@@ -19,6 +19,7 @@
 package f4fez.prm80x0;
 
 import f4fez.prm80x0.gui.PRM80X0View;
+import gnu.io.DriverManager;
 import jargs.gnu.CmdLineParser;
 import org.jdesktop.application.Application;
 import org.jdesktop.application.SingleFrameApplication;
@@ -60,6 +61,7 @@ public class PRM80X0App extends SingleFrameApplication {
                 f4fez.prm80x0.server.Server.runServerConsoleMode(CmdLineOptions.getInstance().getServerPort());
         }
         else
+            DriverManager.getInstance().loadDrivers();
             launch(PRM80X0App.class, args);
     }
 

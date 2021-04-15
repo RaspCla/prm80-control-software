@@ -41,7 +41,7 @@ public interface Controler {
      */
     public final static int FREQ144 = 144;
     /**
-     * UHF PRM ocde frequency
+     * UHF PRM code frequency
      */
     public final static int FREQ430 = 430;
     

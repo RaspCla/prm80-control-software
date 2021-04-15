@@ -130,6 +130,7 @@ public class Slot implements Runnable {
     }
     
     private void openSerialPort(String port) throws ServerException {
+//            DriverManager.getInstance().loadDrivers();
             try {
                 CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(port);
                 if (portIdentifier.isCurrentlyOwned()) {

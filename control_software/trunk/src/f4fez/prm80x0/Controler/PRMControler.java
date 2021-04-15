@@ -29,8 +29,8 @@ public abstract class PRMControler implements Controler{
     protected PRMStateChangeListener changeListener;
     private String holdStateString;
     
-    protected int rxFreq;
-    protected int txFrreq;
+    protected int rxFreq = 144000000; 
+    protected int txFrreq = 144000000;
     protected int channel;
     protected int squelch;
     protected int volume;

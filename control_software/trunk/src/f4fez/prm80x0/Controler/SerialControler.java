@@ -52,7 +52,6 @@ public class SerialControler extends PRMControler{
     }
 
 private void openSerialPort(String port) throws SerialPortException {
-    DriverManager.getInstance().loadDrivers();
             try {
                 CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(port);
                 if (portIdentifier.isCurrentlyOwned()) {
@@ -92,8 +91,8 @@ private void openSerialPort(String port) throws SerialPortException {
                 
             }
             finally {
-                if (this.serialPort != null)
-                    this.serialPort.close();
+//                if (this.serialPort != null)
+//                    this.serialPort.close();
             }
     }
 
@@ -179,5 +178,14 @@ private void openSerialPort(String port) throws SerialPortException {
         }
         return rx.toString();
     }
+    @Override
+    public int getRxPLLFrequency() {        
+       String ident = this.sendCommand("e", "^[0-9A-F]{22}\r\n>$");
+       Integer frequency = Integer.parseUnsignedInt(ident.substring(12, 16),16)* this.getPLLStep();
+//       this.majorFirmwareVersion = Integer.parseInt(ident.substring(9, 10));
+       frequency = frequency - 21400000;
+       return frequency;
 
+    }
+   
 }

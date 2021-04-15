@@ -76,12 +76,12 @@ public class VirtualDeviceFirmware {
     public String getRxFrequency() throws CommunicationException {
         String freq = Integer.toString(this.controler.getRxPLLFrequency());
         return freq.substring(0, 3)+"."+freq.substring(3, 6)+"."+freq.substring(6, 9);
-    }
+      }
     
     public String getTxFrequency() throws CommunicationException {
         String freq = Integer.toString(this.controler.getTxPLLFrequency());
         return freq.substring(0, 3)+"."+freq.substring(3, 6)+"."+freq.substring(6, 9);
-    }
+  }
     
     public void setVfoMode(boolean mode) throws CommunicationException {
         this.vfoMode = mode;

@@ -44,6 +44,7 @@ import f4fez.prm80x0.Controler.PRMStateChangeListener;
 import f4fez.prm80x0.Controler.SerialControler;
 import f4fez.prm80x0.Controler.TcpControler;
 import f4fez.prm80x0.gui.serialterminal.TerminalDialog;
+import gnu.io.DriverManager;
 import java.awt.event.MouseEvent;
 import javax.swing.JFileChooser;
 
@@ -893,6 +894,7 @@ private void resetMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN
 }//GEN-LAST:event_resetMenuItemActionPerformed
 
 private void configurationMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_configurationMenuItemActionPerformed
+//     DriverManager.getInstance().loadDrivers();
     JFrame mainFrame = PRM80X0App.getApplication().getMainFrame();
         ConfigurationDialog cd = new ConfigurationDialog(mainFrame, this.vdf);
         cd.setLocationRelativeTo(mainFrame);

@@ -812,43 +812,7 @@ public class PRM80X0View extends FrameView {
 
     private void powerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_powerButtonActionPerformed
         try {
-            boolean power = !this.vd
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    f.isHighPower();
+            boolean power = !this.vdf.isHighPower();
             this.hpLabel.setVisible(power);
             this.lpLabel.setVisible(!power);
             this.vdf.setHighPower(power);

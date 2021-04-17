@@ -75,6 +75,9 @@ private void openSerialPort(String port) throws SerialPortException {
                             throw new SerialPortException("Unknown PRM80 device");
                         this.majorFirmwareVersion = Integer.parseInt(ident.substring(9, 10));
                         this.minorFirmwareVersion = Integer.parseInt(ident.substring(11, 12));                        
+                        this.frequencyVariant = Integer.parseInt(ident.substring(13, 16));                        
+                        if (this.frequencyVariant != 144 && this.frequencyVariant != 430)
+                            throw new SerialPortException("unknown PRM80x0 frequency variant: "+this.frequencyVariant);
                         this.connected = true;
                     } else {
                         throw new SerialPortException("Invalid serial port name.");
@@ -179,13 +182,57 @@ private void openSerialPort(String port) throws SerialPortException {
         return rx.toString();
     }
     @Override
-    public int getRxPLLFrequency() {        
-       String ident = this.sendCommand("e", "^[0-9A-F]{22}\r\n>$");
-       Integer frequency = Integer.parseUnsignedInt(ident.substring(12, 16),16)* this.getPLLStep();
-//       this.majorFirmwareVersion = Integer.parseInt(ident.substring(9, 10));
-       frequency = frequency - 21400000;
-       return frequency;
-
+    public int getRxPLLFrequency() {      
+        Integer pllFreq;
+        String ident = this.sendCommand("E", "^[0-9A-F]{22}\r\n>$");
+        this.waitChar('>', PRMControler.serialTimeout);
+     
+        pllFreq = Integer.parseUnsignedInt(ident.substring(12, 16),16)* this.getPLLStep();        // PLL Frequency
+        if (this.frequencyVariant == 430) 
+            this.rxFreq = pllFreq + 21400000;                                                       // If 430 Mhz Band Receive frequency is 21.4 Mhz higher than Receive PLL frequency (IF) 
+        else
+            this.rxFreq = pllFreq - 21400000;                                                       // If 144 Mhz Band Receive frequency is 21.4 Mhz higher than Receive PLL frequency (IF) 
+         
+        return this.rxFreq;
     }
-   
+    
+    @Override
+    public int getTxPLLFrequency() {      
+        Integer pllFreq;
+        String ident = this.sendCommand("E", "^[0-9A-F]{22}\r\n>$");
+        this.waitChar('>', PRMControler.serialTimeout);
+     
+        pllFreq = Integer.parseUnsignedInt(ident.substring(16, 20),16)* this.getPLLStep();        // PLL Frequency
+        this.txFrreq = pllFreq;                                                       // If 430 Mhz Band Receive frequency is 21.4 Mhz higher than Receive PLL frequency (IF) 
+         
+        return this.txFrreq;
+    }
+    
+   @Override
+    public int getCurrentChannel() {        
+        String ident = this.sendCommand("E", "^[0-9A-F]{22}\r\n>$");
+        this.waitChar('>', PRMControler.serialTimeout);
+        this.channel = Integer.parseUnsignedInt(ident.substring(2, 4),16);
+
+        return this.channel;
+    }   
+    
+   @Override
+    public boolean isPllLocked() {
+        String ident = this.sendCommand("E", "^[0-9A-F]{22}\r\n>$");
+        this.waitChar('>', PRMControler.serialTimeout);
+        this.mode = Integer.parseUnsignedInt(ident.substring(0, 2),16);
+        return (this.mode & 16) == 16;
+    }
+ 
+    public int getPower() {
+        String ident = this.sendCommand("E", "^[0-9A-F]{22}\r\n>$");
+        this.waitChar('>', PRMControler.serialTimeout);
+        this.mode = Integer.parseUnsignedInt(ident.substring(0, 2),16);
+        if ( (this.mode & 2) == 2)
+            return SerialControler.POWER_LO;
+        else
+            return SerialControler.POWER_HI;
+    }
+
 }

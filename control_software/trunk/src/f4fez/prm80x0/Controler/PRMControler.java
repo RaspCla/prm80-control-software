@@ -19,6 +19,7 @@ public abstract class PRMControler implements Controler{
     protected static int serialTimeout = 1000;
     protected int majorFirmwareVersion;
     protected int minorFirmwareVersion;
+    protected int frequencyVariant;
     protected int prmType;
     protected int prmFreqCode;
     private int pllStep; 
@@ -29,8 +30,8 @@ public abstract class PRMControler implements Controler{
     protected PRMStateChangeListener changeListener;
     private String holdStateString;
     
-    protected int rxFreq = 144000000; 
-    protected int txFrreq = 144000000;
+    protected int rxFreq = 999999999; 
+    protected int txFrreq = 999999999;
     protected int channel;
     protected int squelch;
     protected int volume;
@@ -259,6 +260,7 @@ public abstract class PRMControler implements Controler{
             model = model | 2;
         else
             model = model & 253;
+        this.mode = model; 
         this.send("d");
         this.waitChar(':', PRMControler.serialTimeout);
         String sMode = Integer.toHexString(model).toUpperCase();
@@ -426,22 +428,27 @@ public abstract class PRMControler implements Controler{
             result = this.sendCommand("c");
             
             StringTokenizer tokenizer = new StringTokenizer(result, "\r\n");
-            if (!tokenizer.hasMoreTokens() || !tokenizer.nextToken().equals("Channels list :")) {
+            if (!tokenizer.hasMoreTokens() || !tokenizer.nextToken().equals("Channel Frequency Shift State")) {
                 result = null;
             }
             else {
                 while (tokenizer.hasMoreTokens() && result != null) {
                     String line = tokenizer.nextToken();
                     if (chanCount <= chanMax) {
-                        if (line.matches("^[0-9]{2} : [0-9A-F]{4} [0-9A-F]{2}$")) {
+                        if (line.matches("^[0-9]{2} [0-9A-F]{4} [0-9A-F]{4} [0-9A-F]{2}$")) {
                             int chanNum = Integer.parseInt(line.substring(0, 2), 10);
-                            int freq = Integer.parseInt(line.substring(5, 9), 16);
-                            int state = Integer.parseInt(line.substring(10, 12), 16);
+                            int freq = Integer.parseInt(line.substring(3, 7), 16);
+                            int shiftFreq = Integer.parseInt(line.substring(8, 12), 16);
+                            int state = Integer.parseInt(line.substring(13, 15), 16);
                             if (chanNum == chanCount++) {
                                 String shift = "";
-                                if (state != 0)
+                                if ((state & 1) != 0) {
+                                    if ((state & 4) == 0) 
                                     shift="-";
-                                Channel chan = new Channel(freq * this.getPLLStep(), shift);
+                                    else
+                                    shift="+";       
+                                }    
+                                Channel chan = new Channel(freq * this.getPLLStep(), shiftFreq * this.getPLLStep(), shift);
                                 list.addChannel(chan);
                             } else {
                                 result = null;
@@ -476,7 +483,7 @@ public abstract class PRMControler implements Controler{
      * Ask for current prm80 state value and load them into variables
      */
     protected synchronized void updateState() {
-        String stateLine = this.sendCommand("e", "^[0-9A-F]{20}\r\n>$");
+        String stateLine = this.sendCommand("e", "^[0-9A-F]{22}\r\n>$");
         
         if (stateLine != null) {
             try {
@@ -641,7 +648,7 @@ public abstract class PRMControler implements Controler{
                 break;
         }
         sendEscapeCommand();
-        
+   
         if (ok)
             return data;
         else
@@ -800,12 +807,28 @@ public abstract class PRMControler implements Controler{
             while (freq.length() < 4)
                 freq = "0" + freq;
             send(freq);
+
             commandResponse = this.waitChar('$', serialTimeout);
             if (commandResponse == null) {
                 ok = false;
                 continue;
             }
-            if (!commandResponse.equals(freq+"\r\nChannel state : $")) {
+            if (!commandResponse.equals(freq+"\r\nShift value : $")) {
+                ok = false;
+                continue;
+            }
+            String shiftFreq = Integer.toHexString( (chan.getIntShiftFreq() / this.getPLLStep()) ).toUpperCase();
+            while (shiftFreq.length() < 4)
+                shiftFreq = "0" + shiftFreq;
+            send(shiftFreq);
+            
+
+            commandResponse = this.waitChar('$', serialTimeout);
+            if (commandResponse == null) {
+                ok = false;
+                continue;
+            }
+            if (!commandResponse.equals(shiftFreq+"\r\nChannel state : $")) {
                 ok = false;
                 continue;
             }
@@ -818,7 +841,8 @@ public abstract class PRMControler implements Controler{
                 stateStr = "0" + stateStr;
             send(stateStr);
             char[] chars = {'>', '?'};
-            commandResponse = this.waitChar(chars, serialTimeout);
+//            commandResponse = this.waitChar(chars, serialTimeout);
+            commandResponse = this.waitChar('>', serialTimeout);
             if (commandResponse == null) {
                 ok = false;
                 continue;

@@ -106,7 +106,7 @@ public class ChannelManager extends javax.swing.JDialog {
                 tableTableChanged(e);
             }            
         });
-        table.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(getShiftCombo()));
+        table.getColumnModel().getColumn(3).setCellEditor(new DefaultCellEditor(getShiftCombo()));
         tableScroll.setViewportView(table);
 
         getContentPane().add(tableScroll, java.awt.BorderLayout.CENTER);

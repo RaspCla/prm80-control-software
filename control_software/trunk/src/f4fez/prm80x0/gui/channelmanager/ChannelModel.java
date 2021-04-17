@@ -30,8 +30,9 @@ import javax.swing.table.AbstractTableModel;
 public class ChannelModel extends AbstractTableModel {
     public static int COL_CHANNEL = 0;
     public static int COL_FREQUENCY = 1;
-    public static int COL_SHIFT = 2;
-    public static int COL_COMMENTS = 3;
+    public static int COL_SHIFTFreq = 2;
+    public static int COL_SHIFT = 3;
+    public static int COL_COMMENTS = 4;
     private ChannelList channels;
     private Channel newChannel;
 
@@ -49,7 +50,7 @@ public class ChannelModel extends AbstractTableModel {
 
     @Override
     public int getColumnCount() {
-        return 4;
+        return 5;
     }
 
     @Override
@@ -69,8 +70,10 @@ public class ChannelModel extends AbstractTableModel {
             case 1:
                 return editedChannel.getFrequency();
             case 2:
-                return editedChannel.getShift();
+                return editedChannel.getShiftFreq();
             case 3:
+                return editedChannel.getShift();
+            case 4:
                 return editedChannel.getComments();
             default:
                 return "Internal Error";
@@ -85,8 +88,10 @@ public class ChannelModel extends AbstractTableModel {
             case 1:
                 return "Frequency";
             case 2:
-                return "Shift";
+                return "ShiftFrequency";
             case 3:
+                return "Shift";
+            case 4:
                 return "Comments";
             default:
                 return "Internal Error";
@@ -121,13 +126,16 @@ public class ChannelModel extends AbstractTableModel {
                 editedChannel.setFrequency((String) value);
                 break;
             case 2:
+                editedChannel.setShiftFreq((String) value);
+                break;
+            case 3:
                 /*String shift = "";
                 if ( (Boolean) value )
                     shift = "-";
                 editedChannel.setShift(shift);*/
                 editedChannel.setShift((String) value);
                 break;                
-            case 3:
+            case 4:
                 editedChannel.setComments((String) value);
                 break;
         }

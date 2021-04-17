@@ -101,13 +101,14 @@ public class ChannelList{
                 if (id != lineCount)
                     throw new Exception("Invalid sequence number. Value read : "+Integer.toString(id)+" instead of "+Integer.toString(lineCount));
                 String frequency =  ((String) elements[1]).trim();
-                String shift =  ((String)elements[2]).trim();
+                String shiftFreq =  ((String) elements[2]).trim();
+                String shift =  ((String)elements[3]).trim();
                 if (!shift.matches("^[\\+-]?$"))
-                    throw new Exception("Invalid shift value for chanel Id : "+Integer.toString(id));
+                    throw new Exception("Invalid shift value for channel Id : "+Integer.toString(id));
                 String comments = "";
-                if (elements.length > 3)
-                    comments =  ((String)elements[3]).trim();
-                Channel chan = new Channel(frequency, shift);
+                if (elements.length > 4)
+                    comments =  ((String)elements[4]).trim();
+                Channel chan = new Channel(frequency, shiftFreq, shift);
                 chan.setId(id);
                 chan.setComments(comments);
                 newList.add(chan);

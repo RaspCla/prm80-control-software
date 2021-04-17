@@ -29,7 +29,7 @@ public class Channel {
         this.id = -1;
     }
     
-    public Channel(String frequency, String shift) {
+    public Channel(String frequency, String shiftFreq, String shift) {
         this.id = -1;
         this.shift = shift;
         this.comments = "";
@@ -42,11 +42,22 @@ public class Channel {
                 right.append('0');
             this.frequency = left+"."+right.toString();
         }
+
+        sepPos = shiftFreq.indexOf('.');
+        if (sepPos > 0) {
+            String left = shiftFreq.substring(0, sepPos);
+            StringBuffer right = new StringBuffer(shiftFreq.substring(sepPos+1));
+            while (right.length() < 6)
+                right.append('0');
+            this.shiftFreq = left+"."+right.toString();
+        }
+
     }
 
-    public Channel(int frequency, String shift) {
+    public Channel(int frequency, int shiftFreq, String shift) {
         this.id = -1;
         this.setFrequency(frequency);
+        this.setShiftFreq(shiftFreq);
         this.shift = shift;
         this.comments = "";
     }
@@ -69,7 +80,7 @@ public class Channel {
     }
 
     private String frequency;
-
+    
     /**
      * Get the value of frequency
      *
@@ -79,6 +90,19 @@ public class Channel {
         return frequency;
     }
     
+    private String shiftFreq ="";
+
+    /**
+     * Get the value of the shift Frequency
+     *
+     * @return the value of shift Frequency
+     */
+    public String getShiftFreq() {
+        return this.shiftFreq;
+    }
+    
+  
+
     /**
      * Get the frequency in Hertz
      * @return The frequency
@@ -86,6 +110,18 @@ public class Channel {
     public int getIntFrequency() {
         int freq = Integer.parseInt(this.frequency.replace(".", ""));
         return freq;        
+    }
+
+    
+       /**
+     * Get the shift frequency in Hertz
+     * @return The shift frequency
+     */
+    public int getIntShiftFreq() {
+//        int shiftFreq = Integer.parseInt(this.shiftFreq.replace(".", ""));
+        int shiftFreq = 0;
+
+        return shiftFreq;        
     }
 
     /**
@@ -109,6 +145,28 @@ public class Channel {
         int right = frequency % 1000000;
         this.setFrequency(left+"."+right);
     }
+    /**
+     * Set the value of shift frequency
+     *
+     * @param ShiftFreq new value of shift frequency
+     */
+    public void setShiftFreq(String shiftFreq) {
+        int sepPos = shiftFreq.indexOf('.');
+        if (sepPos > 0) {
+            String left = shiftFreq.substring(0, sepPos);
+            StringBuffer right = new StringBuffer(shiftFreq.substring(sepPos+1));
+            while (right.length() < 6)
+                right.append('0');
+            this.shiftFreq = left+"."+right.toString();
+        }
+    }
+    
+    public void setShiftFreq(int shiftFreq) {
+        int left = shiftFreq / 1000000;
+        int right = shiftFreq % 1000000;
+        this.setShiftFreq(left+"."+right);
+    }
+
     
     protected String shift ="";
 

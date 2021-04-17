@@ -155,7 +155,7 @@
             <Property name="name" type="java.lang.String" value="table" noResource="true"/>
           </Properties>
           <AuxValues>
-            <AuxValue name="JavaCodeGenerator_InitCodePost" type="java.lang.String" value="        table.getModel().addTableModelListener(new TableModelListener() {&#xd;&#xa;            public void tableChanged(TableModelEvent e) {&#xd;&#xa;                tableTableChanged(e);&#xd;&#xa;            }            &#xd;&#xa;        });&#xd;&#xa;        table.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(getShiftCombo()));"/>
+            <AuxValue name="JavaCodeGenerator_InitCodePost" type="java.lang.String" value="        table.getModel().addTableModelListener(new TableModelListener() {&#xd;&#xa;            public void tableChanged(TableModelEvent e) {&#xd;&#xa;                tableTableChanged(e);&#xd;&#xa;            }            &#xd;&#xa;        });&#xd;&#xa;        table.getColumnModel().getColumn(3).setCellEditor(new DefaultCellEditor(getShiftCombo()));"/>
             <AuxValue name="JavaCodeGenerator_SerializeTo" type="java.lang.String" value="ChannelManager_table"/>
           </AuxValues>
         </Component>

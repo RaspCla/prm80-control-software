@@ -986,7 +986,7 @@ private void freqLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:e
 
         this.squelchSpinner.setValue(this.vdf.getSquelch());
         this.volumeSlider.setValue(this.vdf.getVolume());
-        
+
         this.hpLabel.setVisible(this.vdf.isHighPower());
         this.lpLabel.setVisible(!this.vdf.isHighPower());
 

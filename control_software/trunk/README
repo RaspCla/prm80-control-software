@@ -1,2 +1,6 @@
 This software is for use with the F4FEZ/F8EGQ PRM80 firmware
-The java RX/TX library is needed to run this program correctly
+The java RX/TX library is needed to run this program correctly (2021-04: already included)
+rxtx-api-... and rxtxSerial...)
+ 
+Tested with Windows10 64Bit (Windows 10 Pro, Version: 20H2,Build: 19042.906)
+Environment: Apache Netbeans IDE 12.0, jdk-15.01  

@@ -108,7 +108,7 @@ public class ChannelList{
                 String comments = "";
                 if (elements.length > 4)
                     comments =  ((String)elements[4]).trim();
-                Channel chan = new Channel(frequency, shiftFreq, shift);
+                Channel chan = new Channel(frequency, shiftFreq, "0", shift);
                 chan.setId(id);
                 chan.setComments(comments);
                 newList.add(chan);

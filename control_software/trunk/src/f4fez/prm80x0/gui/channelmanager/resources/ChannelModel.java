@@ -39,22 +39,23 @@ public class ChannelModel extends AbstractTableModel {
     }
 
     public int getColumnCount() {
-        return 4;
+        return 8;
     }
 
-    public Object getValueAt(int rowIndex, int columnIndex) {
+        public Object getValueAt(int rowIndex, int columnIndex) {
         switch (columnIndex) {
             case 0:
                 return this.channels.getChannel(rowIndex).getId();
             case 1:
                 return this.channels.getChannel(rowIndex).getFrequency();
-            case 2:
-                return this.channels.getChannel(rowIndex).isShift();
             case 3:
+                return this.channels.getChannel(rowIndex).isShift();
+            case 7:
                 return this.channels.getChannel(rowIndex).getComments();
             default:
                 return "Internal Error";
         }
     }
-
+    
 }
+

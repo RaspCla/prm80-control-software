@@ -229,6 +229,10 @@ public class PRM80X0View extends FrameView {
         downButton = new javax.swing.JButton();
         volumeLabel = new javax.swing.JLabel();
         powerButton = new javax.swing.JButton();
+        jSpinner1 = new javax.swing.JSpinner();
+        label1 = new java.awt.Label();
+        checkbox1 = new java.awt.Checkbox();
+        checkbox2 = new java.awt.Checkbox();
         menuBar = new javax.swing.JMenuBar();
         javax.swing.JMenu fileMenu = new javax.swing.JMenu();
         connectMenuItem = new javax.swing.JMenuItem();
@@ -260,6 +264,10 @@ public class PRM80X0View extends FrameView {
         statusAnimationLabel = new javax.swing.JLabel();
         progressBar = new javax.swing.JProgressBar();
         modeButtonGroup = new javax.swing.ButtonGroup();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jList1 = new javax.swing.JList();
+        jComboBox1 = new javax.swing.JComboBox();
+        list1 = new java.awt.List();
 
         mainPanel.setName("mainPanel"); // NOI18N
         mainPanel.setLayout(new javax.swing.BoxLayout(mainPanel, javax.swing.BoxLayout.Y_AXIS));
@@ -416,6 +424,26 @@ public class PRM80X0View extends FrameView {
             }
         });
         jPanel2.add(powerButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 60, 100, -1));
+
+        jSpinner1.setModel(new javax.swing.SpinnerListModel(new String[] {"9400000", "7600000", "1600000", "600000"}));
+        jSpinner1.setName("jSpinner1"); // NOI18N
+        jPanel2.add(jSpinner1, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 100, 80, 20));
+        jSpinner1.getAccessibleContext().setAccessibleParent(vfoToggleButton);
+
+        label1.setName("ShiftFrequency"); // NOI18N
+        label1.setText(resourceMap.getString("ShiftFrequency.text")); // NOI18N
+        jPanel2.add(label1, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 80, -1, -1));
+        label1.getAccessibleContext().setAccessibleName(resourceMap.getString("label1.AccessibleContext.accessibleName")); // NOI18N
+
+        checkbox1.setLabel(resourceMap.getString("ShiftEna.label")); // NOI18N
+        checkbox1.setName("ShiftEna"); // NOI18N
+        jPanel2.add(checkbox1, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 20, -1, 20));
+        checkbox1.getAccessibleContext().setAccessibleParent(vfoToggleButton);
+
+        checkbox2.setLabel(resourceMap.getString("checkbox2.label")); // NOI18N
+        checkbox2.setName("checkbox2"); // NOI18N
+        jPanel2.add(checkbox2, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 50, -1, 20));
+        checkbox2.getAccessibleContext().setAccessibleParent(vfoToggleButton);
 
         mainPanel.add(jPanel2);
 
@@ -610,7 +638,7 @@ public class PRM80X0View extends FrameView {
             .add(statusPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(statusMessageLabel)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 318, Short.MAX_VALUE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 334, Short.MAX_VALUE)
                 .add(progressBar, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(statusAnimationLabel)
@@ -627,6 +655,21 @@ public class PRM80X0View extends FrameView {
                     .add(progressBar, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .add(3, 3, 3))
         );
+
+        jScrollPane1.setName("jScrollPane1"); // NOI18N
+
+        jList1.setModel(new javax.swing.AbstractListModel() {
+            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
+            public int getSize() { return strings.length; }
+            public Object getElementAt(int i) { return strings[i]; }
+        });
+        jList1.setName("jList1"); // NOI18N
+        jScrollPane1.setViewportView(jList1);
+
+        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        jComboBox1.setName("jComboBox1"); // NOI18N
+
+        list1.setName("list1"); // NOI18N
 
         setComponent(mainPanel);
         setMenuBar(menuBar);
@@ -1007,6 +1050,8 @@ private void freqLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:e
     private javax.swing.JMenu ToolsMenu;
     private javax.swing.JLabel chanLabel;
     private javax.swing.JMenuItem channelManagerMenuItem;
+    private java.awt.Checkbox checkbox1;
+    private java.awt.Checkbox checkbox2;
     private javax.swing.JMenuItem configurationMenuItem;
     private javax.swing.JMenuItem connectMenuItem;
     private javax.swing.JMenuItem connectTcpMenuItem;
@@ -1020,9 +1065,15 @@ private void freqLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:e
     private javax.swing.JLabel freqLabel;
     private javax.swing.JLabel hpLabel;
     private javax.swing.JLabel infoLabel;
+    private javax.swing.JComboBox jComboBox1;
+    private javax.swing.JList jList1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
+    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSeparator jSeparator1;
+    private javax.swing.JSpinner jSpinner1;
+    private java.awt.Label label1;
+    private java.awt.List list1;
     private javax.swing.JLabel lpLabel;
     private javax.swing.JPanel mainPanel;
     private javax.swing.JToggleButton memToggleButton;

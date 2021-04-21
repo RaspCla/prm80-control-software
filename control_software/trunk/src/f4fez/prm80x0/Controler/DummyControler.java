@@ -230,7 +230,7 @@ public class DummyControler implements Controler{
                     shift = "-";
                 }
             }
-            list.addChannel(new Channel(freq, "111111111", shift));               // here we have to add a real shift freq
+            list.addChannel(new Channel(freq, "111111111", "0", shift));               // here we have to add a real shift freq
         }
         return list;
     }

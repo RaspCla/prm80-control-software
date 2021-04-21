@@ -30,9 +30,12 @@ import javax.swing.table.AbstractTableModel;
 public class ChannelModel extends AbstractTableModel {
     public static int COL_CHANNEL = 0;
     public static int COL_FREQUENCY = 1;
-    public static int COL_SHIFTFreq = 2;
-    public static int COL_SHIFT = 3;
-    public static int COL_COMMENTS = 4;
+    public static int COL_SHIFTFREQ = 2;
+    public static int COL_SCANLOCK = 3;
+    public static int COL_SHIFTPOSNEG = 4;
+    public static int COL_SHIFTREVERSE = 5;
+    public static int COL_SHIFTENABLED = 6;
+    public static int COL_COMMENTS = 7;
     private ChannelList channels;
     private Channel newChannel;
 
@@ -50,7 +53,7 @@ public class ChannelModel extends AbstractTableModel {
 
     @Override
     public int getColumnCount() {
-        return 5;
+        return 8;
     }
 
     @Override
@@ -72,8 +75,15 @@ public class ChannelModel extends AbstractTableModel {
             case 2:
                 return editedChannel.getShiftFreq();
             case 3:
-                return editedChannel.getShift();
+                return editedChannel.getScanLock();
             case 4:
+//                return editedChannel.getShiftPosNeg();
+                return editedChannel.getShift();
+            case 5:
+                return editedChannel.getShiftReverse();
+            case 6:
+                return editedChannel.getShiftEnabled();
+            case 7:
                 return editedChannel.getComments();
             default:
                 return "Internal Error";
@@ -90,8 +100,14 @@ public class ChannelModel extends AbstractTableModel {
             case 2:
                 return "ShiftFrequency";
             case 3:
-                return "Shift";
+                return "ScanLock";
             case 4:
+                return "ShiftPosNeg";
+            case 5:
+                return "ShiftReverse";
+            case 6:
+                return "ShiftEnabled";
+            case 7:
                 return "Comments";
             default:
                 return "Internal Error";
@@ -129,13 +145,16 @@ public class ChannelModel extends AbstractTableModel {
                 editedChannel.setShiftFreq((String) value);
                 break;
             case 3:
+                editedChannel.setScanLock((String) value);
+                break;             
+            case 4:
                 /*String shift = "";
                 if ( (Boolean) value )
                     shift = "-";
                 editedChannel.setShift(shift);*/
                 editedChannel.setShift((String) value);
                 break;                
-            case 4:
+            case 8:
                 editedChannel.setComments((String) value);
                 break;
         }

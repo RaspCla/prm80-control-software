@@ -24,14 +24,18 @@ package f4fez.prm80x0.Controler;
 public class Channel {
 
     private int id;
+    private String shiftLock;
+
+    private String shiftPosNeg;
 
     public Channel() {
         this.id = -1;
     }
     
-    public Channel(String frequency, String shiftFreq, String shift) {
+    public Channel(String frequency, String shiftFreq, String scanLock, String shift) {
         this.id = -1;
         this.shift = shift;
+        this.scanLock = scanLock; 
         this.comments = "";
         
         int sepPos = frequency.indexOf('.');
@@ -54,10 +58,13 @@ public class Channel {
 
     }
 
-    public Channel(int frequency, int shiftFreq, String shift) {
+    public Channel(int frequency, int shiftFreq, String scanLock, String shiftReverse, String shiftEnabled, String shift) {
         this.id = -1;
         this.setFrequency(frequency);
         this.setShiftFreq(shiftFreq);
+        this.scanLock = scanLock;
+        this.shiftReverse = shiftReverse;
+        this.shiftEnabled = shiftEnabled;
         this.shift = shift;
         this.comments = "";
     }
@@ -113,7 +120,7 @@ public class Channel {
     }
 
     
-       /**
+     /**
      * Get the shift frequency in Hertz
      * @return The shift frequency
      */
@@ -122,6 +129,45 @@ public class Channel {
         int shiftFreq = 0;
 
         return shiftFreq;        
+    }
+
+    
+    private String scanLock ="";    
+     /**
+     * Get the status of Scan Lock
+     * @return The Scan Lock status
+     */
+    public String getScanLock() {
+        return scanLock;        
+    }
+
+    /**
+     * Get the sign (+/-) of the Shift Frequency
+     * @return The sign of shift frequency
+     */
+    public int getShiftPosNeg() {
+//        int shiftFreq = Integer.parseInt(this.shiftFreq.replace(".", ""));
+        int shiftPosNeg = 0;
+
+        return shiftPosNeg;        
+    }
+
+     private String shiftReverse ="";    
+     /**
+     * Get the status of the Shift Reverse Mode
+     * @return The Status of shift Reverse Mode
+     */
+    public String getShiftReverse() {
+        return shiftReverse;        
+    }
+
+     private String shiftEnabled ="";    
+     /**
+     * Get the status of the Shift Enable
+     * @return The Status of shift Enable
+     */
+    public String getShiftEnabled() {
+        return shiftEnabled;        
     }
 
     /**
@@ -181,7 +227,7 @@ public class Channel {
     
     /**
      * Is shift activated or not
-     * @return I s shift activated
+     * @return Is shift activated
      */
     public boolean isShift() {
         return !shift.equals("");
@@ -195,6 +241,10 @@ public class Channel {
     public void setShift(String shift) {
         this.shift = shift;
     }
+
+
+
+
     private String comments;
 
     /**
@@ -213,6 +263,10 @@ public class Channel {
      */
     public void setComments(String comments) {
         this.comments = comments;
+    }
+
+    public void setScanLock(String string) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
 }

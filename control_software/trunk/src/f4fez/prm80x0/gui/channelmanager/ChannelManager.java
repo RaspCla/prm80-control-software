@@ -104,9 +104,12 @@ public class ChannelManager extends javax.swing.JDialog {
         table.getModel().addTableModelListener(new TableModelListener() {
             public void tableChanged(TableModelEvent e) {
                 tableTableChanged(e);
-            }            
+            }
         });
-        table.getColumnModel().getColumn(3).setCellEditor(new DefaultCellEditor(getShiftCombo()));
+        table.getColumnModel().getColumn(3).setCellEditor(new DefaultCellEditor(getScanLockCombo()));
+        table.getColumnModel().getColumn(4).setCellEditor(new DefaultCellEditor(getShiftPosNegCombo()));
+        table.getColumnModel().getColumn(5).setCellEditor(new DefaultCellEditor(getShiftReverseCombo()));
+        table.getColumnModel().getColumn(6).setCellEditor(new DefaultCellEditor(getShiftEnabledCombo()));
         tableScroll.setViewportView(table);
 
         getContentPane().add(tableScroll, java.awt.BorderLayout.CENTER);
@@ -226,6 +229,10 @@ private void importCSVMenuItemActionPerformed(java.awt.event.ActionEvent evt) {/
             int decimalCount = data.length() - data.indexOf('.');
             int a = 0;
         }
+        if (column == ChannelModel.COL_SHIFTFREQ) {
+            int decimalCount = data.length() - data.indexOf('.');
+            int a = 0;
+        }
     }
 
     @Action
@@ -238,17 +245,40 @@ private void importCSVMenuItemActionPerformed(java.awt.event.ActionEvent evt) {/
         return this.channels != null;
     }
     
+    /**
+     * 
+     * @return
+     */
     public ChannelList getChannelList() {
         return this.channels;
     }
     
-    private JComboBox getShiftCombo() {
-        JComboBox<String> combo = new JComboBox<String>();
+    private JComboBox getScanLockCombo() {
+        JComboBox<String> combo = new JComboBox<>();
+        combo.addItem("");
+        combo.addItem("Lock");
+        return combo;
+    }
+    private JComboBox getShiftPosNegCombo() {
+        JComboBox<String> combo = new JComboBox<>();
         combo.addItem("");
         combo.addItem("-");
         combo.addItem("+");
         return combo;
     }
+    private JComboBox getShiftReverseCombo() {
+        JComboBox<String> combo = new JComboBox<>();
+        combo.addItem("");
+        combo.addItem("Reverse");
+        return combo;
+    }
+    private JComboBox getShiftEnabledCombo() {
+        JComboBox<String> combo = new JComboBox<>();
+        combo.addItem("");
+        combo.addItem("Enabled");
+        return combo;
+    }
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel buttonsBar;
     private javax.swing.JButton cancelButton;

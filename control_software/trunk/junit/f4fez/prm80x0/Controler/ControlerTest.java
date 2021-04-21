@@ -50,6 +50,7 @@ public abstract class ControlerTest {
 
     /**
      * Test of connectPRM method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testConnectPRM() throws Exception {
@@ -71,6 +72,7 @@ public abstract class ControlerTest {
 
     /**
      * Test of disconnectPRM method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testDisconnectPRM() throws Exception {
@@ -85,6 +87,7 @@ public abstract class ControlerTest {
 
     /**
      * Test of getPRMState method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testGetPRMState() throws Exception {
@@ -96,6 +99,7 @@ public abstract class ControlerTest {
 
     /**
      * Test of setPLLStep method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testSetPLLStep() throws Exception {
@@ -115,6 +119,7 @@ public abstract class ControlerTest {
 
     /**
      * Test of getPLLStep method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testGetPLLStep() throws Exception {
@@ -126,6 +131,7 @@ public abstract class ControlerTest {
 
     /**
      * Test of getRxPLLFrequency method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testGetRxPLLFrequency() throws Exception {
@@ -137,6 +143,7 @@ public abstract class ControlerTest {
     
     /**
      * Test of setRxPLLFrequecny method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testSetRxPLLFrequecny() throws Exception {
@@ -156,6 +163,7 @@ public abstract class ControlerTest {
 
     /**
      * Test of getTxPLLFrequency method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testGetTxPLLFrequency() throws Exception {
@@ -167,6 +175,7 @@ public abstract class ControlerTest {
     
     /**
      * Test of setTxPLLFrequecny method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testSetTxPLLFrequecny() throws Exception {
@@ -187,6 +196,7 @@ public abstract class ControlerTest {
 
     /**
      * Test of isPllLocked method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testIsPllLocked() throws Exception {
@@ -199,6 +209,7 @@ public abstract class ControlerTest {
 
     /**
      * Test of readVolume method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testReadVolume() throws Exception {
@@ -210,6 +221,7 @@ public abstract class ControlerTest {
 
     /**
      * Test of writeVolume method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testWriteVolume() throws Exception {
@@ -226,6 +238,7 @@ public abstract class ControlerTest {
 
     /**
      * Test of readSquelch method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testReadSquelch() throws Exception {
@@ -237,6 +250,7 @@ public abstract class ControlerTest {
 
     /**
      * Test of writeSquelch method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testWriteSquelch() throws Exception {
@@ -253,6 +267,7 @@ public abstract class ControlerTest {
 
     /**
      * Test of getMaxChan method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testGetMaxChan() throws Exception {
@@ -264,6 +279,7 @@ public abstract class ControlerTest {
 
     /**
      * Test of getCurrentChannel method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testGetCurrentChannel() throws Exception {
@@ -275,6 +291,7 @@ public abstract class ControlerTest {
 
     /**
      * Test of setCurrentChannel method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testSetCurrentChannel() throws Exception {
@@ -291,6 +308,7 @@ public abstract class ControlerTest {
 
     /**
      * Test of getPower method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testGetPower() throws Exception {
@@ -311,6 +329,7 @@ public abstract class ControlerTest {
 
     /**
      * Test of setPower method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testSetPower() throws Exception {
@@ -341,6 +360,7 @@ public abstract class ControlerTest {
 
     /**
      * Test of resetPRM method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testResetPRM() throws Exception {
@@ -351,6 +371,7 @@ public abstract class ControlerTest {
 
     /**
      * Test of getMajorFirmwareVersion method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testGetMajorFirmwareVersion() throws Exception {
@@ -364,6 +385,7 @@ public abstract class ControlerTest {
 
     /**
      * Test of getMinorFirmwareVersion method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testGetMinorFirmwareVersion() throws Exception {
@@ -386,6 +408,7 @@ public abstract class ControlerTest {
 
     /**
      * Test of EEPROM2RAM method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testEEPROM2RAM() throws Exception {
@@ -400,6 +423,7 @@ public abstract class ControlerTest {
 
     /**
      * Test of getMemoryImage method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testGetMemoryImage() throws Exception {
@@ -412,21 +436,23 @@ public abstract class ControlerTest {
 
     /**
      * Test of getChannels method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testGetChannels() throws Exception {
         System.out.println("getChannels");
         instance.connectPRM(port);
         ChannelList result = instance.getChannels();
+        int countChan = instance.getMaxChan()+1;
         if (result == null || result.countChannel() == 0)
             fail("No channels found");
-        int countChan = instance.getMaxChan()+1;
-        if (result.countChannel() != countChan)
-            fail("MaxChan different of counted channels");
+        else if (result.countChannel() != countChan) {
+            fail("MaxChan different of counted channels");}
     }
 
     /**
      * Test of setChannels method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testSetChannels() throws Exception {
@@ -434,8 +460,8 @@ public abstract class ControlerTest {
         instance.connectPRM(port);
         ChannelList oldList = instance.getChannels();
         ChannelList list = new ChannelList();
-        list.addChannel(new Channel("144000000", ""));
-        list.addChannel(new Channel("145000000", ""));
+        list.addChannel(new Channel("144000000", "0", ""));
+        list.addChannel(new Channel("145000000", "0", ""));
         instance.setChannels(list);
         ChannelList newList = instance.getChannels();
         if (newList.countChannel() != 2)
@@ -453,6 +479,7 @@ public abstract class ControlerTest {
 
     /**
      * Test of isConnected method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testIsConnected() throws Exception {
@@ -465,6 +492,7 @@ public abstract class ControlerTest {
 
     /**
      * Test of getTxFrequencyShift method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testGetTxFrequencyShift() throws Exception {
@@ -476,6 +504,7 @@ public abstract class ControlerTest {
 
     /**
      * Test of setTxFrequencyShift method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testSetTxFrequencyShift() throws Exception {
@@ -484,6 +513,7 @@ public abstract class ControlerTest {
 
     /**
      * Test of getScanSpeed method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testGetScanSpeed() throws Exception {
@@ -495,6 +525,7 @@ public abstract class ControlerTest {
 
     /**
      * Test of setScanSpeed method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testSetScanSpeed() throws Exception {
@@ -503,6 +534,7 @@ public abstract class ControlerTest {
 
     /**
      * Test of getPRMType method, of class Controler.
+     * @throws java.lang.Exception
      */
     @Test
     public void testGetPRMType() throws Exception {

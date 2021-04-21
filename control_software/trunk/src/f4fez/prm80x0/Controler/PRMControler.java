@@ -441,14 +441,26 @@ public abstract class PRMControler implements Controler{
                             int shiftFreq = Integer.parseInt(line.substring(8, 12), 16);
                             int state = Integer.parseInt(line.substring(13, 15), 16);
                             if (chanNum == chanCount++) {
+
+                                String scanLock = "";
+                                if ((state & 8) != 0)
+                                    scanLock ="Lock";
+
+                                String shiftReverse = "";
+                                if ((state & 2) != 0)
+                                    shiftReverse ="Reverse";
+
+                                String shiftEnabled = "";
                                 String shift = "";
                                 if ((state & 1) != 0) {
+                                    shiftEnabled ="Enabled";
                                     if ((state & 4) == 0) 
                                     shift="-";
                                     else
                                     shift="+";       
                                 }    
-                                Channel chan = new Channel(freq * this.getPLLStep(), shiftFreq * this.getPLLStep(), shift);
+
+                                Channel chan = new Channel(freq * this.getPLLStep(), shiftFreq * this.getPLLStep(), scanLock, shiftReverse, shiftEnabled, shift);
                                 list.addChannel(chan);
                             } else {
                                 result = null;

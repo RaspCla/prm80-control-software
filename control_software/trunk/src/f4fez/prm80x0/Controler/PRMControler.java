@@ -846,8 +846,16 @@ public abstract class PRMControler implements Controler{
             }
             
             int state = 0;
-            if (chan.isShift())
-                state += 1;
+            if (chan.isShift()){
+                state = state | 1;
+                if ("+".equals(chan.shiftPosNeg))
+                    state = state | 4; 
+                }    
+            if ("Reverse".equals(chan.shiftReverse))
+                state = state | 2;
+            if ("Lock".equals(chan.scanLock))
+                state = state | 8;
+            
             String stateStr = Integer.toString(state);
             if (stateStr.length() == 1)
                 stateStr = "0" + stateStr;

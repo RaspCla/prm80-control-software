@@ -184,9 +184,9 @@ private void openSerialPort(String port) throws SerialPortException {
     @Override
     public int getRxPLLFrequency() {      
         Integer pllFreq;
-        String ident = this.sendCommand("E", "^[0-9A-F]{22}\r\n>$");
-        this.waitChar('>', PRMControler.serialTimeout);
-     
+        String ident = this.sendCommand("e", "^[0-9A-F]{22}\r\n>$");
+//        this.waitChar('>', PRMControler.serialTimeout);
+// this.wait does always run into timeout because ">" was already received in line above
         pllFreq = Integer.parseUnsignedInt(ident.substring(12, 16),16)* this.getPLLStep();        // PLL Frequency
         if (this.frequencyVariant == 430) 
             this.rxFreq = pllFreq + 21400000;                                                       // If 430 Mhz Band Receive frequency is 21.4 Mhz higher than Receive PLL frequency (IF) 
@@ -199,8 +199,8 @@ private void openSerialPort(String port) throws SerialPortException {
     @Override
     public int getTxPLLFrequency() {      
         Integer pllFreq;
-        String ident = this.sendCommand("E", "^[0-9A-F]{22}\r\n>$");
-        this.waitChar('>', PRMControler.serialTimeout);
+        String ident = this.sendCommand("e", "^[0-9A-F]{22}\r\n>$");
+//        this.waitChar('>', PRMControler.serialTimeout);
      
         pllFreq = Integer.parseUnsignedInt(ident.substring(16, 20),16)* this.getPLLStep();        // PLL Frequency
         this.txFrreq = pllFreq;                                                       // If 430 Mhz Band Receive frequency is 21.4 Mhz higher than Receive PLL frequency (IF) 
@@ -210,8 +210,8 @@ private void openSerialPort(String port) throws SerialPortException {
     
    @Override
     public int getCurrentChannel() {        
-        String ident = this.sendCommand("E", "^[0-9A-F]{22}\r\n>$");
-        this.waitChar('>', PRMControler.serialTimeout);
+        String ident = this.sendCommand("e", "^[0-9A-F]{22}\r\n>$");
+//        this.waitChar('>', PRMControler.serialTimeout);
         this.channel = Integer.parseUnsignedInt(ident.substring(2, 4),16);
 
         return this.channel;
@@ -219,15 +219,15 @@ private void openSerialPort(String port) throws SerialPortException {
     
    @Override
     public boolean isPllLocked() {
-        String ident = this.sendCommand("E", "^[0-9A-F]{22}\r\n>$");
-        this.waitChar('>', PRMControler.serialTimeout);
+        String ident = this.sendCommand("e", "^[0-9A-F]{22}\r\n>$");
+//        this.waitChar('>', PRMControler.serialTimeout);
         this.mode = Integer.parseUnsignedInt(ident.substring(0, 2),16);
         return (this.mode & 16) == 16;
     }
  
     public int getPower() {
-        String ident = this.sendCommand("E", "^[0-9A-F]{22}\r\n>$");
-        this.waitChar('>', PRMControler.serialTimeout);
+        String ident = this.sendCommand("e", "^[0-9A-F]{22}\r\n>$");
+//        this.waitChar('>', PRMControler.serialTimeout);
         this.mode = Integer.parseUnsignedInt(ident.substring(0, 2),16);
         if ( (this.mode & 2) == 2)
             return SerialControler.POWER_LO;

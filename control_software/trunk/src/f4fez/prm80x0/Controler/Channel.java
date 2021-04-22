@@ -26,16 +26,18 @@ public class Channel {
     private int id;
     private String shiftLock;
 
-    private String shiftPosNeg;
+    String shiftPosNeg;
 
     public Channel() {
         this.id = -1;
     }
     
-    public Channel(String frequency, String shiftFreq, String scanLock, String shift) {
+    public Channel(String frequency, String shiftFreq, String scanLock, String shift, String shiftReverse, String shiftEnabled) {
         this.id = -1;
         this.shift = shift;
         this.scanLock = scanLock; 
+        this.shiftReverse = shiftReverse;
+        this.shiftEnabled = shiftEnabled;
         this.comments = "";
         
         int sepPos = frequency.indexOf('.');
@@ -125,14 +127,12 @@ public class Channel {
      * @return The shift frequency
      */
     public int getIntShiftFreq() {
-//        int shiftFreq = Integer.parseInt(this.shiftFreq.replace(".", ""));
-        int shiftFreq = 0;
-
+        int shiftFreq = Integer.parseInt(this.shiftFreq.replace(".", ""));
         return shiftFreq;        
     }
 
     
-    private String scanLock ="";    
+    public String scanLock ="";    
      /**
      * Get the status of Scan Lock
      * @return The Scan Lock status
@@ -152,7 +152,7 @@ public class Channel {
         return shiftPosNeg;        
     }
 
-     private String shiftReverse ="";    
+     public String shiftReverse ="";    
      /**
      * Get the status of the Shift Reverse Mode
      * @return The Status of shift Reverse Mode

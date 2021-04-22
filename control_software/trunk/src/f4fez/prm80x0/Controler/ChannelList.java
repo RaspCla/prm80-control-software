@@ -65,13 +65,18 @@ public class ChannelList{
                 file.delete();
             }
             out = new PrintWriter(file);
-            out.println( "Chan Id;Frequency;Shift;Comments");
+            out.println( "Chan Id;Frequency;ShiftFrequency;ScanLock;ShifPosNeg;ShiftReverse;ShiftEnabled;Comments");
             for (int i = 0; i < this.list.size(); i++) {
                 Channel chan = this.list.get(i);
                 out.println(    Integer.toString(chan.getId()) 
                                 + ";"  + chan.getFrequency()
-                                + ";" + chan.getShift()
-                                + ";" + chan.getComments()
+                                + ";"  + chan.getShiftFreq()
+                                + ";"  + chan.getScanLock()
+                                + ";"  + chan.getShift()
+//                                + ";"  + chan.getShiftPosNeg()
+                                + ";"  + chan.getShiftReverse()
+                                + ";"  + chan.getShiftEnabled()
+                                + ";"  + chan.getComments()
                                 );
             }
 
@@ -95,20 +100,31 @@ public class ChannelList{
         while((line = in.readLine()) != null) {
             try {
                 Object[] elements = lineTokenizer(line);
-                if ((elements.length < 3) || (elements.length > 4))
+                if ((elements.length < 3) || (elements.length > 8))
                     throw new Exception("Invalid parameters count");
                 int id = Integer.parseInt( (String)elements[0]);
                 if (id != lineCount)
                     throw new Exception("Invalid sequence number. Value read : "+Integer.toString(id)+" instead of "+Integer.toString(lineCount));
-                String frequency =  ((String) elements[1]).trim();
-                String shiftFreq =  ((String) elements[2]).trim();
-                String shift =  ((String)elements[3]).trim();
+                String frequency =      ((String) elements[1]).trim();
+                String shiftFreq =      ((String) elements[2]).trim();
+                String scanLock =       ((String) elements[3]).trim();
+                String shift =          ((String) elements[4]).trim();
+                String shiftReverse =   ((String) elements[5]).trim();
+                String shiftEnabled =   ((String) elements[6]).trim();
+
+                if (!(("Locked".equals(scanLock)) || ("".equals(scanLock))))
+                    throw new Exception("Invalid ScanLock value for channel Id : "+Integer.toString(id));
                 if (!shift.matches("^[\\+-]?$"))
-                    throw new Exception("Invalid shift value for channel Id : "+Integer.toString(id));
+                    throw new Exception("Invalid ShiftEnabled value for channel Id : "+Integer.toString(id));
+                if (!(("Reverse".equals(shiftReverse)) || ("".equals(shiftReverse))))
+                    throw new Exception("Invalid ShiftReverse value for channel Id : "+Integer.toString(id));
+                if (!(("Enabled".equals(shiftEnabled)) || ("".equals(shiftEnabled))))
+                    throw new Exception("Invalid ShiftEnabled value for channel Id : "+Integer.toString(id));
+
                 String comments = "";
-                if (elements.length > 4)
-                    comments =  ((String)elements[4]).trim();
-                Channel chan = new Channel(frequency, shiftFreq, "0", shift);
+                if (elements.length > 7)
+                    comments =  ((String)elements[7]).trim();
+                Channel chan = new Channel(frequency, shiftFreq, scanLock, shift, shiftReverse, shiftEnabled);
                 chan.setId(id);
                 chan.setComments(comments);
                 newList.add(chan);

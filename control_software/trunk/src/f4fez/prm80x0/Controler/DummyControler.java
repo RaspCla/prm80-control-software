@@ -107,7 +107,7 @@ public class DummyControler implements Controler{
         int pllWord = ((wordHi & 0xFF) << 8) + (wordLo & 0xFF);
         
         this.setRxPLLFrequecny(pllWord * (DummyControler.localOscillatorFrequency / this.pllRefCounter));
-        this.setTxPLLFrequecny(pllWord * (DummyControler.localOscillatorFrequency / this.pllRefCounter));
+        this.setTxPLLFrequency(pllWord * (DummyControler.localOscillatorFrequency / this.pllRefCounter));
     }
 
     @Override
@@ -166,7 +166,7 @@ public class DummyControler implements Controler{
         //return this.pllCounter * this.getPLLStep();
     }
     @Override
-        public void setTxPLLFrequecny(int frequency){
+        public void setTxPLLFrequency(int frequency){
         this.txFreq = frequency;
     }
 

@@ -167,7 +167,7 @@ public class PRM80X0View extends FrameView {
         this.upButton.setEnabled(enable);
         this.downButton.setEnabled(enable);
         this.volumeLabel.setEnabled(enable);
-        this.volumeSlider.setEnabled(false/*enable*/);
+        this.volumeSlider.setEnabled(/*false*/enable);
         this.squelchLabel.setEnabled(enable);
         this.squelchSpinner.setEnabled(enable);
         this.vfoToggleButton.setEnabled(enable);
@@ -229,10 +229,10 @@ public class PRM80X0View extends FrameView {
         downButton = new javax.swing.JButton();
         volumeLabel = new javax.swing.JLabel();
         powerButton = new javax.swing.JButton();
-        jSpinner1 = new javax.swing.JSpinner();
+        ShiftFreqSpinner = new javax.swing.JSpinner();
         label1 = new java.awt.Label();
-        checkbox1 = new java.awt.Checkbox();
-        checkbox2 = new java.awt.Checkbox();
+        ShiftEnabledCheckbox = new java.awt.Checkbox();
+        ShiftPositiveCheckbox = new java.awt.Checkbox();
         menuBar = new javax.swing.JMenuBar();
         javax.swing.JMenu fileMenu = new javax.swing.JMenu();
         connectMenuItem = new javax.swing.JMenuItem();
@@ -425,25 +425,25 @@ public class PRM80X0View extends FrameView {
         });
         jPanel2.add(powerButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 60, 100, -1));
 
-        jSpinner1.setModel(new javax.swing.SpinnerListModel(new String[] {"9400000", "7600000", "1600000", "600000"}));
-        jSpinner1.setName("jSpinner1"); // NOI18N
-        jPanel2.add(jSpinner1, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 100, 80, 20));
-        jSpinner1.getAccessibleContext().setAccessibleParent(vfoToggleButton);
+        ShiftFreqSpinner.setModel(new javax.swing.SpinnerListModel(new String[] {"9400000", "7600000", "1600000", "600000"}));
+        ShiftFreqSpinner.setName("ShiftFreqSpinner"); // NOI18N
+        jPanel2.add(ShiftFreqSpinner, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 100, 80, 20));
+        ShiftFreqSpinner.getAccessibleContext().setAccessibleParent(vfoToggleButton);
 
         label1.setName("ShiftFrequency"); // NOI18N
         label1.setText(resourceMap.getString("ShiftFrequency.text")); // NOI18N
         jPanel2.add(label1, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 80, -1, -1));
         label1.getAccessibleContext().setAccessibleName(resourceMap.getString("label1.AccessibleContext.accessibleName")); // NOI18N
 
-        checkbox1.setLabel(resourceMap.getString("ShiftEna.label")); // NOI18N
-        checkbox1.setName("ShiftEna"); // NOI18N
-        jPanel2.add(checkbox1, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 20, -1, 20));
-        checkbox1.getAccessibleContext().setAccessibleParent(vfoToggleButton);
+        ShiftEnabledCheckbox.setLabel(resourceMap.getString("ShiftEna.label")); // NOI18N
+        ShiftEnabledCheckbox.setName("ShiftEna"); // NOI18N
+        jPanel2.add(ShiftEnabledCheckbox, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 20, -1, 20));
+        ShiftEnabledCheckbox.getAccessibleContext().setAccessibleParent(vfoToggleButton);
 
-        checkbox2.setLabel(resourceMap.getString("checkbox2.label")); // NOI18N
-        checkbox2.setName("checkbox2"); // NOI18N
-        jPanel2.add(checkbox2, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 50, -1, 20));
-        checkbox2.getAccessibleContext().setAccessibleParent(vfoToggleButton);
+        ShiftPositiveCheckbox.setLabel(resourceMap.getString("ShiftPositiveCheckbox.label")); // NOI18N
+        ShiftPositiveCheckbox.setName("ShiftPositiveCheckbox"); // NOI18N
+        jPanel2.add(ShiftPositiveCheckbox, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 50, -1, 20));
+        ShiftPositiveCheckbox.getAccessibleContext().setAccessibleParent(vfoToggleButton);
 
         mainPanel.add(jPanel2);
 
@@ -997,7 +997,16 @@ private void freqLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:e
                 d.setVisible(true);
                 if (d.getRxFrequency() != -1) {
                     this.vdf.getPRMControler().setRxPLLFrequecny(d.getRxFrequency());
-                    this.vdf.getPRMControler().setTxPLLFrequecny(d.getRxFrequency());
+
+            if (this.ShiftEnabledCheckbox.getState() == true) {             // ShiftEnabled
+                if (this.ShiftPositiveCheckbox.getState() == true)           // ShiftPositiv
+                    this.vdf.getPRMControler().setTxPLLFrequency(d.getRxFrequency()+Integer.parseInt(this.ShiftFreqSpinner.getValue().toString()));
+                else
+                    this.vdf.getPRMControler().setTxPLLFrequency(d.getRxFrequency()-Integer.parseInt(this.ShiftFreqSpinner.getValue().toString()));
+            }    
+            else
+                    this.vdf.getPRMControler().setTxPLLFrequency(d.getRxFrequency());
+                
                     this.vdf.setVfoMode(true);
                     this.chanLabel.setVisible(false);
                     this.vfoToggleButton.setSelected(true);
@@ -1050,8 +1059,8 @@ private void freqLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:e
     private javax.swing.JMenu ToolsMenu;
     private javax.swing.JLabel chanLabel;
     private javax.swing.JMenuItem channelManagerMenuItem;
-    private java.awt.Checkbox checkbox1;
-    private java.awt.Checkbox checkbox2;
+    private java.awt.Checkbox ShiftEnabledCheckbox;
+    private java.awt.Checkbox ShiftPositiveCheckbox;
     private javax.swing.JMenuItem configurationMenuItem;
     private javax.swing.JMenuItem connectMenuItem;
     private javax.swing.JMenuItem connectTcpMenuItem;
@@ -1071,7 +1080,7 @@ private void freqLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:e
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSeparator jSeparator1;
-    private javax.swing.JSpinner jSpinner1;
+    private javax.swing.JSpinner ShiftFreqSpinner;
     private java.awt.Label label1;
     private java.awt.List list1;
     private javax.swing.JLabel lpLabel;

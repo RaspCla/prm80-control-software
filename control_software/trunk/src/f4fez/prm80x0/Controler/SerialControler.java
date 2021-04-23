@@ -75,9 +75,10 @@ private void openSerialPort(String port) throws SerialPortException {
                             throw new SerialPortException("Unknown PRM80 device");
                         this.majorFirmwareVersion = Integer.parseInt(ident.substring(9, 10));
                         this.minorFirmwareVersion = Integer.parseInt(ident.substring(11, 12));                        
-                        this.frequencyVariant = Integer.parseInt(ident.substring(13, 16));                        
-                        if (this.frequencyVariant != 144 && this.frequencyVariant != 430)
-                            throw new SerialPortException("unknown PRM80x0 frequency variant: "+this.frequencyVariant);
+//                        this.frequencyVariant = Integer.parseInt(ident.substring(13, 16));                        
+                        this.prmFreqCode = Integer.parseInt(ident.substring(13, 16));                        
+                        if (this.prmFreqCode != PRMControler.FREQ144 && this.prmFreqCode != PRMControler.FREQ430)
+                            throw new SerialPortException("unknown PRM80x0 frequency variant: "+this.prmFreqCode);
                         this.connected = true;
                     } else {
                         throw new SerialPortException("Invalid serial port name.");
@@ -188,10 +189,10 @@ private void openSerialPort(String port) throws SerialPortException {
 //        this.waitChar('>', PRMControler.serialTimeout);
 // this.wait does always run into timeout because ">" was already received in line above
         pllFreq = Integer.parseUnsignedInt(ident.substring(12, 16),16)* this.getPLLStep();        // PLL Frequency
-        if (this.frequencyVariant == 430) 
-            this.rxFreq = pllFreq + 21400000;                                                       // If 430 Mhz Band Receive frequency is 21.4 Mhz higher than Receive PLL frequency (IF) 
+        if (this.prmFreqCode == PRMControler.FREQ144) 
+            this.rxFreq = pllFreq - 21400000;                                                       // If 430 Mhz Band Receive frequency is 21.4 Mhz higher than Receive PLL frequency (IF) 
         else
-            this.rxFreq = pllFreq - 21400000;                                                       // If 144 Mhz Band Receive frequency is 21.4 Mhz higher than Receive PLL frequency (IF) 
+            this.rxFreq = pllFreq + 21400000;                                                       // If 144 Mhz Band Receive frequency is 21.4 Mhz higher than Receive PLL frequency (IF) 
          
         return this.rxFreq;
     }

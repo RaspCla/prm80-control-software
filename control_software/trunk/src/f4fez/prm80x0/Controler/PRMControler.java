@@ -19,7 +19,7 @@ public abstract class PRMControler implements Controler{
     protected static int serialTimeout = 1000;
     protected int majorFirmwareVersion;
     protected int minorFirmwareVersion;
-    protected int frequencyVariant;
+//    protected int frequencyVariant;
     protected int prmType;
     protected int prmFreqCode;
     private int pllStep; 
@@ -100,7 +100,7 @@ public abstract class PRMControler implements Controler{
     }
     
     @Override
-    public void setTxPLLFrequecny(int frequency) {
+    public void setTxPLLFrequency(int frequency) {
         this.setPLLFrequencies(this.getRxPLLFrequency(), frequency);
         this.updateState();
     }
@@ -151,7 +151,15 @@ public abstract class PRMControler implements Controler{
     }
 
     @Override
-    public void writeVolume(int volume) {
+    public synchronized void writeVolume(int volume) {
+        this.send("o");
+        this.waitChar(':', PRMControler.serialTimeout);
+        String sChan = Integer.toString(volume);
+        if (sChan.length() == 1)
+            sChan = "0"+sChan;
+        this.send(sChan);
+        this.waitChar('>', PRMControler.serialTimeout);
+        this.updateState();
         
     }
 
@@ -499,7 +507,7 @@ public abstract class PRMControler implements Controler{
         
         if (stateLine != null) {
             try {
-                if (stateLine != null && stateLine.length() == 23 && !stateLine.equals(this.holdStateString)) {
+                if (stateLine != null && stateLine.length() == 25 && !stateLine.equals(this.holdStateString)) {
                     int freq = Integer.parseInt(stateLine.substring(12, 16), 16);
                     if (this.prmFreqCode == PRMControler.FREQ144) {
                         this.rxFreq = freq*this.getPLLStep()-Controler.IF;
@@ -510,8 +518,8 @@ public abstract class PRMControler implements Controler{
                     
                     freq = Integer.parseInt(stateLine.substring(16, 20), 16);
                     this.txFrreq = freq*this.getPLLStep();
-                    this.volume =  (255-Integer.parseInt(stateLine.substring(8, 10), 16)) >> 4;
-                    this.squelch = Integer.parseInt(stateLine.substring(6, 8), 16);
+                    this.volume =  (Integer.parseInt(stateLine.substring(8, 10), 16)) & 15;
+                    this.squelch = Integer.parseInt(stateLine.substring(6, 8), 16 & 15);
                     this.channel = Integer.parseInt(stateLine.substring(2, 4), 16);
                     this.mode = Integer.parseInt(stateLine.substring(0, 2), 16);
                     this.holdStateString = stateLine;

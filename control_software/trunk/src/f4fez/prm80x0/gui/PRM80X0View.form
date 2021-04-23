@@ -290,7 +290,7 @@
                 </Constraint>
               </Constraints>
             </Component>
-            <Component class="javax.swing.JSpinner" name="jSpinner1">
+            <Component class="javax.swing.JSpinner" name="ShiftFreqSpinner">
               <Properties>
                 <Property name="model" type="javax.swing.SpinnerModel" editor="org.netbeans.modules.form.editors2.SpinnerModelEditor">
                   <SpinnerModel type="list">
@@ -300,7 +300,7 @@
                     <ListItem value="600000"/>
                   </SpinnerModel>
                 </Property>
-                <Property name="name" type="java.lang.String" value="jSpinner1" noResource="true"/>
+                <Property name="name" type="java.lang.String" value="ShiftFreqSpinner" noResource="true"/>
               </Properties>
               <AccessibilityProperties>
                 <Property name="AccessibleContext.accessibleParent" type="javax.accessibility.Accessible" editor="org.netbeans.modules.form.RADVisualComponent$AccessibleParentEditor">
@@ -327,7 +327,7 @@
                 </Constraint>
               </Constraints>
             </Component>
-            <Component class="java.awt.Checkbox" name="checkbox1">
+            <Component class="java.awt.Checkbox" name="ShiftEnabledCheckbox">
               <Properties>
                 <Property name="label" type="java.lang.String" resourceKey="ShiftEna.label"/>
                 <Property name="name" type="java.lang.String" value="ShiftEna" noResource="true"/>
@@ -343,10 +343,10 @@
                 </Constraint>
               </Constraints>
             </Component>
-            <Component class="java.awt.Checkbox" name="checkbox2">
+            <Component class="java.awt.Checkbox" name="ShiftPositiveCheckbox">
               <Properties>
-                <Property name="label" type="java.lang.String" resourceKey="checkbox2.label"/>
-                <Property name="name" type="java.lang.String" value="checkbox2" noResource="true"/>
+                <Property name="label" type="java.lang.String" resourceKey="ShiftPositiveCheckbox.label"/>
+                <Property name="name" type="java.lang.String" value="ShiftPositiveCheckbox" noResource="true"/>
               </Properties>
               <AccessibilityProperties>
                 <Property name="AccessibleContext.accessibleParent" type="javax.accessibility.Accessible" editor="org.netbeans.modules.form.RADVisualComponent$AccessibleParentEditor">

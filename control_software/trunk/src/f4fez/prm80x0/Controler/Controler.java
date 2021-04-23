@@ -101,7 +101,7 @@ public interface Controler {
      * Set the PLL current frequency for emission
      * @param frequency The frequency (Hertz) of the PLL
      */
-    public void setTxPLLFrequecny(int frequency) throws CommunicationException;
+    public void setTxPLLFrequency(int frequency) throws CommunicationException;
     /**
      * Get the PLL current frequency for emission
      * @return The frequency (Hertz) of the PLL

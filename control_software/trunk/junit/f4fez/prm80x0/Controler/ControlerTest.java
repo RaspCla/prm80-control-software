@@ -174,21 +174,21 @@ public abstract class ControlerTest {
     }
     
     /**
-     * Test of setTxPLLFrequecny method, of class Controler.
+     * Test of setTxPLLFrequency method, of class Controler.
      * @throws java.lang.Exception
      */
     @Test
-    public void testSetTxPLLFrequecny() throws Exception {
-        System.out.println("setTxPLLFrequecny");
+    public void testsetTxPLLFrequency() throws Exception {
+        System.out.println("setTxPLLFrequency");
         instance.connectPRM(port);
         int frequency = instance.getTxPLLFrequency();
-        instance.setTxPLLFrequecny(144000000);        
+        instance.setTxPLLFrequency(144000000);        
         if (instance.getTxPLLFrequency() != 144000000)
             fail("Can't set TX frequency");
-        instance.setTxPLLFrequecny(146000000);
+        instance.setTxPLLFrequency(146000000);
         if (instance.getTxPLLFrequency() != 146000000)
             fail("Can't set TX frequency");
-        instance.setTxPLLFrequecny(frequency);        
+        instance.setTxPLLFrequency(frequency);        
         if (instance.getTxPLLFrequency() != frequency)
             fail("Can't set TX frequency");
     }
@@ -460,8 +460,12 @@ public abstract class ControlerTest {
         instance.connectPRM(port);
         ChannelList oldList = instance.getChannels();
         ChannelList list = new ChannelList();
-        list.addChannel(new Channel("144000000", "0", ""));
-        list.addChannel(new Channel("145000000", "0", ""));
+        list.addChannel(new Channel("144000000", "0", "", "", "", ""));
+        list.addChannel(new Channel("145100000", "0", "", "", "", ""));
+        list.addChannel(new Channel("145125000", "600000", "", "-", "", "Enabled"));
+        list.addChannel(new Channel("145150000", "600000", "", "+", "", "Enabled"));
+        list.addChannel(new Channel("145175000", "600000", "", "-", "Reverse", "Enabled"));
+        list.addChannel(new Channel("145200000", "0", "Locked", "", "", ""));
         instance.setChannels(list);
         ChannelList newList = instance.getChannels();
         if (newList.countChannel() != 2)

@@ -518,8 +518,8 @@ public abstract class PRMControler implements Controler{
                     
                     freq = Integer.parseInt(stateLine.substring(16, 20), 16);
                     this.txFrreq = freq*this.getPLLStep();
-                    this.volume =  (Integer.parseInt(stateLine.substring(8, 10), 16)) & 15;
-                    this.squelch = Integer.parseInt(stateLine.substring(6, 8), 16 & 15);
+                    this.volume =  (Integer.parseInt(stateLine.substring(8, 10), 16)) & 31;
+                    this.squelch = (Integer.parseInt(stateLine.substring(6, 8), 16)) & 15;
                     this.channel = Integer.parseInt(stateLine.substring(2, 4), 16);
                     this.mode = Integer.parseInt(stateLine.substring(0, 2), 16);
                     this.holdStateString = stateLine;

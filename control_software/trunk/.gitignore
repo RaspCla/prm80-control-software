@@ -1,0 +1,16 @@
+# Maven build output
+target/
+
+# IDE files
+nbproject/private/
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+
+# OS files
+Thumbs.db
+desktop.ini
+.DS_Store

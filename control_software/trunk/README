@@ -1,9 +1,61 @@
-This software is for use with the F4FEZ/F8EGQ PRM80 firmware
-The java RX/TX library is needed to run this program correctly (2021-04: already included)
-rxtx-api-... and rxtxSerial...)
- 
-Tested with Windows10 64Bit (Windows 10 Pro, Version: 20H2,Build: 19042.906)
-Environment: Apache Netbeans IDE 12.0, jdk-15.01
+PRM80 control software
+======================
 
-Tested with PRM80xx Firmware V5, only (will have issues with earlier versions)
-  
+This software is for use with the F4FEZ/F8EGQ PRM80 firmware.
+Tested with PRM80xx Firmware V5 only (will have issues with earlier versions).
+
+Since version 2.0 the program runs on Windows and Linux (and should run on macOS):
+
+  - Build system: Maven (pom.xml). NetBeans, IntelliJ IDEA and VS Code open
+    the project directly; the libraries are downloaded automatically.
+  - Serial port: jSerialComm (replaces RXTX, no separate native libraries)
+  - Look and feel: FlatLaf (start with --dark for the dark variant)
+  - The old Swing Application Framework, swing-layout and swingworker
+    libraries are no longer needed.
+
+Requirements
+------------
+  - JDK 21 or newer (e.g. Eclipse Temurin, https://adoptium.net)
+  - for development: Apache NetBeans (GUI builder for the .form files)
+
+Build and run
+-------------
+  NetBeans:      File > Open Project > select this folder (control_software/trunk),
+                 then "Clean and Build" and "Run".
+  Command line:  mvn package
+                 java -jar target/prm80-control-software-2.0.0.jar
+
+The jar in target/ contains all libraries and runs on every computer with Java 21+.
+
+Stand-alone program (no Java installation needed)
+--------------------------------------------------
+After building, run
+
+  Windows:  package-windows.bat        -> target\dist\PRM80\PRM80.exe
+  Linux:    ./package-linux.sh         -> target/dist/PRM80/bin/PRM80
+
+The PRM80 folder contains its own Java runtime and can be copied or zipped.
+"package-windows.bat msi" (needs WiX Toolset) or "./package-linux.sh deb"
+build an installer / package instead.
+
+Serial port on Linux
+--------------------
+The user needs access to the serial ports, usually by membership in the
+group "dialout":   sudo usermod -aG dialout $USER   (then log in again)
+Ports are named /dev/ttyUSB0, /dev/ttyACM0, /dev/ttyS0, ... on Linux and
+COM1, COM2, ... on Windows. Select the port in Tools > Options.
+
+Command line options
+--------------------
+  -h,   --help           Print this help message
+  -s,   --server=PORT    Server mode. Listen on TCP port PORT
+  -p,   --port=SERIAL    Serial port for server mode (e.g. COM3 or /dev/ttyUSB0),
+                         default: the port selected in the GUI options
+  -d,   --debug          Set debug mode
+        --dark           Use the dark look and feel
+
+History
+-------
+  1.x  Florian MAZEN (F4FEZ), NetBeans/Ant project, RXTX, Swing Application Framework
+       Windows 10, NetBeans 12.0, JDK 15
+  2.0  Maven, jSerialComm, FlatLaf, plain Swing; Windows and Linux

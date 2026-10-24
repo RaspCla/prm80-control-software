@@ -191,6 +191,13 @@ public class ChannelManager extends javax.swing.JDialog {
                 if (e.getColumn() != ChannelModel.COL_COMMENTS)
                     sessionSyncedWithPrm = false;
                 updateTitle();
+                // a value edited in one of several selected rows: offer it for all of them
+                if (!this.applyingToSelection && e.getType() == javax.swing.event.TableModelEvent.UPDATE
+                        && e.getFirstRow() == e.getLastRow() && e.getColumn() >= 0) {
+                    final int row = e.getFirstRow();
+                    final int col = e.getColumn();
+                    javax.swing.SwingUtilities.invokeLater(() -> this.applyToSelection(row, col));
+                }
             }
         });
 
@@ -592,6 +599,46 @@ public class ChannelManager extends javax.swing.JDialog {
         this.busy = true;               // no "modified" for the new list
         this.model.setChannels(list);
         this.busy = wasBusy;
+        this.updateTitle();
+    }
+
+    /** true while a value is copied to the selected rows */
+    private boolean applyingToSelection;
+
+    /**
+     * A value was changed in a row that is selected together with other
+     * rows: ask whether it shall be set in all selected rows (not for the
+     * frequency, every channel has its own).
+     */
+    private void applyToSelection(int row, int col) {
+        if (col == ChannelModel.COL_CHANNEL || col == ChannelModel.COL_FREQUENCY)
+            return;
+        if (row >= sessionList.countChannel() || !this.table.isRowSelected(row))
+            return;
+        java.util.List<Integer> others = new java.util.ArrayList<>();
+        for (int viewRow : this.table.getSelectedRows()) {
+            int r = this.table.convertRowIndexToModel(viewRow);
+            if (r != row && r < sessionList.countChannel())
+                others.add(r);
+        }
+        if (others.isEmpty())
+            return;
+        Object value = this.model.getValueAt(row, col);
+        String text = value == null || value.toString().isEmpty() ? "(empty)" : "\"" + value + "\"";
+        int answer = JOptionPane.showConfirmDialog(this,
+                "Set \"" + this.model.getColumnName(col) + "\" to " + text + "\nfor all "
+                + (others.size() + 1) + " selected channels?",
+                this.getTitle(), JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+        if (answer != JOptionPane.YES_OPTION)
+            return;
+        this.applyingToSelection = true;
+        try {
+            for (int r : others)
+                this.model.setValueAt(value, r, col);
+        } finally {
+            this.applyingToSelection = false;
+        }
+        sessionSource = this.model.getColumnName(col) + " set for " + (others.size() + 1) + " channels";
         this.updateTitle();
     }
 

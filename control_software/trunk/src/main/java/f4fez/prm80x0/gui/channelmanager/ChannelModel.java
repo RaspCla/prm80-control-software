@@ -161,6 +161,7 @@ public class ChannelModel extends AbstractTableModel {
             this.newChannel = new Channel();
             this.fireTableRowsInserted(row + 1, row + 1);
         }
-        this.fireTableRowsUpdated(row, row);
+        // event with the column: the channel manager needs to know which value changed
+        this.fireTableCellUpdated(row, col);
     }
 }

@@ -60,6 +60,10 @@ Channel manager
 Tools > Channel manager. It shows the channel file used last time.
   Read from PRM80 / Write to PRM80   exchange the channels with the radio
   Read / Save / Save As              channel file (CSV, separator ";", UTF-8)
+Several channels can be changed at once: select the rows (Shift + click or
+Ctrl + click, the last click may open the value to change), change the value
+in one of them, then answer the question "... for all selected channels?"
+with Yes (not for the frequency).
 The PRM80 has no memory for comments: they are only kept in the file.
 The main window shows the comment of the current channel below the channel
 number (if the channel in the list has the same frequency as in the PRM80). When the

@@ -14,6 +14,11 @@
   (the firmware has no serial command for its own scan)
 - Virtual PRM80 simulates some stations for testing the scan
 
+### Channel manager
+- A value changed in one of several selected rows can be set for all
+  selected rows (after a question), e.g. scan lock or shift for many channels
+- Changing only a comment no longer marks the list as different from the PRM80
+
 ### Display
 - The comment of the current channel (from the channel manager list) is
   shown in red below the channel number (full text as tooltip); only if the

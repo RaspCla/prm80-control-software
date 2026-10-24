@@ -9,8 +9,9 @@ Writes PRM80.ico (Windows, all sizes), PRM80.png (Linux, 256 px) and the
 window icons ../src/main/resources/f4fez/prm80x0/gui/resources/icons/prm80-<size>.png
 
 Sizes 48 px and more: window picture with "PRM80" below.
-Sizes below 48 px (title bar, task bar): only the display, the text
-would not be readable there.
+Sizes below 64 px (Explorer, title bar, task bar, start menu) are drawn
+pixel by pixel so that they stay sharp: 24 and 32 px with "PRM80" in a
+pixel font, 40 and 48 px with normal text, 16 and 20 px only the window.
 """
 import os
 from PIL import Image, ImageDraw, ImageFont
@@ -126,27 +127,135 @@ def window(d, box, s, detail):
     button(d, (x0 + w * 0.83, py0 + ph * 0.54, x0 + w * 0.95, py1), s)
 
 
+# ---- small sizes: drawn pixel by pixel (no blur) ---------------------------
+
+FONT5X7 = {
+    "P": ["11110", "10001", "10001", "11110", "10000", "10000", "10000"],
+    "R": ["11110", "10001", "10001", "11110", "10100", "10010", "10001"],
+    "M": ["10001", "11011", "10101", "10101", "10001", "10001", "10001"],
+    "8": ["01110", "10001", "10001", "01110", "10001", "10001", "01110"],
+    "0": ["01110", "10001", "10011", "10101", "11001", "10001", "01110"],
+}
+FONT3X5 = {                                    # M is 5 pixels wide
+    "P": ["110", "101", "110", "100", "100"],
+    "R": ["110", "101", "110", "101", "101"],
+    "M": ["10001", "11011", "10101", "10001", "10001"],
+    "8": ["111", "101", "111", "101", "111"],
+    "0": ["111", "101", "101", "101", "111"],
+}
+
+
+def pixel_text(img, text, font, top):
+    """Text in a pixel font, centred, dark with a light outline."""
+    n = img.size[0]
+    width = sum(len(font[c][0]) + 1 for c in text) - 1
+    x = (n - width) // 2
+    pixels = set()
+    for c in text:
+        for row, bits in enumerate(font[c]):
+            for col, bit in enumerate(bits):
+                if bit == "1":
+                    pixels.add((x + col, top + row))
+        x += len(font[c][0]) + 1
+    draw_pixels(img, pixels)
+
+
+def crisp_text(img, text, box):
+    """Text of the bold sans serif font without grey edges (pixel sharp)."""
+    n = img.size[0]
+    x0, y0, x1, y1 = box
+    f = fit(SANS_FILE, text, x1 - x0, y1 - y0)
+    mask = Image.new("L", (n, n), 0)
+    text_in(ImageDraw.Draw(mask), text, f, box, 255)
+    m = mask.load()
+    draw_pixels(img, {(a, b) for a in range(n) for b in range(n) if m[a, b] >= 110})
+
+
+def draw_pixels(img, pixels):
+    """Dark pixels with a light outline: readable on light and dark backgrounds."""
+    n = img.size[0]
+    px = img.load()
+    for (a, b) in pixels:                       # outline
+        for da in (-1, 0, 1):
+            for db in (-1, 0, 1):
+                if 0 <= a + da < n and 0 <= b + db < n and (a + da, b + db) not in pixels:
+                    px[a + da, b + db] = (255, 255, 255, 255)
+    for (a, b) in pixels:
+        px[a, b] = (30, 30, 34, 255)
+
+
+def window_pixels(d, x0, y0, x1, y1):
+    """The main window in a few pixels (coordinates inclusive)."""
+    w, h = x1 - x0 + 1, y1 - y0 + 1
+    R = lambda v: int(round(v))
+    d.rectangle([x0, y0, x1, y1], fill=(222, 222, 226), outline=(95, 95, 100))
+    # display
+    dx0, dy0, dx1 = x0 + 1, y0 + 1, x1 - 1
+    dh = R(h * 0.52)
+    dw = dx1 - dx0 + 1
+    d.rectangle([dx0, dy0, dx1, dy0 + dh - 1], fill=(0, 0, 0))
+    ch = max(2, R(dh * 0.34))
+    oh = max(1, R(dh * 0.18))
+    ry = dy0 + max(1, R(dh * 0.15))
+    oy = ry + ch + 1
+    d.rectangle([dx0 + 1, ry, min(dx0 + R(dw * 0.56), dx0 + R(dw * 0.66) - 2), ry + ch - 1], fill=RX)  # RX
+    d.rectangle([dx0 + R(dw * 0.66), ry, dx0 + R(dw * 0.82), ry + ch - 1], fill=CHAN)       # channel
+    d.rectangle([dx0 + R(dw * 0.22), oy, min(dx0 + R(dw * 0.56), dx0 + R(dw * 0.66) - 2), oy + oh - 1], fill=TX)  # TX
+    d.rectangle([dx0 + R(dw * 0.66), oy, dx0 + R(dw * 0.90), oy + oh - 1], fill=CHAN)       # comment
+    if w >= 24:
+        d.rectangle([dx0 + R(dw * 0.86), ry, dx1 - 1, ry + max(0, ch // 2 - 1)], fill=HP)   # HIGH POWER
+    # control panel
+    py0, py1 = dy0 + dh + 1, y1 - 1
+    ph = py1 - py0 + 1
+    if ph >= 5:
+        half = (ph - 1) // 2
+        rows = [(py0, py0 + half - 1), (py0 + half + 1, py1)]
+    else:
+        rows = [(py0, py1)]
+    for (a, b) in rows:
+        d.rectangle([x0 + R(w * 0.16), a, x0 + R(w * 0.36), b], fill=(255, 255, 255))        # Power / Scan
+        d.rectangle([x0 + R(w * 0.45), a, x0 + R(w * 0.62), b], fill=(255, 255, 255))        # VFO / MEM
+        d.rectangle([x0 + R(w * 0.78), a, x1 - 2, b], fill=(255, 255, 255))                 # + / -
+    d.rectangle([x0 + 2, py0 + ph // 2 - 1, x0 + 2 + (1 if w >= 24 else 0), py0 + ph // 2], fill=SLIDER)
+
+
+def small_icon(n):
+    img = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    if n >= 40:
+        th = R0(n * 0.27)                           # text height
+        window_pixels(d, 0, 1, n - 1, n - th - 3)
+        crisp_text(img, "PRM80", (2, n - th, n - 2, n - 2))
+    elif n >= 32:
+        window_pixels(d, 0, 1, n - 1, n - 11)       # window, PRM80 below (5x7 font)
+        pixel_text(img, "PRM80", FONT5X7, n - 8)
+    elif n >= 24:
+        window_pixels(d, 0, 1, n - 1, n - 8)        # window, PRM80 below (3x5 font)
+        pixel_text(img, "PRM80", FONT3X5, n - 6)
+    else:
+        window_pixels(d, 0, R0(n * 0.12), n - 1, n - 1 - R0(n * 0.12))
+    return img
+
+
+def R0(v):
+    return int(round(v))
+
+
+# ---- all sizes --------------------------------------------------------------
+
 def icon(n):
+    if n < 64:
+        return small_icon(n)
     S = 8                                   # draw 8 times larger, then reduce
     N = n * S
     s = N / 256.0                           # line widths are given for 256 px
     img = Image.new("RGBA", (N, N), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    if n >= 48:
-        # window picture, "PRM80" below it
-        window(d, (N * 0.03, N * 0.04, N * 0.97, N * 0.70), s, n >= 64)
-        f = fit(SANS_FILE, "PRM80", N * 0.86, N * 0.22)
-        text_in(d, "PRM80", f, (0, N * 0.74, N, N * 0.98), (30, 30, 34), "center",
-                int(N * 0.012), (255, 255, 255))
-    else:
-        # small: only the display (fills the icon)
-        d.rounded_rectangle([0, N * 0.12, N - 1, N * 0.88], radius=N * 0.08, fill=(0, 0, 0),
-                            outline=FRAME, width=max(S, int(N * 0.03)))
-        # digits would only be a blur here: lines in the colours of the display
-        d.rectangle([N * 0.10, N * 0.24, N * 0.62, N * 0.44], fill=RX)           # RX
-        d.rectangle([N * 0.26, N * 0.54, N * 0.62, N * 0.66], fill=TX)           # TX
-        d.rectangle([N * 0.70, N * 0.24, N * 0.88, N * 0.44], fill=CHAN)         # channel
-        d.rectangle([N * 0.70, N * 0.54, N * 0.88, N * 0.66], fill=CHAN)         # comment
+    # window picture, "PRM80" below it
+    window(d, (N * 0.03, N * 0.04, N * 0.97, N * 0.70), s, n >= 64)
+    f = fit(SANS_FILE, "PRM80", N * 0.86, N * 0.22)
+    text_in(d, "PRM80", f, (0, N * 0.74, N, N * 0.98), (30, 30, 34), "center",
+            int(N * 0.012), (255, 255, 255))
     return img.resize((n, n), Image.LANCZOS)
 
 

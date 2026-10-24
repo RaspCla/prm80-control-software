@@ -1,9 +1,129 @@
-This software is for use with the F4FEZ/F8EGQ PRM80 firmware
-The java RX/TX library is needed to run this program correctly (2021-04: already included)
-rxtx-api-... and rxtxSerial...)
- 
-Tested with Windows10 64Bit (Windows 10 Pro, Version: 20H2,Build: 19042.906)
-Environment: Apache Netbeans IDE 12.0, jdk-15.01
+PRM80 control software
+======================
 
-Tested with PRM80xx Firmware V5, only (will have issues with earlier versions)
-  
+This software is for use with the F4FEZ/F8EGQ PRM80 firmware.
+Tested with PRM80xx Firmware V5 only (will have issues with earlier versions).
+
+Since version 2.0 the program runs on Windows and Linux (and should run on macOS):
+
+  - Build system: Maven (pom.xml). NetBeans, IntelliJ IDEA and VS Code open
+    the project directly; the libraries are downloaded automatically.
+  - Serial port: jSerialComm (replaces RXTX, no separate native libraries)
+  - Look and feel: FlatLaf (start with --dark for the dark variant)
+  - The old Swing Application Framework, swing-layout and swingworker
+    libraries are no longer needed.
+
+Requirements
+------------
+  - JDK 21 or newer (e.g. Eclipse Temurin, https://adoptium.net)
+  - for development: Apache NetBeans (GUI builder for the .form files)
+
+Build and run
+-------------
+  NetBeans:      File > Open Project > select this folder (control_software/trunk),
+                 then "Clean and Build" and "Run".
+  Command line:  mvn package
+                 java -jar target/prm80-control-software-2.0.0.jar
+
+The jar in target/ contains all libraries and runs on every computer with Java 21+.
+NetBeans "Run" / "Debug" use nbactions.xml (adds --enable-native-access=ALL-UNNAMED,
+needed by FlatLaf and jSerialComm from Java 24 on; java -jar gets it from the manifest).
+
+Stand-alone program (no Java installation needed)
+--------------------------------------------------
+After building, run
+
+  Windows:  package-windows.bat        -> target\dist\PRM80\PRM80.exe
+  Linux:    ./package-linux.sh         -> target/dist/PRM80/bin/PRM80
+
+The PRM80 folder contains its own Java runtime and can be copied or zipped.
+"package-windows.bat msi" (needs WiX Toolset) or "./package-linux.sh deb"
+build an installer / package instead.
+
+Serial port on Linux
+--------------------
+The user needs access to the serial ports, usually by membership in the
+group "dialout":   sudo usermod -aG dialout $USER   (then log in again)
+Ports are named /dev/ttyUSB0, /dev/ttyACM0, /dev/ttyS0, ... on Linux and
+COM1, COM2, ... on Windows. Select the port at the top of the main window.
+
+Connecting
+----------
+Select the serial port in the main window and press "Connect". The list of
+ports is updated each time it is opened (e.g. after plugging in a USB adapter).
+All communication with the PRM80 runs in the background: the display changes
+at once, "BUSY" is shown in the display until the PRM80 has answered.
+The state of the PRM80 is read every 1.5 s (changes made at the radio).
+
+Channel manager
+---------------
+Tools > Channel manager. It shows the channel file used last time.
+  Read from PRM80 / Write to PRM80   exchange the channels with the radio
+  Read / Save / Save As              channel file (CSV, separator ";", UTF-8)
+The PRM80 has no memory for comments: they are only kept in the file. When the
+channels are read from the PRM80, the comments of the list shown before are
+kept for channels with the same number and frequency.
+
+"Export A51" (shown in expert mode) saves the list as channel configuration
+of the firmware: src/inc_144.a51 or src/inc_430.a51, ready to assemble with
+the firmware (make). The firmware loads these channels when RAM and EEPROM are
+invalid (first start) or with the "I" command. The file contains
+  CONFIG_CHAN_COUNT (highest channel number), default shift, PLL divider,
+  scan duration, freq_list, shift_list (shift per channel, firmware V5) and
+  chan_state_table (shift enabled, positive, reverse, scan lock out),
+with the frequency, shift and comment of every channel as comment.
+PLL step, default shift and scan speed are taken from the connected PRM80;
+without connection the defaults of the firmware are used (V5, 12.5 kHz,
+600 kHz / 7.6 MHz, 400 ms). Frequencies and shifts must be multiples of the
+PLL step.
+
+VFO mode
+--------
+In VFO mode "Shift enabled", "Shift positive", "Shift reverse" and "Shift
+Frequency" set the frequencies at once: TX = RX +/- shift, with reverse RX and
+TX are swapped (as the firmware does it for channels).
+In memory mode the fields show the shift of the current channel.
+
+"Write to MEM" (VFO mode) stores the VFO setting in a memory channel. The
+channel list of the channel manager is used; it is only read from the PRM80
+when it is not known to be the same (asks before a different list is
+replaced). The dialog stays open: write to further channels, "Undo" takes
+writes back, "OK" or "Cancel" close it (written channels stay in the PRM80).
+The channel manager shows the changes.
+
+Expert mode
+-----------
+Tools > Expert mode shows the functions for experts (restart, RAM/EEPROM,
+serial monitor, A51 export in the channel manager, TCP server connection,
+virtual PRM for tests).
+
+The virtual PRM (File > Connect virtual PRM (test)) simulates a PRM8060 144 MHz with
+firmware V5.0 as it is meant to work: factory channels of src/inc_144.a51,
+shift per channel, reverse, scan lock, default shift, scan duration, RAM with
+checksums and EEPROM (restart, Reload RAM, RAM <-> EEPROM). Known errors of the
+firmware are not simulated (reverse uses the channel in RAM and its own shift,
+configuration changes update the checksum).
+
+Zoom
+----
+The window can be resized with the mouse, the whole user interface zooms
+with it. Alternatively: View menu, Ctrl + / Ctrl - / Ctrl 0 (100 %).
+The zoom factor is shown in the status bar and remembered for the next start.
+
+Command line options
+--------------------
+  -h,   --help           Print this help message
+  -s,   --server=PORT    Server mode. Listen on TCP port PORT
+  -p,   --port=SERIAL    Serial port for server mode (e.g. COM3 or /dev/ttyUSB0),
+                         default: the port selected in the GUI options
+  -d,   --debug          Set debug mode
+        --dark           Use the dark look and feel
+
+History
+-------
+  1.x  Florian MAZEN (F4FEZ), NetBeans/Ant project, RXTX, Swing Application Framework
+       2021 extensions for firmware V5 by Claus Moessner
+  2.0  Maven, jSerialComm, FlatLaf, plain Swing; Windows and Linux; zoomable window,
+       channel manager, Write to MEM, A51 export, virtual PRM80 V5
+See CHANGELOG.md and README.md in the main folder of the repository (also for
+the tools needed to build the program and the packages).

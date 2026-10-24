@@ -1,0 +1,8 @@
+# Line endings: Windows batch files need CRLF, shell scripts LF
+*.bat   text eol=crlf
+*.sh    text eol=lf
+*.java  text
+*.form  text
+*.xml   text
+*.md    text
+*.a51   text

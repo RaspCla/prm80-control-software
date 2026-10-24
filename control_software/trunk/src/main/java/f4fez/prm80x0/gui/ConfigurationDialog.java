@@ -25,6 +25,7 @@ public class ConfigurationDialog extends javax.swing.JDialog {
     public ConfigurationDialog(java.awt.Frame parent, VirtualDeviceFirmware vdf) {
         super(parent, true);
         initComponents();
+        Zoom.install(this);
         this.vdf = vdf;
         try {
             float pllStep = ((float)this.vdf.getPRMControler().getPLLStep()) / 1000f;
@@ -78,7 +79,7 @@ public class ConfigurationDialog extends javax.swing.JDialog {
 
         jPanel1.setMinimumSize(new java.awt.Dimension(300, 189));
         jPanel1.setName("jPanel1"); // NOI18N
-        jPanel1.setPreferredSize(new java.awt.Dimension(300, 210));
+        jPanel1.setPreferredSize(new java.awt.Dimension(300, 240));
         jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jLabel1.setText("No PLL :"); // NOI18N

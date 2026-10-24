@@ -45,6 +45,12 @@ group "dialout":   sudo usermod -aG dialout $USER   (then log in again)
 Ports are named /dev/ttyUSB0, /dev/ttyACM0, /dev/ttyS0, ... on Linux and
 COM1, COM2, ... on Windows. Select the port in Tools > Options.
 
+Zoom
+----
+The window can be resized with the mouse, the whole user interface zooms
+with it. Alternatively: View menu, Ctrl + / Ctrl - / Ctrl 0 (100 %).
+The zoom factor is shown in the status bar and remembered for the next start.
+
 Command line options
 --------------------
   -h,   --help           Print this help message
@@ -58,4 +64,4 @@ History
 -------
   1.x  Florian MAZEN (F4FEZ), NetBeans/Ant project, RXTX, Swing Application Framework
        Windows 10, NetBeans 12.0, JDK 15
-  2.0  Maven, jSerialComm, FlatLaf, plain Swing; Windows and Linux
+  2.0  Maven, jSerialComm, FlatLaf, plain Swing; Windows and Linux; zoomable window

@@ -23,6 +23,7 @@ public class PRM80X0AboutBox extends javax.swing.JDialog {
     public PRM80X0AboutBox(java.awt.Frame parent) {
         super(parent);
         initComponents();
+        Zoom.install(this);
         getRootPane().setDefaultButton(closeButton);
     }
 

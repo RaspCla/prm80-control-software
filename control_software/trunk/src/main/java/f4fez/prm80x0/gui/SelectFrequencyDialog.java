@@ -23,6 +23,7 @@ public class SelectFrequencyDialog extends javax.swing.JDialog {
     public SelectFrequencyDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
+        Zoom.install(this);
         this.getRootPane().setDefaultButton(okButton);
     }
 

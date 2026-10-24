@@ -34,6 +34,7 @@ public class OptionsDialog extends javax.swing.JDialog {
     public OptionsDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
+        Zoom.install(this);
         fillComboBoxWithSerialPorts();
     }
     

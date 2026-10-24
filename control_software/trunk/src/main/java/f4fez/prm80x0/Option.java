@@ -35,6 +35,7 @@ public class Option {
     private final static String prefSerialPort = "serialPort";
     private final static String prefExpertMode = "expertMode";
     private final static String prefLastURI = "lastServerURI";   
+    private final static String prefZoom = "zoom";
     public Option() {
         this.prefs = Preferences.userRoot().node(prefRoot);
         // Last used serial port, otherwise the first one found
@@ -69,6 +70,15 @@ public class Option {
         }
     }
     
+    /** Zoom factor of the user interface, 1 = 100 %. */
+    public float getZoom() {
+        return this.prefs.getFloat(Option.prefZoom, 1f);
+    }
+
+    public void setZoom(float zoom) {
+        this.prefs.putFloat(Option.prefZoom, zoom);
+    }
+
     public String getLastServerURI() {
         return this.lastServerURI;
     }

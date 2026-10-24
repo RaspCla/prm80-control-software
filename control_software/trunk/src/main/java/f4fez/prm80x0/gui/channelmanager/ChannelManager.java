@@ -44,6 +44,7 @@ public class ChannelManager extends javax.swing.JDialog {
 
         this.channels = channels;
         initComponents();
+        f4fez.prm80x0.gui.Zoom.install(this);
     }
     
     /** This method is called from within the constructor to

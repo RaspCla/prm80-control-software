@@ -20,6 +20,7 @@ public class ConnectDialog extends javax.swing.JDialog {
         this.config = parent.getConfiguration();
         this.setLocationRelativeTo(parent);
         initComponents();
+        Zoom.install(this);
         this.serverField.setText(config.getLastServerURI());
     }
 

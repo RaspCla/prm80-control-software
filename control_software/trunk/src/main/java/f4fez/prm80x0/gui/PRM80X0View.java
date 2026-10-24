@@ -20,7 +20,20 @@ package f4fez.prm80x0.gui;
 
 import f4fez.prm80x0.*;
 import f4fez.prm80x0.gui.channelmanager.ChannelManager;
+import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+import javax.swing.AbstractAction;
+import javax.swing.JComponent;
+import javax.swing.JMenuItem;
+import javax.swing.JRootPane;
+import javax.swing.KeyStroke;
+import javax.swing.Timer;
 import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -47,9 +60,11 @@ public class PRM80X0View extends javax.swing.JFrame {
     private TerminalDialog serialSpy;
             
     public PRM80X0View() {
-            initComponents();
-
+            // zoom factor of the last session
             this.config = new Option();
+            Zoom.set(this.config.getZoom());
+
+            initComponents();
             
             // Disable all controls
             this.setEnableControls(false);
@@ -65,14 +80,102 @@ public class PRM80X0View extends javax.swing.JFrame {
             // the file locked and "Clean" fails while the program is running.
             try (InputStream lcdFontStream = PRM80X0View.class.getResourceAsStream("/f4fez/prm80x0/gui/resources/lcd.ttf")) {
                 Font lcdFont = Font.createFont(Font.TRUETYPE_FONT, lcdFontStream);
-                this.freqLabel.setFont(lcdFont.deriveFont(32f));
-                this.chanLabel.setFont(lcdFont.deriveFont(32f));
-                this.txFreqLabel.setFont(lcdFont.deriveFont(24f));
-                this.infoLabel.setFont(lcdFont.deriveFont(24f));
+                float zoom = Zoom.get();
+                this.freqLabel.setFont(lcdFont.deriveFont(32f * zoom));
+                this.chanLabel.setFont(lcdFont.deriveFont(32f * zoom));
+                this.txFreqLabel.setFont(lcdFont.deriveFont(24f * zoom));
+                this.infoLabel.setFont(lcdFont.deriveFont(24f * zoom));
             } catch (Exception ex) {
                 Logger.getLogger(PRM80X0View.class.getName()).log(Level.SEVERE, null, ex);
                 JOptionPane.showMessageDialog(this, ex.getMessage());
             } 
+            Font powerFont = this.hpLabel.getFont();
+            powerFont = powerFont.deriveFont(Font.BOLD, powerFont.getSize2D() * 0.85f);
+            this.hpLabel.setFont(powerFont);
+            this.lpLabel.setFont(powerFont);
+
+            this.initZoom();
+    }
+
+    // ---- Zoom -------------------------------------------------------------
+
+    /** Content size after the last pack(), its resize event must not change the zoom */
+    private Dimension packedSize;
+    /** Collects the resize events while the window border is dragged */
+    private Timer zoomTimer;
+
+    private void initZoom() {
+        Zoom.install(this);
+        this.setLocationRelativeTo(null);
+        this.packedSize = this.getContentPane().getSize();
+        this.showZoom();
+
+        // zoom when the window size is changed with the mouse
+        this.zoomTimer = new Timer(60, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                zoomToWindowSize();
+            }
+        });
+        this.zoomTimer.setRepeats(false);
+        this.getContentPane().addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                if (!getContentPane().getSize().equals(packedSize)) {
+                    zoomTimer.restart();
+                }
+            }
+        });
+
+        // keyboard: Ctrl + / Ctrl - / Ctrl 0, also on the numeric keypad
+        int ctrl = InputEvent.CTRL_DOWN_MASK;
+        this.zoomInMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_PLUS, ctrl));
+        this.zoomOutMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, ctrl));
+        this.zoomResetMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_0, ctrl));
+        this.bindKey(KeyStroke.getKeyStroke(KeyEvent.VK_ADD, ctrl), "zoomIn", this.zoomInMenuItem);
+        this.bindKey(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, ctrl), "zoomIn", this.zoomInMenuItem);
+        this.bindKey(KeyStroke.getKeyStroke(KeyEvent.VK_SUBTRACT, ctrl), "zoomOut", this.zoomOutMenuItem);
+        this.bindKey(KeyStroke.getKeyStroke(KeyEvent.VK_NUMPAD0, ctrl), "zoomReset", this.zoomResetMenuItem);
+    }
+
+    private void bindKey(KeyStroke key, String name, final JMenuItem item) {
+        JRootPane root = this.getRootPane();
+        root.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(key, name);
+        root.getActionMap().put(name, new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                item.doClick(0);
+            }
+        });
+    }
+
+    /** Set a new zoom factor and adapt the window size to it. */
+    private void setZoom(float zoom) {
+        Zoom.set(zoom);
+        this.config.setZoom(Zoom.get());
+        this.pack();
+        this.packedSize = this.getContentPane().getSize();
+        this.showZoom();
+    }
+
+    /** Choose the zoom factor so that the content fits into the window. */
+    private void zoomToWindowSize() {
+        float zoom = Zoom.get();
+        Dimension window = this.getContentPane().getSize();
+        Dimension content = this.getContentPane().getPreferredSize();
+        float baseWidth = content.width / zoom;
+        float baseHeight = content.height / zoom;
+        float newZoom = Math.min(window.width / baseWidth, window.height / baseHeight);
+        newZoom = Zoom.clamp((float) Math.floor(newZoom * 100f) / 100f);
+        if (Math.abs(newZoom - zoom) >= 0.01f) {
+            Zoom.set(newZoom);
+            this.config.setZoom(Zoom.get());
+            this.showZoom();
+        }
+    }
+
+    private void showZoom() {
+        this.statusAnimationLabel.setText(Math.round(Zoom.get() * 100) + " %");
     }
 
     public void showAboutBox() {
@@ -189,6 +292,10 @@ public class PRM80X0View extends javax.swing.JFrame {
         exportA51MenuItem = new javax.swing.JMenuItem();
         expertSeparator = new javax.swing.JSeparator();
         optionMenuItem = new javax.swing.JMenuItem();
+        viewMenu = new javax.swing.JMenu();
+        zoomInMenuItem = new javax.swing.JMenuItem();
+        zoomOutMenuItem = new javax.swing.JMenuItem();
+        zoomResetMenuItem = new javax.swing.JMenuItem();
         javax.swing.JMenu helpMenu = new javax.swing.JMenu();
         javax.swing.JMenuItem aboutMenuItem = new javax.swing.JMenuItem();
         statusPanel = new javax.swing.JPanel();
@@ -201,7 +308,6 @@ public class PRM80X0View extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("PRM80 control software"); // NOI18N
         setName("mainFrame"); // NOI18N
-        setResizable(false);
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 formWindowClosing(evt);
@@ -228,7 +334,7 @@ public class PRM80X0View extends javax.swing.JFrame {
                 freqLabelMouseClicked(evt);
             }
         });
-        jPanel1.add(freqLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, 160, 30));
+        jPanel1.add(freqLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 10, 170, 30));
 
         chanLabel.setForeground(new java.awt.Color(255, 51, 51)); // NOI18N
         chanLabel.setText("00"); // NOI18N
@@ -241,15 +347,21 @@ public class PRM80X0View extends javax.swing.JFrame {
         });
         jPanel1.add(chanLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(260, 10, 50, 30));
 
-        hpLabel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/f4fez/prm80x0/gui/resources/hp.png"))); // NOI18N
-        hpLabel.setText(""); // NOI18N
+        hpLabel.setBackground(new java.awt.Color(255, 0, 0));
+        hpLabel.setForeground(new java.awt.Color(0, 0, 0));
+        hpLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        hpLabel.setText("HIGH POWER"); // NOI18N
         hpLabel.setName("hpLabel"); // NOI18N
-        jPanel1.add(hpLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(410, 10, -1, -1));
+        hpLabel.setOpaque(true);
+        jPanel1.add(hpLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 10, 90, 16));
 
-        lpLabel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/f4fez/prm80x0/gui/resources/lp.png"))); // NOI18N
-        lpLabel.setText(""); // NOI18N
+        lpLabel.setBackground(new java.awt.Color(255, 255, 0));
+        lpLabel.setForeground(new java.awt.Color(0, 0, 0));
+        lpLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lpLabel.setText("LOW POWER"); // NOI18N
         lpLabel.setName("lpLabel"); // NOI18N
-        jPanel1.add(lpLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(410, 30, -1, -1));
+        lpLabel.setOpaque(true);
+        jPanel1.add(lpLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 30, 90, 16));
 
         txFreqLabel.setForeground(new java.awt.Color(255, 204, 0)); // NOI18N
         txFreqLabel.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
@@ -261,7 +373,7 @@ public class PRM80X0View extends javax.swing.JFrame {
                 freqLabelMouseClicked(evt);
             }
         });
-        jPanel1.add(txFreqLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 40, 160, 20));
+        jPanel1.add(txFreqLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 40, 170, 20));
 
         infoLabel.setForeground(new java.awt.Color(0, 255, 0)); // NOI18N
         infoLabel.setText(""); // NOI18N
@@ -351,7 +463,7 @@ public class PRM80X0View extends javax.swing.JFrame {
 
         volumeLabel.setText("Volume"); // NOI18N
         volumeLabel.setName("volumeLabel"); // NOI18N
-        jPanel2.add(volumeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, 50, -1));
+        jPanel2.add(volumeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, -1, -1));
 
         powerButton.setText("Power"); // NOI18N
         powerButton.setName("powerButton"); // NOI18N
@@ -550,6 +662,38 @@ public class PRM80X0View extends javax.swing.JFrame {
 
         menuBar.add(ToolsMenu);
 
+        viewMenu.setText("View"); // NOI18N
+        viewMenu.setName("viewMenu"); // NOI18N
+
+        zoomInMenuItem.setText("Zoom in"); // NOI18N
+        zoomInMenuItem.setName("zoomInMenuItem"); // NOI18N
+        zoomInMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                zoomInMenuItemActionPerformed(evt);
+            }
+        });
+        viewMenu.add(zoomInMenuItem);
+
+        zoomOutMenuItem.setText("Zoom out"); // NOI18N
+        zoomOutMenuItem.setName("zoomOutMenuItem"); // NOI18N
+        zoomOutMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                zoomOutMenuItemActionPerformed(evt);
+            }
+        });
+        viewMenu.add(zoomOutMenuItem);
+
+        zoomResetMenuItem.setText("Zoom 100 %"); // NOI18N
+        zoomResetMenuItem.setName("zoomResetMenuItem"); // NOI18N
+        zoomResetMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                zoomResetMenuItemActionPerformed(evt);
+            }
+        });
+        viewMenu.add(zoomResetMenuItem);
+
+        menuBar.add(viewMenu);
+
         helpMenu.setText("Help"); // NOI18N
         helpMenu.setName("helpMenu"); // NOI18N
 
@@ -577,11 +721,11 @@ public class PRM80X0View extends javax.swing.JFrame {
         statusPanel.setLayout(statusPanelLayout);
         statusPanelLayout.setHorizontalGroup(
             statusPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(statusPanelSeparator, javax.swing.GroupLayout.DEFAULT_SIZE, 504, Short.MAX_VALUE)
+            .addComponent(statusPanelSeparator, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(statusPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(statusMessageLabel)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 334, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(progressBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(statusAnimationLabel)
@@ -669,6 +813,18 @@ public class PRM80X0View extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Erreur de connexion : "+ex.getMessage(), "Erreur de connexion", JOptionPane.ERROR_MESSAGE);
         }
     }                                                                                    
+
+    private void zoomInMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_zoomInMenuItemActionPerformed
+        this.setZoom(Zoom.stepUp(Zoom.get()));
+    }//GEN-LAST:event_zoomInMenuItemActionPerformed
+
+    private void zoomOutMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_zoomOutMenuItemActionPerformed
+        this.setZoom(Zoom.stepDown(Zoom.get()));
+    }//GEN-LAST:event_zoomOutMenuItemActionPerformed
+
+    private void zoomResetMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_zoomResetMenuItemActionPerformed
+        this.setZoom(1f);
+    }//GEN-LAST:event_zoomResetMenuItemActionPerformed
 
     private void exitMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitMenuItemActionPerformed
         this.quit();
@@ -1033,6 +1189,10 @@ private void freqLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:e
     private javax.swing.JMenuBar menuBar;
     private javax.swing.ButtonGroup modeButtonGroup;
     private javax.swing.JMenuItem optionMenuItem;
+    private javax.swing.JMenu viewMenu;
+    private javax.swing.JMenuItem zoomInMenuItem;
+    private javax.swing.JMenuItem zoomOutMenuItem;
+    private javax.swing.JMenuItem zoomResetMenuItem;
     private javax.swing.JButton powerButton;
     private javax.swing.JProgressBar progressBar;
     private javax.swing.JMenuItem ram2eepromMenuItem;

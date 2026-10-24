@@ -33,6 +33,7 @@ public class TerminalDialog extends javax.swing.JFrame implements SerialListener
     public TerminalDialog() {
         super();
         initComponents();
+        f4fez.prm80x0.gui.Zoom.install(this);
     }
     
     /** This method is called from within the constructor to

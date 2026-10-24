@@ -21,6 +21,7 @@ public class SelectChannelDialog extends javax.swing.JDialog {
     public SelectChannelDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
+        Zoom.install(this);
     }
 
     /** This method is called from within the constructor to

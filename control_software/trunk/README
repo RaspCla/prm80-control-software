@@ -94,7 +94,15 @@ The channel manager shows the changes.
 Expert mode
 -----------
 Tools > Expert mode shows the functions for experts (restart, RAM/EEPROM,
-serial monitor, A51 export in the channel manager, TCP server connection, virtual PRM for tests).
+serial monitor, A51 export in the channel manager, TCP server connection,
+virtual PRM for tests).
+
+The virtual PRM (File > Connect virtual PRM (test)) simulates a PRM8060 144 MHz with
+firmware V5.0 as it is meant to work: factory channels of src/inc_144.a51,
+shift per channel, reverse, scan lock, default shift, scan duration, RAM with
+checksums and EEPROM (restart, Reload RAM, RAM <-> EEPROM). Known errors of the
+firmware are not simulated (reverse uses the channel in RAM and its own shift,
+configuration changes update the checksum).
 
 Zoom
 ----

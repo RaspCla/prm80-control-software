@@ -173,15 +173,6 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="serialSpyMenuItemActionPerformed"/>
               </Events>
             </MenuItem>
-            <MenuItem class="javax.swing.JMenuItem" name="exportA51MenuItem">
-              <Properties>
-                <Property name="text" type="java.lang.String" value="Export A51"/>
-                <Property name="name" type="java.lang.String" value="exportA51MenuItem" noResource="true"/>
-              </Properties>
-              <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="exportA51MenuItemActionPerformed"/>
-              </Events>
-            </MenuItem>
             <MenuItem class="javax.swing.JSeparator" name="expertSeparator">
               <Properties>
                 <Property name="name" type="java.lang.String" value="expertSeparator" noResource="true"/>

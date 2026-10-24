@@ -51,7 +51,6 @@ import java.util.logging.Logger;
 import javax.swing.AbstractAction;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
-import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JRootPane;
@@ -604,7 +603,6 @@ public class PRM80X0View extends javax.swing.JFrame {
             this.writeMemButton.setVisible(false);
         }
         this.powerButton.setEnabled(enable);
-        this.exportA51MenuItem.setEnabled(enable);
         this.configurationMenuItem.setEnabled(enable);
     }
     
@@ -619,7 +617,6 @@ public class PRM80X0View extends javax.swing.JFrame {
         this.serialSpyMenuItem.setVisible(enable);
         this.expertSeparator.setVisible(enable);
         this.connectTcpMenuItem.setVisible(enable);
-        this.exportA51MenuItem.setVisible(enable);
     }
 
     /** This method is called from within the constructor to
@@ -682,7 +679,6 @@ public class PRM80X0View extends javax.swing.JFrame {
         ram2eepromMenuItem = new javax.swing.JMenuItem();
         eeprom2ramMenuItem = new javax.swing.JMenuItem();
         serialSpyMenuItem = new javax.swing.JMenuItem();
-        exportA51MenuItem = new javax.swing.JMenuItem();
         expertSeparator = new javax.swing.JSeparator();
         expertModeMenuItem = new javax.swing.JCheckBoxMenuItem();
         viewMenu = new javax.swing.JMenu();
@@ -1115,15 +1111,6 @@ public class PRM80X0View extends javax.swing.JFrame {
         });
         ToolsMenu.add(serialSpyMenuItem);
 
-        exportA51MenuItem.setText("Export A51"); // NOI18N
-        exportA51MenuItem.setName("exportA51MenuItem"); // NOI18N
-        exportA51MenuItem.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                exportA51MenuItemActionPerformed(evt);
-            }
-        });
-        ToolsMenu.add(exportA51MenuItem);
-
         expertSeparator.setName("expertSeparator"); // NOI18N
         ToolsMenu.add(expertSeparator);
 
@@ -1419,6 +1406,17 @@ public class PRM80X0View extends javax.swing.JFrame {
                     done.run();
                 }, ex -> error.accept(message(ex)));
             }
+
+            @Override
+            public void readConfiguration(Consumer<A51Export.Config> done, Consumer<String> error) {
+                final VirtualDeviceFirmware v = vdf;
+                if (v == null) {
+                    done.accept(null);
+                    return;
+                }
+                worker.run(() -> A51Export.Config.fromPrm(v.getPRMControler()),
+                        done, ex -> error.accept(message(ex)));
+            }
         });
         this.showDialog(cm);
     }//GEN-LAST:event_channelManagerMenuItemActionPerformed
@@ -1620,20 +1618,6 @@ private void connectTcpMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
     }
 }//GEN-LAST:event_connectTcpMenuItemActionPerformed
 
-private void exportA51MenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exportA51MenuItemActionPerformed
-    if (this.vdf == null)
-        return;
-    JFileChooser fc = new JFileChooser();
-    if (fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION)  {
-        final File file = fc.getSelectedFile();
-        final VirtualDeviceFirmware v = this.vdf;
-        this.command(() -> {
-            A51Export.exportA51(v.getPRMControler(), file);
-            return null;
-        });
-    }
-}//GEN-LAST:event_exportA51MenuItemActionPerformed
-
 private void resetMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resetMenuItemActionPerformed
     final VirtualDeviceFirmware v = this.vdf;
     this.command(() -> {
@@ -1782,7 +1766,6 @@ private void freqLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:e
     private javax.swing.JMenuItem eeprom2ramMenuItem;
     private javax.swing.JMenuItem eepromMenuItem;
     private javax.swing.JSeparator expertSeparator;
-    private javax.swing.JMenuItem exportA51MenuItem;
     private javax.swing.JLabel freqLabel;
     private javax.swing.JLabel hpLabel;
     private javax.swing.JLabel infoLabel;

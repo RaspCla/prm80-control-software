@@ -37,6 +37,7 @@ public class Option {
     private final static String prefLastURI = "lastServerURI";   
     private final static String prefZoom = "zoom";
     private final static String prefChannelFile = "channelFile";
+    private final static String prefA51File = "a51File";
     public Option() {
         this.prefs = Preferences.userRoot().node(prefRoot);
         // Last used serial port, otherwise the first one found
@@ -87,6 +88,15 @@ public class Option {
 
     public void setChannelFile(String file) {
         this.prefs.put(Option.prefChannelFile, file == null ? "" : file);
+    }
+
+    /** @return the file of the last A51 export, "" if none */
+    public String getA51File() {
+        return this.prefs.get(Option.prefA51File, "");
+    }
+
+    public void setA51File(String file) {
+        this.prefs.put(Option.prefA51File, file == null ? "" : file);
     }
 
     public String getLastServerURI() {

@@ -162,6 +162,16 @@
               <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="saveAsButtonActionPerformed"/>
             </Events>
           </Component>
+          <Component class="javax.swing.JButton" name="exportA51Button">
+            <Properties>
+              <Property name="text" type="java.lang.String" value="Export A51"/>
+              <Property name="toolTipText" type="java.lang.String" value="Save the list as channel configuration of the firmware (src/inc_144.a51 or src/inc_430.a51)"/>
+              <Property name="name" type="java.lang.String" value="exportA51Button" noResource="true"/>
+            </Properties>
+            <Events>
+              <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="exportA51ButtonActionPerformed"/>
+            </Events>
+          </Component>
           <Component class="javax.swing.JButton" name="closeButton">
             <Properties>
               <Property name="text" type="java.lang.String" value="Close"/>

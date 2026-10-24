@@ -18,6 +18,7 @@
 
 package f4fez.prm80x0.gui.channelmanager;
 
+import f4fez.prm80x0.A51Export;
 import f4fez.prm80x0.Controler.ChannelList;
 import f4fez.prm80x0.Option;
 import f4fez.prm80x0.gui.Zoom;
@@ -52,6 +53,12 @@ public class ChannelManager extends javax.swing.JDialog {
         void readChannels(Consumer<ChannelList> done, Consumer<String> error);
         /** Write the channels in the background, then call done or error (in the GUI thread). */
         void writeChannels(ChannelList channels, Runnable done, Consumer<String> error);
+        /**
+         * Read the configuration for the A51 export (firmware version, PLL step,
+         * shift, scan speed, band) in the background, then call done or error
+         * (in the GUI thread). done gets null if no PRM80 is connected.
+         */
+        void readConfiguration(Consumer<A51Export.Config> done, Consumer<String> error);
     }
 
     // The list stays in memory while the program runs, so closing and
@@ -214,6 +221,7 @@ public class ChannelManager extends javax.swing.JDialog {
         readFileButton = new javax.swing.JButton();
         saveButton = new javax.swing.JButton();
         saveAsButton = new javax.swing.JButton();
+        exportA51Button = new javax.swing.JButton();
         closeButton = new javax.swing.JButton();
         tableScroll = new javax.swing.JScrollPane();
         table = new javax.swing.JTable();
@@ -294,6 +302,16 @@ public class ChannelManager extends javax.swing.JDialog {
             }
         });
         fileButtonsPanel.add(saveAsButton);
+
+        exportA51Button.setText("Export A51"); // NOI18N
+        exportA51Button.setToolTipText("Save the list as channel configuration of the firmware (src/inc_144.a51 or src/inc_430.a51)"); // NOI18N
+        exportA51Button.setName("exportA51Button"); // NOI18N
+        exportA51Button.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                exportA51ButtonActionPerformed(evt);
+            }
+        });
+        fileButtonsPanel.add(exportA51Button);
 
         closeButton.setText("Close"); // NOI18N
         closeButton.setName("closeButton"); // NOI18N
@@ -415,6 +433,86 @@ public class ChannelManager extends javax.swing.JDialog {
         this.save(true);
     }//GEN-LAST:event_saveAsButtonActionPerformed
 
+    private void exportA51ButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exportA51ButtonActionPerformed
+        this.stopEditing();
+        if (sessionList.countChannel() == 0) {
+            JOptionPane.showMessageDialog(this, "The channel list is empty.", "Export A51", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (sessionList.countChannel() > ChannelList.MAX_CHANNELS) {
+            JOptionPane.showMessageDialog(this, "The PRM80 has only " + ChannelList.MAX_CHANNELS + " channels (0 to "
+                    + (ChannelList.MAX_CHANNELS - 1) + ").", "Export A51", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (this.prm != null && this.prm.isConnected()) {
+            // PLL step, shift and scan speed of the connected PRM80
+            this.setBusy(true, "Reading configuration from PRM80 ...");
+            this.prm.readConfiguration(cfg -> {
+                this.setBusy(false, null);
+                this.exportA51(cfg);
+            }, error -> {
+                this.setBusy(false, "Reading configuration from PRM80 failed: " + error);
+            });
+        } else {
+            this.exportA51(null);
+        }
+    }//GEN-LAST:event_exportA51ButtonActionPerformed
+
+    /** Ask for the file name and write the A51 file (config null: default values). */
+    private void exportA51(A51Export.Config cfg) {
+        int listBand = A51Export.guessBand(sessionList);
+        if (cfg == null) {
+            cfg = A51Export.Config.defaults(listBand);
+            cfg.source = "default values (no PRM80 connected)";
+        } else if (cfg.band != listBand) {
+            if (!this.confirm("The connected PRM80 is a " + cfg.band + " MHz model, but the channels are for "
+                    + listBand + " MHz.\nExport anyway?"))
+                return;
+        }
+        String step = new java.math.BigDecimal(cfg.pllStep).movePointLeft(3).stripTrailingZeros().toPlainString();
+        String shift = new java.math.BigDecimal(cfg.txShift).movePointLeft(6).stripTrailingZeros().toPlainString();
+        String summary = "Export " + sessionList.countChannel() + " channels as firmware configuration\n"
+                + "(src/" + A51Export.firmwareFileName(cfg.band) + " of the firmware).\n\n"
+                + "Firmware format:  V" + cfg.firmwareVersion
+                + (cfg.firmwareVersion >= 5 ? " (with shift per channel)" : "") + "\n"
+                + "Band:  " + cfg.band + " MHz\n"
+                + "PLL step:  " + step + " kHz\n"
+                + "Default shift:  " + shift + " MHz\n"
+                + (cfg.firmwareVersion > 3 ? "Scan speed:  " + cfg.scanSpeed + " ms per channel\n" : "")
+                + "Values: " + cfg.source;
+        if (!this.confirm(summary))
+            return;
+
+        JFileChooser fc = new JFileChooser();
+        fc.setFileFilter(new FileNameExtensionFilter("Firmware configuration (*.a51)", "a51"));
+        String last = this.config.getA51File();
+        File dir = null;
+        if (!last.isEmpty() && new File(last).getParentFile() != null)
+            dir = new File(last).getParentFile();
+        else if (sessionFile != null)
+            dir = new File(sessionFile).getParentFile();
+        if (dir != null)
+            fc.setCurrentDirectory(dir);
+        fc.setSelectedFile(new File(dir, A51Export.firmwareFileName(cfg.band)));
+        if (fc.showSaveDialog(this) != JFileChooser.APPROVE_OPTION)
+            return;
+        File file = fc.getSelectedFile();
+        if (!file.getName().toLowerCase().endsWith(".a51"))
+            file = new File(file.getParentFile(), file.getName() + ".a51");
+        if (file.exists() && !this.confirm(file.getName() + " already exists.\nReplace it?"))
+            return;
+        try {
+            A51Export.exportA51(sessionList, cfg,
+                    sessionFile == null ? null : new File(sessionFile).getName(), file);
+            this.config.setA51File(file.getAbsolutePath());
+            sessionSource = "Exported as " + file.getName() + ": " + sessionList.countChannel() + " channels";
+            this.updateTitle();
+        } catch (Exception ex) {
+            Logger.getLogger(ChannelManager.class.getName()).log(Level.INFO, null, ex);
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Export A51", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     private void closeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closeButtonActionPerformed
         this.close();
     }//GEN-LAST:event_closeButtonActionPerformed
@@ -527,6 +625,8 @@ public class ChannelManager extends javax.swing.JDialog {
         this.readFileButton.setEnabled(!busy);
         this.saveButton.setEnabled(!busy);
         this.saveAsButton.setEnabled(!busy);
+        this.exportA51Button.setEnabled(!busy);
+        this.exportA51Button.setVisible(this.config.isExpertMode());
         this.closeButton.setEnabled(!busy);
         this.closeMenuItem.setEnabled(!busy);
     }
@@ -550,6 +650,7 @@ public class ChannelManager extends javax.swing.JDialog {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel bottomPanel;
     private javax.swing.JButton closeButton;
+    private javax.swing.JButton exportA51Button;
     private javax.swing.JMenuItem closeMenuItem;
     private javax.swing.JPanel fileButtonsPanel;
     private javax.swing.JMenu fileMenu;

@@ -64,6 +64,19 @@ The PRM80 has no memory for comments: they are only kept in the file. When the
 channels are read from the PRM80, the comments of the list shown before are
 kept for channels with the same number and frequency.
 
+"Export A51" (shown in expert mode) saves the list as channel configuration
+of the firmware: src/inc_144.a51 or src/inc_430.a51, ready to assemble with
+the firmware (make). The firmware loads these channels when RAM and EEPROM are
+invalid (first start) or with the "I" command. The file contains
+  CONFIG_CHAN_COUNT (highest channel number), default shift, PLL divider,
+  scan duration, freq_list, shift_list (shift per channel, firmware V5) and
+  chan_state_table (shift enabled, positive, reverse, scan lock out),
+with the frequency, shift and comment of every channel as comment.
+PLL step, default shift and scan speed are taken from the connected PRM80;
+without connection the defaults of the firmware are used (V5, 12.5 kHz,
+600 kHz / 7.6 MHz, 400 ms). Frequencies and shifts must be multiples of the
+PLL step.
+
 VFO mode
 --------
 In VFO mode "Shift enabled", "Shift positive", "Shift reverse" and "Shift
@@ -81,7 +94,7 @@ The channel manager shows the changes.
 Expert mode
 -----------
 Tools > Expert mode shows the functions for experts (restart, RAM/EEPROM,
-serial monitor, A51 export, TCP server connection, virtual PRM for tests).
+serial monitor, A51 export in the channel manager, TCP server connection, virtual PRM for tests).
 
 Zoom
 ----

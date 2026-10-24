@@ -61,9 +61,9 @@ public class PRM80X0View extends javax.swing.JFrame {
             progressBar.setVisible(false);
             this.setStatus("Not connected");
 
-            try {
-                // Load lcd font
-                InputStream lcdFontStream = PRM80X0View.class.getResourceAsStream("/f4fez/prm80x0/gui/resources/lcd.ttf");
+            // Load lcd font. The stream must be closed, otherwise Windows keeps
+            // the file locked and "Clean" fails while the program is running.
+            try (InputStream lcdFontStream = PRM80X0View.class.getResourceAsStream("/f4fez/prm80x0/gui/resources/lcd.ttf")) {
                 Font lcdFont = Font.createFont(Font.TRUETYPE_FONT, lcdFontStream);
                 this.freqLabel.setFont(lcdFont.deriveFont(32f));
                 this.chanLabel.setFont(lcdFont.deriveFont(32f));

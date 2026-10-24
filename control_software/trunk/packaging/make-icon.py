@@ -9,9 +9,10 @@ Writes PRM80.ico (Windows, all sizes), PRM80.png (Linux, 256 px) and the
 window icons ../src/main/resources/f4fez/prm80x0/gui/resources/icons/prm80-<size>.png
 
 Sizes 48 px and more: window picture with "PRM80" below.
-Sizes below 64 px (Explorer, title bar, task bar, start menu) are drawn
-pixel by pixel so that they stay sharp: 24 and 32 px with "PRM80" in a
-pixel font, 40 and 48 px with normal text, 16 and 20 px only the window.
+Below 32 px (Explorer list, small symbols, title bar) the icon is drawn
+pixel by pixel (frequency digits would only be a blur there): 24 and 30 px
+with "PRM80" in a pixel font, 16 and 20 px only the window.
+From 32 px: the window with the frequency display and "PRM80" below.
 """
 import os
 from PIL import Image, ImageDraw, ImageFont
@@ -244,22 +245,32 @@ def R0(v):
 # ---- all sizes --------------------------------------------------------------
 
 def icon(n):
-    if n < 64:
+    if n < 32:
         return small_icon(n)
     S = 8                                   # draw 8 times larger, then reduce
     N = n * S
     s = N / 256.0                           # line widths are given for 256 px
     img = Image.new("RGBA", (N, N), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    # window picture, "PRM80" below it
-    window(d, (N * 0.03, N * 0.04, N * 0.97, N * 0.70), s, n >= 64)
-    f = fit(SANS_FILE, "PRM80", N * 0.86, N * 0.22)
-    text_in(d, "PRM80", f, (0, N * 0.74, N, N * 0.98), (30, 30, 34), "center",
-            int(N * 0.012), (255, 255, 255))
-    return img.resize((n, n), Image.LANCZOS)
+    # window picture with the frequency display, "PRM80" below it
+    if n >= 64:
+        window(d, (N * 0.03, N * 0.04, N * 0.97, N * 0.70), s, True)
+        f = fit(SANS_FILE, "PRM80", N * 0.86, N * 0.22)
+        text_in(d, "PRM80", f, (0, N * 0.74, N, N * 0.98), (30, 30, 34), "center",
+                max(int(N * 0.012), int(1.6 * S)), (255, 255, 255))
+        return img.resize((n, n), Image.LANCZOS)
+    # 32 .. 48 px: the window takes more room, the text is drawn sharp afterwards
+    th = R0(n * 0.25)
+    window(d, (0, N * 0.02, N - 1, N - (th + 2) * S), s, False)
+    img = img.resize((n, n), Image.LANCZOS)
+    f = fit(SANS_FILE, "PRM80", n - 4, th - 2)       # drawn in the real size: sharp
+    text_in(ImageDraw.Draw(img), "PRM80", f, (0, n - th - 1, n, n - 1), (30, 30, 34), "center", 1, (255, 255, 255))
+    return img
 
 
-sizes = [16, 20, 24, 32, 40, 48, 64, 128, 256]
+# all sizes Windows uses at 100 % to 250 % display scaling (Explorer, start
+# menu, task bar, desktop); a missing size is scaled by Windows and blurred
+sizes = [16, 20, 24, 30, 32, 36, 40, 48, 60, 64, 72, 80, 96, 128, 256]
 imgs = {n: icon(n) for n in sizes}
 icons = os.path.join(RES, "icons")
 os.makedirs(icons, exist_ok=True)

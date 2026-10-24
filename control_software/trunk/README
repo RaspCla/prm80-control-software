@@ -23,7 +23,7 @@ Build and run
   NetBeans:      File > Open Project > select this folder (control_software/trunk),
                  then "Clean and Build" and "Run".
   Command line:  mvn package
-                 java -jar target/prm80-control-software-2.0.0.jar
+                 java -jar target/prm80-control-software-<version>.jar
 
 The jar in target/ contains all libraries and runs on every computer with Java 21+.
 NetBeans "Run" / "Debug" use nbactions.xml (adds --enable-native-access=ALL-UNNAMED,
@@ -90,6 +90,25 @@ when it is not known to be the same (asks before a different list is
 replaced). The dialog stays open: write to further channels, "Undo" takes
 writes back, "OK" or "Cancel" close it (written channels stay in the PRM80).
 The channel manager shows the changes.
+
+Scan
+----
+"Scan" starts the scan, pressing it again stops it. Any operation of the radio
+in the program (channel +/-, VFO/MEM, entering a channel or frequency, Write
+to MEM ...) stops the scan as well; volume, squelch and power do not.
+  MEM mode   all memory channels one after the other, channels with
+             "scan lock" are skipped
+  VFO mode   a frequency range with a step: Tools > Scan settings
+             (asked for at the first VFO scan, stored separately for 144 and
+             430 MHz); the shift fields are applied as in VFO mode
+On every channel the scan waits the scan speed of the PRM80 (Tools >
+Configuration, time per channel), then reads the squelch. Squelch open: the
+scan stays there ("HOLD" in the display) while the signal is received and the
+hold time after it (Tools > Scan settings, default 3 s), then continues.
+Transmitting stops the scan. The display shows "SCAN" while scanning.
+The scan is done by the program (the firmware V5 has no serial command to start
+its own scan), so it runs only while the PRM80 is connected. Squelch 0 (always
+open) stops the scan on every channel.
 
 Expert mode
 -----------

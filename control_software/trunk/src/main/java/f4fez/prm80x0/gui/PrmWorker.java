@@ -117,6 +117,31 @@ public class PrmWorker {
         });
     }
 
+    /**
+     * Run work of the program itself (e.g. the scanner) without busy
+     * indicator. Unlike {@link #poll} it is never skipped; regular polls are
+     * skipped while it is waiting or running.
+     * @param task the work, runs in the background
+     * @param done called with the result in the GUI thread, may be null
+     * @param error called with the exception in the GUI thread, may be null
+     */
+    public <T> void background(Task<T> task, Consumer<T> done, Consumer<Exception> error) {
+        this.polls.incrementAndGet();
+        this.executor.execute(() -> {
+            try {
+                T result = task.run();
+                if (done != null)
+                    SwingUtilities.invokeLater(() -> done.accept(result));
+            } catch (Exception ex) {
+                Logger.getLogger(PrmWorker.class.getName()).log(Level.WARNING, "PRM80 background work failed", ex);
+                if (error != null)
+                    SwingUtilities.invokeLater(() -> error.accept(ex));
+            } finally {
+                this.polls.decrementAndGet();
+            }
+        });
+    }
+
     private void fireBusy() {
         if (this.busyListener != null)
             SwingUtilities.invokeLater(this.busyListener);

@@ -18,6 +18,8 @@ e.g. macOS or a Raspberry Pi).
 - Shift: enabled, positive/negative, reverse, frequency – in VFO mode the
   frequencies change at once, in memory mode the fields show the channel
 - **Write to MEM**: store the VFO setting in a memory channel (with Undo)
+- **Scan** of the memory channels (channels with scan lock are skipped) or of
+  a frequency range in VFO mode, stops on a signal and continues after a hold time
 - **Channel manager**: read/write all channels from/to the PRM80, edit them,
   save as CSV file (with comments), **export as firmware configuration
   (A51 file)** for building the firmware with your own default channels
@@ -76,7 +78,7 @@ libraries), exec-maven-plugin (run from NetBeans, see `nbactions.xml`).
 ```
 cd control_software/trunk
 mvn package
-java -jar target/prm80-control-software-2.0.0.jar
+java -jar target/prm80-control-software-<version>.jar
 ```
 
 NetBeans: *File > Open Project* > `control_software/trunk`, then
@@ -92,14 +94,14 @@ Windows (after `mvn package`):
 
 ```
 package-windows.bat          -> target\dist\PRM80\PRM80.exe   (zip the PRM80 folder)
-package-windows.bat msi      -> target\dist\PRM80-2.0.0.msi   (needs WiX Toolset)
+package-windows.bat msi      -> target\dist\PRM80-<version>.msi   (needs WiX Toolset)
 ```
 
 Linux (after `mvn package`):
 
 ```
 ./package-linux.sh           -> target/dist/PRM80/bin/PRM80   (tar the PRM80 folder)
-./package-linux.sh deb       -> target/dist/prm80_2.0.0-1_amd64.deb
+./package-linux.sh deb       -> target/dist/prm80_<version>-1_amd64.deb
 ```
 
 The version number is taken from `<version>` in `pom.xml`.

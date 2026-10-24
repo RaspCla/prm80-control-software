@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.1.0 – 2026-10
+
+### Scan
+- **Scan** button: scan of the memory channels (channels with scan lock are
+  skipped) or, in VFO mode, of a frequency range with a step
+- Stops on a signal (squelch open, "HOLD" in the display) and continues after
+  an adjustable hold time; transmitting stops the scan
+- Tools > **Scan settings**: VFO range (stored for 144 and 430 MHz), step,
+  hold time; time per channel = scan speed of the PRM80 (Configuration)
+- The scan runs in the program and works with the existing firmware V5
+  (the firmware has no serial command for its own scan)
+- Virtual PRM80 simulates some stations for testing the scan
+
 ## 2.0.0 – 2026-10
 
 Modernisation of the PRM80 control software: runs on Windows and Linux,

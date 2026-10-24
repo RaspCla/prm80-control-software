@@ -602,6 +602,16 @@ public abstract class PRMControler implements Controler{
     }
 
     @Override
+    public boolean isSquelchOpen() {
+        return (this.mode & 4) != 0;
+    }
+
+    @Override
+    public boolean isTransmitting() {
+        return (this.mode & 8) != 0;
+    }
+
+    @Override
     public boolean isStateValid() {
         return this.stateValid;
     }

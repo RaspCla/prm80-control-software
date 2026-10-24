@@ -39,6 +39,8 @@ package f4fez.prm80x0.Controler;
  * <li>configuration changes (squelch, shift, PLL, scan duration) update the
  *     checksum (the "M" command of the firmware does not)</li>
  * </ul>
+ * For tests of the scan some stations are simulated (145.6125, 145.500 and
+ * 145.2875 MHz, a few seconds on, then off), squelch 0 is always open.
  * Frequencies are the displayed frequencies (the firmware adds / subtracts
  * the IF for RX, the PRM80 control software shows the real frequencies).
  *
@@ -89,8 +91,33 @@ public class DummyControler implements Controler {
         return Controler.STATE_NORMAL;
     }
 
+    /**
+     * Simulated stations for testing the scan: RX frequency, carrier on for
+     * "on" ms every "period" ms.
+     */
+    private static final int[][] STATIONS = {
+        {145612500, 5000, 20000},       // repeater on channel 1
+        {145500000, 4000, 17000},       // S20 calling frequency
+        {145287500, 6000, 30000},       // channel 23
+    };
+    private final long startTime = System.currentTimeMillis();
+    private boolean squelchOpen;
+
+    /** Read the state: the simulated stations open the squelch (squelch 0: always open). */
     @Override
     public void refreshState() {
+        boolean open = this.readSquelch() == 0;
+        long t = System.currentTimeMillis() - this.startTime;
+        for (int[] station : STATIONS) {
+            if (station[0] == this.rxFreq && t % station[2] < station[1])
+                open = true;
+        }
+        this.squelchOpen = open;
+    }
+
+    @Override
+    public boolean isSquelchOpen() {
+        return this.squelchOpen;
     }
 
     @Override

@@ -99,6 +99,44 @@ public class Option {
         this.prefs.put(Option.prefA51File, file == null ? "" : file);
     }
 
+    // ---- scan settings ------------------------------------------------------
+
+    /**
+     * @param band 144 or 430
+     * @return start frequency of the VFO scan in Hz, 0 if not set yet
+     */
+    public int getScanFrom(int band) {
+        return this.prefs.getInt("scanFrom" + band, 0);
+    }
+
+    /** @return end frequency of the VFO scan in Hz, 0 if not set yet */
+    public int getScanTo(int band) {
+        return this.prefs.getInt("scanTo" + band, 0);
+    }
+
+    public void setScanRange(int band, int from, int to) {
+        this.prefs.putInt("scanFrom" + band, from);
+        this.prefs.putInt("scanTo" + band, to);
+    }
+
+    /** @return step of the VFO scan in Hz, 0 = PLL step */
+    public int getScanStep() {
+        return this.prefs.getInt("scanStep", 0);
+    }
+
+    public void setScanStep(int step) {
+        this.prefs.putInt("scanStep", step);
+    }
+
+    /** @return time in ms the scan waits after a signal has ended */
+    public int getScanHold() {
+        return this.prefs.getInt("scanHold", 3000);
+    }
+
+    public void setScanHold(int ms) {
+        this.prefs.putInt("scanHold", ms);
+    }
+
     public String getLastServerURI() {
         return this.lastServerURI;
     }

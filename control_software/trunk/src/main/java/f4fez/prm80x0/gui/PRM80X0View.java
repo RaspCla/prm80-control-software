@@ -73,6 +73,23 @@ public class PRM80X0View extends javax.swing.JFrame {
 
     /** All communication with the PRM80 runs in this background worker. */
     private final PrmWorker worker = new PrmWorker(this::busyChanged);
+    /** Scan done by the program (memory channels or VFO range). */
+    private final Scanner scanner = new Scanner(this.worker, new Scanner.Listener() {
+        @Override
+        public void scanUpdated() {
+            refreshDisplay();
+        }
+
+        @Override
+        public void scanStateChanged() {
+            showScanState();
+        }
+
+        @Override
+        public void scanStopped(String reason) {
+            setStatus(reason);
+        }
+    });
     /** Reads the state of the PRM80 regularly (front panel changes). */
     private Timer pollTimer;
     /** true while the display is updated: the change listeners must not send anything */
@@ -112,6 +129,7 @@ public class PRM80X0View extends javax.swing.JFrame {
             this.expertModeMenuItem.setSelected(this.config.isExpertMode());
             this.setVisibleExpertControls(this.config.isExpertMode());
             this.writeMemButton.setVisible(false);
+            this.scanLabel.setVisible(false);
 
             // status bar initialization
             progressBar.setVisible(false);
@@ -136,6 +154,7 @@ public class PRM80X0View extends javax.swing.JFrame {
             this.hpLabel.setFont(powerFont);
             this.lpLabel.setFont(powerFont);
             this.busyLabel.setFont(powerFont);
+            this.scanLabel.setFont(powerFont);
             Font unitFont = this.rxUnitLabel.getFont();
             unitFont = unitFont.deriveFont(Font.BOLD, unitFont.getSize2D() * 0.85f);
             this.rxUnitLabel.setFont(unitFont);
@@ -407,6 +426,7 @@ public class PRM80X0View extends javax.swing.JFrame {
     private void disconnect() {
         if (this.vdf == null)
             return;
+        this.scanner.stop();
         final VirtualDeviceFirmware old = this.vdf;
         this.vdf = null;
         ChannelManager.prmConnectionChanged();
@@ -435,8 +455,17 @@ public class PRM80X0View extends javax.swing.JFrame {
 
     // ---- Communication with the PRM80 -------------------------------------
 
-    /** Run a command in the background, the display is updated afterwards. */
+    /**
+     * Run a command in the background, the display is updated afterwards.
+     * A running scan is stopped (the user operates the radio).
+     */
     private void command(PrmWorker.Task<?> task) {
+        this.scanner.stop();
+        this.commandWhileScanning(task);
+    }
+
+    /** Run a command that does not stop the scan (volume, squelch, power). */
+    private void commandWhileScanning(PrmWorker.Task<?> task) {
         if (this.vdf == null)
             return;
         this.worker.run(task, ex -> {
@@ -449,8 +478,8 @@ public class PRM80X0View extends javax.swing.JFrame {
     /** Read the state of the PRM80 when nothing else is to do. */
     private void poll() {
         final VirtualDeviceFirmware v = this.vdf;
-        if (v == null || !this.worker.isIdle())
-            return;
+        if (v == null || !this.worker.isIdle() || this.scanner.isRunning())
+            return;     // the scanner reads the state itself
         this.worker.poll(() -> {
             v.getPRMControler().refreshState();
             return null;
@@ -603,6 +632,12 @@ public class PRM80X0View extends javax.swing.JFrame {
             this.writeMemButton.setVisible(false);
         }
         this.powerButton.setEnabled(enable);
+        this.scanToggleButton.setEnabled(enable);
+        if (!enable) {
+            this.scanner.stop();
+            this.scanToggleButton.setSelected(false);
+            this.scanLabel.setVisible(false);
+        }
         this.configurationMenuItem.setEnabled(enable);
     }
     
@@ -643,6 +678,7 @@ public class PRM80X0View extends javax.swing.JFrame {
         txUnitLabel = new javax.swing.JLabel();
         chnlUnitLabel = new javax.swing.JLabel();
         busyLabel = new javax.swing.JLabel();
+        scanLabel = new javax.swing.JLabel();
         jPanel2 = new javax.swing.JPanel();
         vfoToggleButton = new javax.swing.JToggleButton();
         memToggleButton = new javax.swing.JToggleButton();
@@ -654,6 +690,7 @@ public class PRM80X0View extends javax.swing.JFrame {
         downButton = new javax.swing.JButton();
         volumeLabel = new javax.swing.JLabel();
         powerButton = new javax.swing.JButton();
+        scanToggleButton = new javax.swing.JToggleButton();
         ShiftFreqSpinner = new javax.swing.JSpinner();
         label1 = new javax.swing.JLabel();
         ShiftEnabledCheckbox = new javax.swing.JCheckBox();
@@ -669,6 +706,7 @@ public class PRM80X0View extends javax.swing.JFrame {
         ToolsMenu = new javax.swing.JMenu();
         channelManagerMenuItem = new javax.swing.JMenuItem();
         configurationMenuItem = new javax.swing.JMenuItem();
+        scanSettingsMenuItem = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JSeparator();
         resetMenuItem = new javax.swing.JMenuItem();
         razMenuItem = new javax.swing.JMenuItem();
@@ -818,6 +856,14 @@ public class PRM80X0View extends javax.swing.JFrame {
         busyLabel.setOpaque(true);
         jPanel1.add(busyLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 50, 90, 16));
 
+        scanLabel.setBackground(new java.awt.Color(0, 204, 0));
+        scanLabel.setForeground(new java.awt.Color(0, 0, 0));
+        scanLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        scanLabel.setText("SCAN"); // NOI18N
+        scanLabel.setName("scanLabel"); // NOI18N
+        scanLabel.setOpaque(true);
+        jPanel1.add(scanLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 70, 90, 16));
+
         mainPanel.add(jPanel1);
 
         jPanel2.setName("jPanel2"); // NOI18N
@@ -922,6 +968,16 @@ public class PRM80X0View extends javax.swing.JFrame {
             }
         });
         jPanel2.add(powerButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 60, 100, -1));
+
+        scanToggleButton.setText("Scan"); // NOI18N
+        scanToggleButton.setToolTipText("Scan the memory channels (MEM) or a frequency range (VFO, see Tools > Scan settings)"); // NOI18N
+        scanToggleButton.setName("scanToggleButton"); // NOI18N
+        scanToggleButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                scanToggleButtonActionPerformed(evt);
+            }
+        });
+        jPanel2.add(scanToggleButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 100, 100, -1));
 
         ShiftFreqSpinner.setModel(new javax.swing.SpinnerListModel(new String[] {"9400000", "7600000", "1600000", "600000"}));
         ShiftFreqSpinner.setName("ShiftFreqSpinner"); // NOI18N
@@ -1042,6 +1098,15 @@ public class PRM80X0View extends javax.swing.JFrame {
             }
         });
         ToolsMenu.add(configurationMenuItem);
+
+        scanSettingsMenuItem.setText("Scan settings ..."); // NOI18N
+        scanSettingsMenuItem.setName("scanSettingsMenuItem"); // NOI18N
+        scanSettingsMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                scanSettingsMenuItemActionPerformed(evt);
+            }
+        });
+        ToolsMenu.add(scanSettingsMenuItem);
 
         jSeparator1.setName("jSeparator1"); // NOI18N
         ToolsMenu.add(jSeparator1);
@@ -1343,7 +1408,7 @@ public class PRM80X0View extends javax.swing.JFrame {
         this.wantedSquelch.set(value);
         if (this.squelchQueued.compareAndSet(false, true)) {
             final VirtualDeviceFirmware v = this.vdf;
-            this.command(() -> {
+            this.commandWhileScanning(() -> {
                 this.squelchQueued.set(false);
                 v.setSquelch(this.wantedSquelch.get());
                 return null;
@@ -1357,7 +1422,7 @@ public class PRM80X0View extends javax.swing.JFrame {
         this.wantedVolume.set(this.volumeSlider.getValue());
         if (this.volumeQueued.compareAndSet(false, true)) {
             final VirtualDeviceFirmware v = this.vdf;
-            this.command(() -> {
+            this.commandWhileScanning(() -> {
                 this.volumeQueued.set(false);
                 v.setVolume(this.wantedVolume.get());
                 return null;
@@ -1366,6 +1431,7 @@ public class PRM80X0View extends javax.swing.JFrame {
     }                                                                                  
 
     private void channelManagerMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_channelManagerMenuItemActionPerformed
+        this.scanner.stop();
         ChannelManager cm = new ChannelManager(this, new ChannelManager.PrmAccess() {
             @Override
             public boolean isConnected() {
@@ -1446,6 +1512,7 @@ public class PRM80X0View extends javax.swing.JFrame {
     private void writeMemButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_writeMemButtonActionPerformed
         if (this.vdf == null)
             return;
+        this.scanner.stop();        // e.g. a signal was found: store the frequency
         // the list of the channel manager is used; it is only read from the
         // PRM80 if it is not known to be the same
         if (ChannelManager.isSyncedWithPrm()) {
@@ -1578,6 +1645,95 @@ public class PRM80X0View extends javax.swing.JFrame {
         this.writeMemButton.setVisible(this.vdf != null && this.vfoToggleButton.isSelected());
     }
 
+    // ---- Scan -------------------------------------------------------------
+
+    private void scanToggleButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_scanToggleButtonActionPerformed
+        if (this.scanner.isRunning()) {
+            this.scanner.stop();
+            this.setStatus(this.connectedStatus);
+            return;
+        }
+        this.startScan();
+    }//GEN-LAST:event_scanToggleButtonActionPerformed
+
+    /** Start the memory scan (MEM) or the VFO scan (VFO). */
+    private void startScan() {
+        this.scanToggleButton.setSelected(false);
+        if (this.vdf == null)
+            return;
+        Controler c = this.vdf.getPRMControler();
+        try {
+            if (this.vfoToggleButton.isSelected()) {
+                int band = c.getPRMFrequencyCode();
+                int pllStep = c.getPLLStep();
+                if (ScanSettingsDialog.isRangeUnset(this.config, band)) {
+                    // first VFO scan: ask for the range
+                    ScanSettingsDialog d = new ScanSettingsDialog(this, band, pllStep);
+                    this.showDialog(d);
+                    if (!d.isSaved())
+                        return;
+                }
+                int[] range = ScanSettingsDialog.range(this.config, band);
+                int step = ScanSettingsDialog.step(this.config, pllStep);
+                this.scanner.startVfo(c, range[0], range[1], step, this.vfoBase(),
+                        this::vfoFrequencies, this.config.getScanHold());
+            } else {
+                this.scanner.startMemory(c, this.config.getScanHold());
+            }
+        } catch (CommunicationException ex) {
+            this.setStatus("Error: " + message(ex));
+        }
+    }
+
+    /** Scan button, SCAN / HOLD in the display, status line. */
+    private void showScanState() {
+        boolean running = this.scanner.isRunning();
+        this.scanToggleButton.setSelected(running);
+        this.scanLabel.setVisible(running);
+        if (!running) {
+            if (this.vdf != null)
+                this.setStatus(this.connectedStatus);
+            return;
+        }
+        boolean hold = this.scanner.isHolding();
+        this.scanLabel.setText(hold ? "HOLD" : "SCAN");
+        this.scanLabel.setBackground(hold ? new java.awt.Color(255, 204, 0) : new java.awt.Color(0, 204, 0));
+        if (hold) {
+            this.setStatus("Signal - the scan continues " + Math.round(this.config.getScanHold() / 1000f)
+                    + " s after its end");
+        } else if (this.scanner.isVfoScan()) {
+            this.setStatus("Scanning " + mhz(this.scanner.getFrom()) + " - " + mhz(this.scanner.getTo())
+                    + " MHz, step " + new java.math.BigDecimal(this.scanner.getStep()).movePointLeft(3)
+                    .stripTrailingZeros().toPlainString() + " kHz");
+        } else {
+            this.setStatus("Scanning the memory channels");
+        }
+    }
+
+    private static String mhz(int hz) {
+        java.math.BigDecimal m = new java.math.BigDecimal(hz).movePointLeft(6).stripTrailingZeros();
+        return (m.scale() < 3 ? m.setScale(3) : m).toPlainString();
+    }
+
+    private void scanSettingsMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_scanSettingsMenuItemActionPerformed
+        int band = Controler.FREQ144;
+        int pllStep = 12500;
+        if (this.vdf != null) {
+            try {
+                band = this.vdf.getPRMControler().getPRMFrequencyCode();
+                pllStep = this.vdf.getPRMControler().getPLLStep();
+            } catch (CommunicationException ex) {
+                Logger.getLogger(PRM80X0View.class.getName()).log(Level.WARNING, null, ex);
+            }
+        }
+        ScanSettingsDialog d = new ScanSettingsDialog(this, band, pllStep);
+        this.showDialog(d);
+        if (d.isSaved() && this.scanner.isRunning()) {
+            this.scanner.stop();
+            this.startScan();       // with the new settings
+        }
+    }//GEN-LAST:event_scanSettingsMenuItemActionPerformed
+
     private void connectVirtualMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_connectVirtualMenuItemActionPerformed
         this.connect(new DummyControler(), "", "virtual PRM");
     }//GEN-LAST:event_connectVirtualMenuItemActionPerformed
@@ -1602,7 +1758,7 @@ public class PRM80X0View extends javax.swing.JFrame {
         this.hpLabel.setVisible(power);
         this.lpLabel.setVisible(!power);
         final VirtualDeviceFirmware v = this.vdf;
-        this.command(() -> {
+        this.commandWhileScanning(() -> {
             v.setHighPower(power);
             return null;
         });
@@ -1629,6 +1785,7 @@ private void resetMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN
 private void configurationMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_configurationMenuItemActionPerformed
     if (this.vdf == null)
         return;
+    this.scanner.stop();
     final VirtualDeviceFirmware v = this.vdf;
     final Controler pc = v.getPRMControler();
     // read the configuration values in the background, then show the dialog
@@ -1744,6 +1901,7 @@ private void freqLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:e
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel busyLabel;
+    private javax.swing.JLabel scanLabel;
     private javax.swing.JLabel rxUnitLabel;
     private javax.swing.JLabel txUnitLabel;
     private javax.swing.JLabel chnlUnitLabel;
@@ -1758,6 +1916,7 @@ private void freqLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:e
     private javax.swing.JCheckBox ShiftEnabledCheckbox;
     private javax.swing.JCheckBox ShiftPositiveCheckbox;
     private javax.swing.JMenuItem configurationMenuItem;
+    private javax.swing.JMenuItem scanSettingsMenuItem;
     private javax.swing.JMenuItem connectMenuItem;
     private javax.swing.JMenuItem connectTcpMenuItem;
     private javax.swing.JMenuItem connectVirtualMenuItem;
@@ -1787,6 +1946,7 @@ private void freqLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:e
     private javax.swing.JMenuItem zoomOutMenuItem;
     private javax.swing.JMenuItem zoomResetMenuItem;
     private javax.swing.JButton powerButton;
+    private javax.swing.JToggleButton scanToggleButton;
     private javax.swing.JProgressBar progressBar;
     private javax.swing.JMenuItem ram2eepromMenuItem;
     private javax.swing.JMenuItem ramExtMenuItem;

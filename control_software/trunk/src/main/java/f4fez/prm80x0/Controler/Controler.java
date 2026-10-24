@@ -234,6 +234,22 @@ public interface Controler {
     }
 
     /**
+     * @return true if the squelch was open when the state was read the last
+     * time (a signal is received), mode bit 2 of the "E" command
+     */
+    public default boolean isSquelchOpen() {
+        return false;
+    }
+
+    /**
+     * @return true if the PRM was transmitting when the state was read the
+     * last time, mode bit 3 of the "E" command
+     */
+    public default boolean isTransmitting() {
+        return false;
+    }
+
+    /**
      * @return false if the PRM did not answer when its state was read the
      * last time, the values of the getters may be outdated then
      */

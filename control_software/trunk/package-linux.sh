@@ -43,7 +43,7 @@ mkdir -p target/jpackage-input
 cp "target/$JAR" target/jpackage-input/
 
 "$JPACKAGE" --type "$TYPE" --name PRM80 --app-version "$VERSION" --vendor F4FEZ \
-    --description "PRM80 control software" \
+    --description "PRM80 control software" --icon packaging/PRM80.png \
     --input target/jpackage-input --main-jar "$JAR" \
     --main-class f4fez.prm80x0.PRM80X0App \
     --add-modules java.base,java.desktop,java.logging,java.prefs \

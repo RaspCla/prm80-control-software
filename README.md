@@ -133,6 +133,7 @@ control_software/trunk/
   nbactions.xml                 NetBeans Run/Debug settings
   package-windows.bat           Windows package (jpackage)
   package-linux.sh              Linux package (jpackage)
+  packaging/                    program icon (PRM80.ico, PRM80.png, make-icon.py)
   README                        user documentation
   src/main/java/f4fez/prm80x0/
     PRM80X0App.java             start, command line options

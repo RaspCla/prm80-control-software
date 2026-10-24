@@ -24,6 +24,9 @@
   if `JAVA_HOME` points to an old Java without `jpackage` (e.g. Java 8)
 - Windows installer: start menu folder "PRM80"
 - The GitHub workflow also builds the Windows installer (`.msi`, WiX Toolset 3.14)
+- **Program icon** (display of the PRM80 with "PRM80" in the LCD font) for the
+  window, the Windows installer, start menu, desktop and the Linux package;
+  `packaging/make-icon.py` draws it
 
 ### Display
 - The comment of the current channel (from the channel manager list) is

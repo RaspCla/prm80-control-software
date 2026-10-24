@@ -52,7 +52,7 @@ mkdir target\jpackage-input
 copy "target\%JAR%" target\jpackage-input\ >nul
 
 %JPACKAGE% --type %TYPE% --name PRM80 --app-version %VERSION% --vendor F4FEZ ^
-    --description "PRM80 control software" ^
+    --description "PRM80 control software" --icon packaging\PRM80.ico ^
     --input target\jpackage-input --main-jar %JAR% ^
     --main-class f4fez.prm80x0.PRM80X0App ^
     --add-modules java.base,java.desktop,java.logging,java.prefs ^

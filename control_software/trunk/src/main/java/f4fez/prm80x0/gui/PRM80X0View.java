@@ -120,6 +120,7 @@ public class PRM80X0View extends javax.swing.JFrame {
             Zoom.set(this.config.getZoom());
 
             initComponents();
+            this.setIconImages(loadIcons());
             
             // Disable all controls
             this.setEnableControls(false);
@@ -194,6 +195,17 @@ public class PRM80X0View extends javax.swing.JFrame {
                 }
             });
             this.pollTimer.start();
+    }
+
+    /** Program icon in several sizes (window, task bar, Alt+Tab). */
+    private static java.util.List<java.awt.Image> loadIcons() {
+        java.util.List<java.awt.Image> icons = new java.util.ArrayList<>();
+        for (int size : new int[] {16, 24, 32, 48, 64, 128, 256}) {
+            java.net.URL url = PRM80X0View.class.getResource("/f4fez/prm80x0/gui/resources/icons/prm80-" + size + ".png");
+            if (url != null)
+                icons.add(new javax.swing.ImageIcon(url).getImage());
+        }
+        return icons;
     }
 
     // ---- Zoom -------------------------------------------------------------

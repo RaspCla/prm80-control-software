@@ -64,5 +64,5 @@ new build system, much easier to use.
 ## 1.x – 2007 to 2021
 
 - Original software by Florian MAZEN (F4FEZ), 2007–2008
-- 2021, Claus Moessner: shift functions in VFO mode, reading and writing the
+- 2021, RaspCla: shift functions in VFO mode, reading and writing the
   channel list, channel import/export, squelch fix

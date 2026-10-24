@@ -122,5 +122,8 @@ Command line options
 History
 -------
   1.x  Florian MAZEN (F4FEZ), NetBeans/Ant project, RXTX, Swing Application Framework
-       Windows 10, NetBeans 12.0, JDK 15
-  2.0  Maven, jSerialComm, FlatLaf, plain Swing; Windows and Linux; zoomable window
+       2021 extensions for firmware V5 by Claus Moessner
+  2.0  Maven, jSerialComm, FlatLaf, plain Swing; Windows and Linux; zoomable window,
+       channel manager, Write to MEM, A51 export, virtual PRM80 V5
+See CHANGELOG.md and README.md in the main folder of the repository (also for
+the tools needed to build the program and the packages).

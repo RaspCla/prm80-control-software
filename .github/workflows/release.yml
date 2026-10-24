@@ -1,0 +1,103 @@
+# Builds the PRM80 control software for Linux and Windows.
+#
+#  - on every push / pull request: build and test that it compiles
+#    (the packages can be downloaded from the run under "Artifacts")
+#  - on a version tag (e.g. v2.0.0): additionally creates a GitHub release
+#    with the packages for download
+#
+# Start manually: GitHub > Actions > "Build and release" > "Run workflow".
+
+name: Build and release
+
+on:
+  push:
+    branches: [ main, modernisierung ]
+    tags: [ 'v*' ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write          # needed to create the release
+
+defaults:
+  run:
+    working-directory: control_software/trunk
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Build jar
+        run: mvn -B package
+      - name: Install packaging tools
+        run: sudo apt-get update && sudo apt-get install -y fakeroot
+      - name: Program folder (tar.gz)
+        run: |
+          sh package-linux.sh
+          VERSION=$(mvn -q help:evaluate -Dexpression=project.version -DforceStdout)
+          mkdir -p ../../release
+          tar -czf ../../release/PRM80-$VERSION-linux-x64.tar.gz -C target/dist PRM80
+          cp target/prm80-control-software-$VERSION.jar ../../release/
+      - name: Debian / Ubuntu package (.deb)
+        run: |
+          sh package-linux.sh deb
+          cp target/dist/*.deb ../../release/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: release/*
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Build jar
+        run: mvn -B package
+      - name: Program folder (zip)
+        shell: cmd
+        run: call package-windows.bat
+      - name: Zip
+        shell: pwsh
+        run: |
+          $version = (mvn -q help:evaluate "-Dexpression=project.version" -DforceStdout)
+          New-Item -ItemType Directory -Force -Path ..\..\release | Out-Null
+          Compress-Archive -Path target\dist\PRM80 -DestinationPath "..\..\release\PRM80-$version-windows-x64.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: release/*
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [ linux, windows ]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: release/*
+          generate_release_notes: true
+          body: |
+            Downloads:
+            - **Windows**: `PRM80-…-windows-x64.zip` – unzip, start `PRM80\PRM80.exe` (no Java installation needed)
+            - **Linux**: `prm80_…_amd64.deb` (Debian, Ubuntu, Mint on 64-bit PCs) or `PRM80-…-linux-x64.tar.gz` – unpack, start `PRM80/bin/PRM80`
+            - **Any system with Java 21+** (also Raspberry Pi, macOS): `prm80-control-software-….jar` – `java -jar prm80-control-software-….jar`
+
+            Changes: see [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)

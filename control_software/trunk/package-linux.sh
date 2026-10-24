@@ -30,11 +30,14 @@ if [ -z "$JAR" ]; then
     exit 1
 fi
 
+# version from the jar name (= <version> in pom.xml), e.g. 2.0.0
+VERSION=$(echo "$JAR" | sed -e 's/^prm80-control-software-//' -e 's/\.jar$//' -e 's/-SNAPSHOT$//')
+
 rm -rf target/jpackage-input target/dist
 mkdir -p target/jpackage-input
 cp "target/$JAR" target/jpackage-input/
 
-"$JPACKAGE" --type "$TYPE" --name PRM80 --app-version 2.0.0 --vendor F4FEZ \
+"$JPACKAGE" --type "$TYPE" --name PRM80 --app-version "$VERSION" --vendor F4FEZ \
     --description "PRM80 control software" \
     --input target/jpackage-input --main-jar "$JAR" \
     --main-class f4fez.prm80x0.PRM80X0App \
@@ -44,4 +47,4 @@ cp "target/$JAR" target/jpackage-input/
     $EXTRA --dest target/dist
 
 echo
-echo "Done: target/dist"
+echo "Done: target/dist (version $VERSION)"

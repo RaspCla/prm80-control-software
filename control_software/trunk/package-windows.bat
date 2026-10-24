@@ -30,12 +30,17 @@ if "%JAR%"=="" (
     exit /b 1
 )
 
+rem version from the jar name (= <version> in pom.xml), e.g. 2.0.0
+set VERSION=%JAR:prm80-control-software-=%
+set VERSION=%VERSION:.jar=%
+set VERSION=%VERSION:-SNAPSHOT=%
+
 if exist target\jpackage-input rmdir /s /q target\jpackage-input
 if exist target\dist rmdir /s /q target\dist
 mkdir target\jpackage-input
 copy "target\%JAR%" target\jpackage-input\ >nul
 
-%JPACKAGE% --type %TYPE% --name PRM80 --app-version 2.0.0 --vendor F4FEZ ^
+%JPACKAGE% --type %TYPE% --name PRM80 --app-version %VERSION% --vendor F4FEZ ^
     --description "PRM80 control software" ^
     --input target\jpackage-input --main-jar %JAR% ^
     --main-class f4fez.prm80x0.PRM80X0App ^
@@ -46,4 +51,4 @@ copy "target\%JAR%" target\jpackage-input\ >nul
 if errorlevel 1 exit /b 1
 
 echo.
-echo Done: target\dist
+echo Done: target\dist (version %VERSION%)

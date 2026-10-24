@@ -15,6 +15,7 @@
 
 package f4fez.prm80x0.gui;
 
+import f4fez.prm80x0.Controler.ChannelList;
 import f4fez.prm80x0.Controler.Controler;
 import java.util.function.IntFunction;
 import javax.swing.Timer;
@@ -68,7 +69,12 @@ public class Scanner {
 
     // memory scan
     private int channel;
+    /** scan lock of every channel, null if not known */
+    private boolean[] locked;
+    /** channels with scan lock found one after the other (list not known) */
     private int lockedInRow;
+    /** true while the channel list is read at the start */
+    private boolean preparing;
 
     // VFO scan
     private int from;
@@ -116,24 +122,65 @@ public class Scanner {
 
     /**
      * Start the memory scan with the channel after the current one.
+     * Channels with scan lock are skipped without setting them, so the
+     * scan lock of all channels is needed: from the given list if it is
+     * known to be the channel list of the PRM80, otherwise the list is read
+     * from the PRM80 once (command "C", a few seconds).
      * @param c the PRM80
+     * @param prmList the channels of the PRM80 if known (channel manager), else null
      * @param holdMs time to stay after a signal has ended
      */
-    public void startMemory(Controler c, int holdMs) {
+    public void startMemory(Controler c, ChannelList prmList, int holdMs) {
         this.stop();
         this.vfo = false;
+        final boolean[] known = prmList == null ? null : locks(prmList);
+        this.preparing = known == null;
         this.begin(c, holdMs);
         this.worker.background(() -> {
-            int[] r = {dwellOf(c), c.getCurrentChannel(), c.getMaxChan()};
-            return r;
+            int dwell = dwellOf(c);
+            int current = c.getCurrentChannel();
+            int max = c.getMaxChan();
+            boolean[] locks = known;
+            if (locks == null || locks.length != max + 1) {
+                ChannelList list = c.getChannels();
+                locks = list == null ? null : locks(list);
+            }
+            return new Object[] {dwell, current, locks};
         }, r -> {
             if (!this.isCurrent(c))
                 return;
-            this.dwell = r[0];
-            this.channel = r[1];
+            this.dwell = (Integer) r[0];
+            this.channel = (Integer) r[1];
+            this.locked = (boolean[]) r[2];
             this.lockedInRow = 0;
+            if (this.preparing) {
+                this.preparing = false;
+                this.listener.scanStateChanged();
+            }
             this.nextChannel();
         }, this.failed());
+    }
+
+    /** @return true while the channel list is read before the first channel */
+    public boolean isPreparing() {
+        return this.running && this.preparing;
+    }
+
+    private static boolean[] locks(ChannelList list) {
+        boolean[] locks = new boolean[list.countChannel()];
+        for (int i = 0; i < locks.length; i++)
+            locks[i] = "Lock".equals(list.getChannel(i).getScanLock());
+        return locks;
+    }
+
+    /** @return the next channel after "from" without scan lock, -1 if all are locked */
+    private int nextUnlocked(int from, int max) {
+        for (int i = 1; i <= max + 1; i++) {
+            int chan = (from + i) % (max + 1);
+            if (this.locked == null || chan >= this.locked.length || !this.locked[chan])
+                return chan;
+        }
+        return -1;
     }
 
     /**
@@ -217,26 +264,35 @@ public class Scanner {
     private void nextChannel() {
         final Controler c = this.controler;
         final int gen = this.generation;
+        final int from = this.channel;
         this.worker.background(() -> {
             int max = c.getMaxChan();
-            int next = this.channel + 1 > max ? 0 : this.channel + 1;
+            int next = this.nextUnlocked(from, max);
+            if (next < 0)
+                return new int[] {-1, 0};
             c.setCurrentChannel(next);
-            return new int[] {next, c.getChannelState(), max};
+            return new int[] {next, c.getChannelState()};
         }, r -> {
             if (gen != this.generation)
                 return;
+            if (r[0] < 0) {
+                this.stopWith("All channels are locked for scanning (scan lock)");
+                return;
+            }
             this.channel = r[0];
-            this.listener.scanUpdated();
             if (r[1] >= 0 && (r[1] & 8) != 0) {
-                // scan lock: next channel at once
-                this.lockedInRow++;
-                if (this.lockedInRow > r[2] + 1)
+                // scan lock not known before (list not readable, or set at the
+                // radio meanwhile): remember it and go on at once
+                if (this.locked != null && r[0] < this.locked.length)
+                    this.locked[r[0]] = true;
+                if (++this.lockedInRow > ChannelList.MAX_CHANNELS)
                     this.stopWith("All channels are locked for scanning (scan lock)");
                 else
                     this.nextChannel();
                 return;
             }
             this.lockedInRow = 0;
+            this.listener.scanUpdated();
             this.later(this.dwell, this::check);
         }, this.failed());
     }

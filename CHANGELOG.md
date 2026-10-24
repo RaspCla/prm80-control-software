@@ -4,7 +4,8 @@
 
 ### Scan
 - **Scan** button: scan of the memory channels (channels with scan lock are
-  skipped) or, in VFO mode, of a frequency range with a step
+  skipped without delay, the scan lock is taken from the channel list of the
+  PRM80) or, in VFO mode, of a frequency range with a step
 - Stops on a signal (squelch open, "HOLD" in the display) and continues after
   an adjustable hold time; transmitting stops the scan
 - Tools > **Scan settings**: VFO range (stored for 144 and 430 MHz), step,

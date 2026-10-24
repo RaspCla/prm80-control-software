@@ -1721,7 +1721,10 @@ public class PRM80X0View extends javax.swing.JFrame {
                 this.scanner.startVfo(c, range[0], range[1], step, this.vfoBase(),
                         this::vfoFrequencies, this.config.getScanHold());
             } else {
-                this.scanner.startMemory(c, this.config.getScanHold());
+                // scan lock of all channels: the channel manager list if it is
+                // known to be the list in the PRM80, otherwise the scanner reads it
+                this.scanner.startMemory(c, ChannelManager.isSyncedWithPrm() ? ChannelManager.getSessionList() : null,
+                        this.config.getScanHold());
             }
         } catch (CommunicationException ex) {
             this.setStatus("Error: " + message(ex));
@@ -1748,6 +1751,8 @@ public class PRM80X0View extends javax.swing.JFrame {
             this.setStatus("Scanning " + mhz(this.scanner.getFrom()) + " - " + mhz(this.scanner.getTo())
                     + " MHz, step " + new java.math.BigDecimal(this.scanner.getStep()).movePointLeft(3)
                     .stripTrailingZeros().toPlainString() + " kHz");
+        } else if (this.scanner.isPreparing()) {
+            this.setStatus("Scan: reading the channel list (scan lock) ...");
         } else {
             this.setStatus("Scanning the memory channels");
         }

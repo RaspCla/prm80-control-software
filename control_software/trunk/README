@@ -99,7 +99,10 @@ Scan
 in the program (channel +/-, VFO/MEM, entering a channel or frequency, Write
 to MEM ...) stops the scan as well; volume, squelch and power do not.
   MEM mode   all memory channels one after the other, channels with
-             "scan lock" are skipped
+             "scan lock" (as stored in the PRM80, see "Write to PRM80" in
+             the channel manager) are skipped without delay; if the list is
+             not known to be the one in the PRM80, it is read at the start
+             (a few seconds)
   VFO mode   a frequency range with a step: Tools > Scan settings
              (asked for at the first VFO scan, stored separately for 144 and
              430 MHz); the shift fields are applied as in VFO mode

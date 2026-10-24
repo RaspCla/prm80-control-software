@@ -285,6 +285,30 @@ public class Channel {
         this.comments = comments == null ? "" : comments;
     }
 
+    /** @return a copy of this channel */
+    public Channel copy() {
+        Channel c = new Channel();
+        c.id = this.id;
+        c.frequency = this.frequency;
+        c.shiftFreq = this.shiftFreq;
+        c.scanLock = this.scanLock;
+        c.shift = this.shift;
+        c.shiftReverse = this.shiftReverse;
+        c.shiftEnabled = this.shiftEnabled;
+        c.comments = this.comments;
+        return c;
+    }
+
+    /** @return true if frequency, shift and states are equal (not the comment) */
+    public boolean sameSettingsAs(Channel o) {
+        return java.util.Objects.equals(this.frequency, o.frequency)
+                && java.util.Objects.equals(this.shiftFreq, o.shiftFreq)
+                && java.util.Objects.equals(this.scanLock, o.scanLock)
+                && java.util.Objects.equals(this.shift, o.shift)
+                && java.util.Objects.equals(this.shiftReverse, o.shiftReverse)
+                && java.util.Objects.equals(this.shiftEnabled, o.shiftEnabled);
+    }
+
     public void setScanLock(String scanLock) {
         this.scanLock = scanLock == null ? "" : scanLock;
     }

@@ -268,6 +268,12 @@ public class DummyControler implements Controler{
     public void refreshState() {
     }
     @Override
+    public void deleteLastChannel() {
+        ChannelList list = this.getChannels();
+        list.removeLast();
+        this.setChannels(list);
+    }
+    @Override
     public void writeChannel(Channel channel) {
         ChannelList list = this.getChannels();
         if (channel.getId() < list.countChannel())

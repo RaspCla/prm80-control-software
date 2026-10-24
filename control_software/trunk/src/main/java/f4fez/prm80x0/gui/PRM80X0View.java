@@ -137,6 +137,10 @@ public class PRM80X0View extends javax.swing.JFrame {
             this.hpLabel.setFont(powerFont);
             this.lpLabel.setFont(powerFont);
             this.busyLabel.setFont(powerFont);
+            Font unitFont = this.rxUnitLabel.getFont();
+            unitFont = unitFont.deriveFont(Font.BOLD, unitFont.getSize2D() * 0.85f);
+            this.rxUnitLabel.setFont(unitFont);
+            this.txUnitLabel.setFont(unitFont);
 
             this.initPortList();
             this.initZoom();
@@ -341,6 +345,7 @@ public class PRM80X0View extends javax.swing.JFrame {
             this.connecting = false;
             this.vdf = vdf;
             this.shownShiftKey = "";
+            ChannelManager.prmConnectionChanged();
             controler.setPRMStateChangeListener(new PRMStateChangeListener() {
                 @Override
                 public void stateUpdated() {
@@ -387,6 +392,7 @@ public class PRM80X0View extends javax.swing.JFrame {
             return;
         final VirtualDeviceFirmware old = this.vdf;
         this.vdf = null;
+        ChannelManager.prmConnectionChanged();
         old.getPRMControler().setPRMStateChangeListener(null);
         this.setEnableControls(false);
         this.updateConnectControls();
@@ -525,6 +531,8 @@ public class PRM80X0View extends javax.swing.JFrame {
         boolean enabled = (state & 1) != 0;
         this.ShiftEnabledCheckbox.setSelected(enabled);
         this.ShiftPositiveCheckbox.setSelected((state & 4) != 0);
+        this.ShiftReverseCheckbox.setSelected((state & 2) != 0);
+        this.appliedReverse = (state & 2) != 0;
         int shift = Math.abs(tx - rx);
         if (enabled && shift > 0)
             this.setShiftSpinner(shift);
@@ -567,6 +575,8 @@ public class PRM80X0View extends javax.swing.JFrame {
         this.memoryMenu.setEnabled(enable);
         this.freqLabel.setVisible(enable);
         this.txFreqLabel.setVisible(enable);
+        this.rxUnitLabel.setVisible(enable);
+        this.txUnitLabel.setVisible(enable);
         this.chanLabel.setVisible(enable && this.vdf != null && !this.vdf.isVfoMode());
         this.infoLabel.setVisible(enable);
         if (!enable) {
@@ -614,6 +624,8 @@ public class PRM80X0View extends javax.swing.JFrame {
         lpLabel = new javax.swing.JLabel();
         txFreqLabel = new javax.swing.JLabel();
         infoLabel = new javax.swing.JLabel();
+        rxUnitLabel = new javax.swing.JLabel();
+        txUnitLabel = new javax.swing.JLabel();
         busyLabel = new javax.swing.JLabel();
         jPanel2 = new javax.swing.JPanel();
         vfoToggleButton = new javax.swing.JToggleButton();
@@ -630,6 +642,7 @@ public class PRM80X0View extends javax.swing.JFrame {
         label1 = new javax.swing.JLabel();
         ShiftEnabledCheckbox = new javax.swing.JCheckBox();
         ShiftPositiveCheckbox = new javax.swing.JCheckBox();
+        ShiftReverseCheckbox = new javax.swing.JCheckBox();
         menuBar = new javax.swing.JMenuBar();
         javax.swing.JMenu fileMenu = new javax.swing.JMenu();
         connectMenuItem = new javax.swing.JMenuItem();
@@ -765,6 +778,18 @@ public class PRM80X0View extends javax.swing.JFrame {
         infoLabel.setName("infoLabel"); // NOI18N
         jPanel1.add(infoLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 70, 390, 20));
 
+        rxUnitLabel.setForeground(new java.awt.Color(51, 255, 204));
+        rxUnitLabel.setText("Rx"); // NOI18N
+        rxUnitLabel.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
+        rxUnitLabel.setName("rxUnitLabel"); // NOI18N
+        jPanel1.add(rxUnitLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(174, 22, 30, 16));
+
+        txUnitLabel.setForeground(new java.awt.Color(255, 204, 0));
+        txUnitLabel.setText("Tx"); // NOI18N
+        txUnitLabel.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
+        txUnitLabel.setName("txUnitLabel"); // NOI18N
+        jPanel1.add(txUnitLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(174, 42, 30, 16));
+
         busyLabel.setBackground(new java.awt.Color(255, 0, 0));
         busyLabel.setForeground(new java.awt.Color(0, 0, 0));
         busyLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -885,11 +910,11 @@ public class PRM80X0View extends javax.swing.JFrame {
                 ShiftFreqSpinnerStateChanged(evt);
             }
         });
-        jPanel2.add(ShiftFreqSpinner, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 100, 100, 22));
+        jPanel2.add(ShiftFreqSpinner, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 130, 100, 22));
 
         label1.setName("ShiftFrequency"); // NOI18N
         label1.setText("Shift Frequency"); // NOI18N
-        jPanel2.add(label1, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 80, -1, -1));
+        jPanel2.add(label1, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 110, -1, -1));
 
         ShiftEnabledCheckbox.setText("Shift enabled"); // NOI18N
         ShiftEnabledCheckbox.setName("ShiftEna"); // NOI18N
@@ -908,6 +933,16 @@ public class PRM80X0View extends javax.swing.JFrame {
             }
         });
         jPanel2.add(ShiftPositiveCheckbox, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 50, -1, 20));
+
+        ShiftReverseCheckbox.setText("Shift reverse"); // NOI18N
+        ShiftReverseCheckbox.setToolTipText("Reverse: receive on the TX frequency of the repeater and transmit on its RX frequency"); // NOI18N
+        ShiftReverseCheckbox.setName("ShiftReverseCheckbox"); // NOI18N
+        ShiftReverseCheckbox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ShiftReverseCheckboxActionPerformed(evt);
+            }
+        });
+        jPanel2.add(ShiftReverseCheckbox, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 80, -1, 20));
 
         mainPanel.add(jPanel2);
 
@@ -1277,6 +1312,7 @@ public class PRM80X0View extends javax.swing.JFrame {
         if (this.vdf == null)
             return;
         this.chanLabel.setVisible(false);
+        this.appliedReverse = this.ShiftReverseCheckbox.isSelected();
         this.updateModeControls();
         final VirtualDeviceFirmware v = this.vdf;
         this.command(() -> {
@@ -1377,6 +1413,10 @@ public class PRM80X0View extends javax.swing.JFrame {
         this.applyVfoShift();
     }//GEN-LAST:event_ShiftPositiveCheckboxActionPerformed
 
+    private void ShiftReverseCheckboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ShiftReverseCheckboxActionPerformed
+        this.applyVfoShift();
+    }//GEN-LAST:event_ShiftReverseCheckboxActionPerformed
+
     private void ShiftFreqSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_ShiftFreqSpinnerStateChanged
         this.applyVfoShift();
     }//GEN-LAST:event_ShiftFreqSpinnerStateChanged
@@ -1384,15 +1424,15 @@ public class PRM80X0View extends javax.swing.JFrame {
     private void writeMemButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_writeMemButtonActionPerformed
         if (this.vdf == null)
             return;
+        // the list of the channel manager is used; it is only read from the
+        // PRM80 if it is not known to be the same
+        if (ChannelManager.isSyncedWithPrm()) {
+            this.showWriteMemory();
+            return;
+        }
         final VirtualDeviceFirmware v = this.vdf;
         final Controler c = v.getPRMControler();
-        final int rx = this.shownRx;
-        final int tx = this.shownTx;
-        final String description = "VFO  RX " + formatFrequency(rx) + "  TX " + formatFrequency(tx)
-                + (tx == rx ? "  (no shift)" : "  (shift " + (tx > rx ? "+" : "-")
-                + new java.math.BigDecimal(Math.abs(tx - rx)).movePointLeft(3).stripTrailingZeros().toPlainString() + " kHz)");
         this.setStatus("Reading channels from PRM80 ...");
-        // read the current channels, then let the user choose one
         this.worker.run(() -> {
             ChannelList list = c.getChannels();
             if (list == null)
@@ -1402,25 +1442,18 @@ public class PRM80X0View extends javax.swing.JFrame {
             this.setStatus(this.connectedStatus);
             if (this.vdf != v)
                 return;     // disconnected meanwhile
-            list.takeCommentsFrom(ChannelManager.getSessionList());
-            WriteMemoryDialog d = new WriteMemoryDialog(this, list, description);
-            this.showDialog(d);
-            final int number = d.getSelectedChannel();
-            if (number < 0)
-                return;
-            String scanLock = number < list.countChannel() ? list.getChannel(number).getScanLock() : "";
-            final Channel channel = new Channel(rx, Math.abs(tx - rx), scanLock, "",
-                    tx != rx ? "Enabled" : "", tx == rx ? "" : (tx > rx ? "+" : "-"));
-            channel.setId(number);
-            this.worker.run(() -> {
-                c.writeChannel(channel);
-                return null;
-            }, r -> this.setStatus("VFO stored in channel " + formatChannel(number)),
-            ex -> {
-                this.setStatus("Error: " + message(ex));
-                JOptionPane.showMessageDialog(this, "The channel could not be written:\n" + message(ex),
-                        "PRM80", JOptionPane.ERROR_MESSAGE);
-            });
+            ChannelList current = ChannelManager.getSessionList();
+            if (current.countChannel() > 0 && !list.sameChannelsAs(current)) {
+                int answer = JOptionPane.showConfirmDialog(this,
+                        "The channel manager contains another channel list\n("
+                        + ChannelManager.describeSessionList() + ").\n\n"
+                        + "Replace it with the " + list.countChannel() + " channels read from the PRM80?",
+                        "Write to MEM", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+                if (answer != JOptionPane.OK_OPTION)
+                    return;
+            }
+            ChannelManager.setPrmList(list);
+            this.showWriteMemory();
         }, ex -> {
             this.setStatus("Error: " + message(ex));
             JOptionPane.showMessageDialog(this, "The channels could not be read:\n" + message(ex),
@@ -1428,28 +1461,94 @@ public class PRM80X0View extends javax.swing.JFrame {
         });
     }//GEN-LAST:event_writeMemButtonActionPerformed
 
-    /** TX frequency for the VFO: RX frequency plus / minus the shift fields. */
-    private int vfoTxFrequency(int rx) {
-        if (!this.ShiftEnabledCheckbox.isSelected())
-            return rx;
-        int shift = Integer.parseInt(this.ShiftFreqSpinner.getValue().toString());
-        return this.ShiftPositiveCheckbox.isSelected() ? rx + shift : rx - shift;
+    /** Show the dialog to write the VFO to memory channels. */
+    private void showWriteMemory() {
+        final Controler c = this.vdf.getPRMControler();
+        Channel vfo = this.vfoChannel();
+        int base = this.vfoBase();
+        int rx = this.vfoFrequencies(base)[0];
+        int tx = this.vfoFrequencies(base)[1];
+        // shift as stored in the channel (with reverse the PRM80 swaps RX and TX)
+        int shift = this.vfoShift();
+        String description = "VFO  RX " + formatFrequency(rx) + "  TX " + formatFrequency(tx)
+                + (shift == 0 ? "  (no shift)" : "  (shift " + (shift > 0 ? "+" : "-")
+                + new java.math.BigDecimal(Math.abs(shift)).movePointLeft(3).stripTrailingZeros().toPlainString() + " kHz"
+                + (this.ShiftReverseCheckbox.isSelected() ? ", reverse" : "") + ")");
+        WriteMemoryDialog d = new WriteMemoryDialog(this, ChannelManager.getSessionList(), vfo, description,
+                new WriteMemoryDialog.MemoryAccess() {
+            @Override
+            public void writeChannel(Channel channel, Runnable done, Consumer<String> error) {
+                worker.run(() -> {
+                    c.writeChannel(channel);
+                    return null;
+                }, r -> done.run(), ex -> error.accept(message(ex)));
+            }
+
+            @Override
+            public void deleteLastChannel(Runnable done, Consumer<String> error) {
+                worker.run(() -> {
+                    c.deleteLastChannel();
+                    return null;
+                }, r -> done.run(), ex -> error.accept(message(ex)));
+            }
+        });
+        this.showDialog(d);
     }
 
-    /** VFO mode: a shift field was changed, set the TX frequency at once. */
+    /**
+     * VFO: reverse state the shown RX / TX frequencies were calculated with.
+     * Normal: RX = base, TX = base +/- shift. Reverse (as in the firmware):
+     * TX = base, RX = base +/- shift.
+     */
+    private boolean appliedReverse;
+
+    /** @return the shift in Hz set in the fields, 0 if shift is not enabled */
+    private int vfoShift() {
+        if (!this.ShiftEnabledCheckbox.isSelected())
+            return 0;
+        int shift = Integer.parseInt(this.ShiftFreqSpinner.getValue().toString());
+        return this.ShiftPositiveCheckbox.isSelected() ? shift : -shift;
+    }
+
+    /** @return the base frequency of the VFO (the channel frequency) */
+    private int vfoBase() {
+        return this.appliedReverse ? this.shownTx : this.shownRx;
+    }
+
+    /** @return {RX, TX} for a base frequency and the shift fields */
+    private int[] vfoFrequencies(int base) {
+        int shifted = base + this.vfoShift();
+        return this.ShiftReverseCheckbox.isSelected() ? new int[] {shifted, base} : new int[] {base, shifted};
+    }
+
+    /** VFO mode: a shift field was changed, set RX / TX at once. */
     private void applyVfoShift() {
         if (this.vdf == null || this.updatingDisplay || !this.vfoToggleButton.isSelected())
             return;
-        final int tx = this.vfoTxFrequency(this.shownRx);
-        if (tx == this.shownTx)
+        int base = this.vfoBase();
+        final int[] f = this.vfoFrequencies(base);
+        this.appliedReverse = this.ShiftReverseCheckbox.isSelected();
+        if (f[0] == this.shownRx && f[1] == this.shownTx)
             return;
-        this.shownTx = tx;
-        this.txFreqLabel.setText(formatFrequency(tx));
+        this.shownRx = f[0];
+        this.shownTx = f[1];
+        this.freqLabel.setText(formatFrequency(f[0]));
+        this.txFreqLabel.setText(formatFrequency(f[1]));
         final Controler c = this.vdf.getPRMControler();
         this.command(() -> {
-            c.setTxPLLFrequency(tx);
+            c.setFrequencies(f[0], f[1]);
             return null;
         });
+    }
+
+    /** @return the VFO setting as memory channel */
+    private Channel vfoChannel() {
+        int shift = this.vfoShift();
+        boolean enabled = this.ShiftEnabledCheckbox.isSelected();
+        Channel channel = new Channel(this.vfoBase(), Math.abs(shift), "",
+                this.ShiftReverseCheckbox.isSelected() ? "Reverse" : "",
+                enabled ? "Enabled" : "", enabled ? (shift >= 0 ? "+" : "-") : "");
+        return channel;
     }
 
     /** "Write to MEM" only in VFO mode. */
@@ -1609,7 +1708,11 @@ private void freqLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:e
     this.showDialog(d);
     final int rx = d.getRxFrequency();
     if (rx != -1) {
-        final int txFreq = this.vfoTxFrequency(rx);
+        // the entered frequency is the RX frequency; with reverse the base
+        // (TX) frequency is RX minus the shift
+        int base = this.ShiftReverseCheckbox.isSelected() ? rx - this.vfoShift() : rx;
+        final int txFreq = this.vfoFrequencies(base)[1];
+        this.appliedReverse = this.ShiftReverseCheckbox.isSelected();
         // show at once
         this.shownRx = rx;
         this.shownTx = txFreq;
@@ -1620,8 +1723,7 @@ private void freqLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:e
         this.updateModeControls();
         final VirtualDeviceFirmware v = this.vdf;
         this.command(() -> {
-            v.getPRMControler().setRxPLLFrequecny(rx);
-            v.getPRMControler().setTxPLLFrequency(txFreq);
+            v.getPRMControler().setFrequencies(rx, txFreq);
             v.setVfoMode(true);
             return null;
         });
@@ -1634,6 +1736,9 @@ private void freqLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:e
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel busyLabel;
+    private javax.swing.JLabel rxUnitLabel;
+    private javax.swing.JLabel txUnitLabel;
+    private javax.swing.JCheckBox ShiftReverseCheckbox;
     private javax.swing.JButton connectButton;
     private javax.swing.JPanel connectPanel;
     private javax.swing.JComboBox<String> portComboBox;

@@ -32,6 +32,8 @@ import java.util.ArrayList;
  * @author fmazen
  */
 public class ChannelList{
+    /** The PRM80 has channels 0 to 99. */
+    public static final int MAX_CHANNELS = 100;
     private static final String CSV_HEADER = "Chan Id;Frequency;ShiftFrequency;ScanLock;ShiftPosNeg;ShiftReverse;ShiftEnabled;Comments";
     private ArrayList<Channel> list;
 
@@ -41,6 +43,26 @@ public class ChannelList{
 
     public Channel getChannel(int channel) {
         return this.list.get(channel);
+    }
+
+    /** Remove the last channel. */
+    public void removeLast() {
+        if (!this.list.isEmpty())
+            this.list.remove(this.list.size() - 1);
+    }
+
+    /**
+     * @return true if both lists contain the same channels (comments are
+     * not compared, the PRM80 has none)
+     */
+    public boolean sameChannelsAs(ChannelList other) {
+        if (other == null || other.countChannel() != this.countChannel())
+            return false;
+        for (int i = 0; i < this.list.size(); i++) {
+            if (!this.list.get(i).sameSettingsAs(other.getChannel(i)))
+                return false;
+        }
+        return true;
     }
 
     /** Replace a channel. */

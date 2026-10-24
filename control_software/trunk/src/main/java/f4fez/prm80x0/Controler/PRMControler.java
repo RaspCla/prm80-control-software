@@ -500,9 +500,23 @@ public abstract class PRMControler implements Controler{
     }
 
     @Override
+    public synchronized void setFrequencies(int rx, int tx) {
+        this.setPLLFrequencies(rx, tx);
+    }
+
+    @Override
+    public synchronized void deleteLastChannel() throws CommunicationException {
+        int max = this.getMaxChan();
+        if (max <= 0)
+            throw new SerialPortException("The last channel cannot be removed");
+        if (!this.setMaxChan(max - 1))
+            throw new SerialPortException("The number of channels could not be written");
+    }
+
+    @Override
     public synchronized void writeChannel(Channel channel) throws CommunicationException {
         int max = this.getMaxChan();
-        if (channel.getId() < 0 || channel.getId() > max + 1)
+        if (channel.getId() < 0 || channel.getId() > max + 1 || channel.getId() >= ChannelList.MAX_CHANNELS)
             throw new SerialPortException("Invalid channel number " + channel.getId());
         if (!this.setChannel(channel))
             throw new SerialPortException("Channel " + channel.getId() + " could not be written");

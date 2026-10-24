@@ -481,6 +481,36 @@
                 </Constraint>
               </Constraints>
             </Component>
+            <Component class="javax.swing.JLabel" name="rxUnitLabel">
+              <Properties>
+                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+                  <Color blue="204" green="255" red="51" type="rgb"/>
+                </Property>
+                <Property name="text" type="java.lang.String" value="Rx"/>
+                <Property name="verticalAlignment" type="int" value="3"/>
+                <Property name="name" type="java.lang.String" value="rxUnitLabel" noResource="true"/>
+              </Properties>
+              <Constraints>
+                <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
+                  <AbsoluteConstraints x="174" y="22" width="30" height="16"/>
+                </Constraint>
+              </Constraints>
+            </Component>
+            <Component class="javax.swing.JLabel" name="txUnitLabel">
+              <Properties>
+                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+                  <Color blue="0" green="204" red="255" type="rgb"/>
+                </Property>
+                <Property name="text" type="java.lang.String" value="Tx"/>
+                <Property name="verticalAlignment" type="int" value="3"/>
+                <Property name="name" type="java.lang.String" value="txUnitLabel" noResource="true"/>
+              </Properties>
+              <Constraints>
+                <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
+                  <AbsoluteConstraints x="174" y="42" width="30" height="16"/>
+                </Constraint>
+              </Constraints>
+            </Component>
             <Component class="javax.swing.JLabel" name="busyLabel">
               <Properties>
                 <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
@@ -708,7 +738,7 @@
               </Events>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-                  <AbsoluteConstraints x="310" y="100" width="100" height="22"/>
+                  <AbsoluteConstraints x="310" y="130" width="100" height="22"/>
                 </Constraint>
               </Constraints>
             </Component>
@@ -719,7 +749,7 @@
               </Properties>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-                  <AbsoluteConstraints x="310" y="80" width="-1" height="-1"/>
+                  <AbsoluteConstraints x="310" y="110" width="-1" height="-1"/>
                 </Constraint>
               </Constraints>
             </Component>
@@ -748,6 +778,21 @@
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
                   <AbsoluteConstraints x="310" y="50" width="-1" height="20"/>
+                </Constraint>
+              </Constraints>
+            </Component>
+            <Component class="javax.swing.JCheckBox" name="ShiftReverseCheckbox">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Shift reverse"/>
+                <Property name="toolTipText" type="java.lang.String" value="Reverse: receive on the TX frequency of the repeater and transmit on its RX frequency"/>
+                <Property name="name" type="java.lang.String" value="ShiftReverseCheckbox" noResource="true"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="ShiftReverseCheckboxActionPerformed"/>
+              </Events>
+              <Constraints>
+                <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
+                  <AbsoluteConstraints x="310" y="80" width="-1" height="20"/>
                 </Constraint>
               </Constraints>
             </Component>

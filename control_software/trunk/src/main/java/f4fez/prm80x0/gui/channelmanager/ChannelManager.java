@@ -60,15 +60,103 @@ public class ChannelManager extends javax.swing.JDialog {
     private static String sessionFile;          // file of the list, null if not saved yet
     private static String sessionSource = "";   // shown in the status line
     private static boolean sessionModified;
+    /**
+     * true while the list is known to be the same as the channels in the
+     * connected PRM80: read from / written to the PRM80, since then only
+     * changed by "Write to MEM" (comments do not count, the PRM80 has none)
+     */
+    private static boolean sessionSyncedWithPrm;
 
     private final ChannelModel model = new ChannelModel(null);
 
+    // ---- channel list shared with the main window ("Write to MEM") --------
+
     /**
-     * @return the channel list shown in the channel manager (file or PRM80),
-     * null if it was not opened yet. Used for the comments of the channels.
+     * @return the channel list of the channel manager. At the first call the
+     * channel file used last time is read (as when the dialog is opened).
      */
     public static ChannelList getSessionList() {
+        loadSessionList();
         return sessionList;
+    }
+
+    /** @return true if the list is the same as the channels in the PRM80 */
+    public static boolean isSyncedWithPrm() {
+        return sessionList != null && sessionSyncedWithPrm;
+    }
+
+    /**
+     * @return short description of the list for questions to the user,
+     * e.g. "kanaele.csv, 12 channels, not saved"
+     */
+    public static String describeSessionList() {
+        loadSessionList();
+        String text = (sessionFile == null ? "not saved in a file" : new File(sessionFile).getName())
+                + ", " + sessionList.countChannel() + " channels";
+        if (sessionModified && sessionFile != null)
+            text += ", changed and not saved";
+        return text;
+    }
+
+    /**
+     * Use channels read from the PRM80 as list of the channel manager.
+     * The comments of the old list are kept (same number and frequency).
+     */
+    public static void setPrmList(ChannelList list) {
+        loadSessionList();
+        list.takeCommentsFrom(sessionList);
+        sessionList = list;
+        sessionSource = "Read from PRM80: " + list.countChannel() + " channels";
+        sessionModified = true;     // not in a file
+        sessionSyncedWithPrm = true;
+    }
+
+    /** A channel was written to the PRM80 ("Write to MEM"): update the list. */
+    public static void prmChannelWritten(f4fez.prm80x0.Controler.Channel channel) {
+        if (!isSyncedWithPrm())
+            return;
+        if (channel.getId() < sessionList.countChannel())
+            sessionList.setChannel(channel.getId(), channel);
+        else
+            sessionList.addChannel(channel);
+        sessionSource = "Channel " + channel.getId() + " written to PRM80";
+        sessionModified = true;
+    }
+
+    /** The last channel was removed in the PRM80 ("Undo" in Write to MEM): update the list. */
+    public static void prmLastChannelRemoved() {
+        if (!isSyncedWithPrm())
+            return;
+        sessionList.removeLast();
+        sessionSource = "Channel " + sessionList.countChannel() + " removed in PRM80";
+        sessionModified = true;
+    }
+
+    /** Connected to another (or no) PRM80: the list is no longer known to match. */
+    public static void prmConnectionChanged() {
+        sessionSyncedWithPrm = false;
+    }
+
+    /** First use: show the channel file used last time. */
+    private static void loadSessionList() {
+        if (sessionList != null)
+            return;
+        sessionList = new ChannelList();
+        sessionSource = "Empty list - read the channels from the PRM80 or from a file";
+        String file = new Option().getChannelFile();
+        if (!file.isEmpty() && new File(file).isFile()) {
+            try {
+                ChannelList list = new ChannelList();
+                list.importCSV(file);
+                sessionList = list;
+                sessionFile = file;
+                sessionSource = "Read from file";
+            } catch (Exception ex) {
+                sessionSource = "Could not read " + file + ": " + ex.getMessage();
+            }
+        }
+        sessionModified = false;
+        sessionSyncedWithPrm = false;
     }
     private final PrmAccess prm;
     private final Option config = new Option();
@@ -92,28 +180,15 @@ public class ChannelManager extends javax.swing.JDialog {
         this.model.addTableModelListener(e -> {
             if (!busy) {
                 sessionModified = true;
+                // a changed channel is no longer the one in the PRM80 (comments are not in the PRM80)
+                if (e.getColumn() != ChannelModel.COL_COMMENTS)
+                    sessionSyncedWithPrm = false;
                 updateTitle();
             }
         });
 
         // first call: show the channel file used last time
-        if (sessionList == null) {
-            sessionList = new ChannelList();
-            sessionSource = "Empty list - read the channels from the PRM80 or from a file";
-            String file = this.config.getChannelFile();
-            if (!file.isEmpty() && new File(file).isFile()) {
-                try {
-                    ChannelList list = new ChannelList();
-                    list.importCSV(file);
-                    sessionList = list;
-                    sessionFile = file;
-                    sessionSource = "Read from file";
-                } catch (Exception ex) {
-                    sessionSource = "Could not read " + file + ": " + ex.getMessage();
-                }
-            }
-            sessionModified = false;
-        }
+        loadSessionList();
         this.showList(sessionList);
 
         Zoom.install(this);
@@ -276,6 +351,7 @@ public class ChannelManager extends javax.swing.JDialog {
             sessionSource = "Read from PRM80: " + list.countChannel() + " channels";
             this.showList(list);
             sessionModified = true;     // not saved in a file yet
+            sessionSyncedWithPrm = true;
             this.setBusy(false, null);
         }, error -> {
             this.setBusy(false, "Reading from PRM80 failed: " + error);
@@ -288,11 +364,17 @@ public class ChannelManager extends javax.swing.JDialog {
             JOptionPane.showMessageDialog(this, "The channel list is empty.", "Write to PRM80", JOptionPane.WARNING_MESSAGE);
             return;
         }
+        if (sessionList.countChannel() > ChannelList.MAX_CHANNELS) {
+            JOptionPane.showMessageDialog(this, "The PRM80 has only " + ChannelList.MAX_CHANNELS + " channels (0 to "
+                    + (ChannelList.MAX_CHANNELS - 1) + ").", "Write to PRM80", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
         if (!this.confirm("Write " + sessionList.countChannel() + " channels to the PRM80?\n"
                 + "The channels in the PRM80 will be replaced."))
             return;
         this.setBusy(true, "Writing " + sessionList.countChannel() + " channels to PRM80 ...");
         this.prm.writeChannels(sessionList, () -> {
+            sessionSyncedWithPrm = true;
             this.setBusy(false, "Written to PRM80: " + sessionList.countChannel() + " channels");
         }, error -> {
             this.setBusy(false, "Writing to PRM80 failed: " + error);
@@ -317,6 +399,7 @@ public class ChannelManager extends javax.swing.JDialog {
             this.config.setChannelFile(file);
             this.showList(list);
             sessionModified = false;
+            sessionSyncedWithPrm = false;
             this.updateTitle();
         } catch (Exception ex) {
             Logger.getLogger(ChannelManager.class.getName()).log(Level.INFO, null, ex);

@@ -66,7 +66,8 @@ public class ChannelModel extends AbstractTableModel {
 
     @Override
     public int getRowCount() {
-        return channels.countChannel()+1;
+        // last row "*" adds a channel, the PRM80 has 100 channels at most
+        return channels.countChannel() + (channels.countChannel() < ChannelList.MAX_CHANNELS ? 1 : 0);
     }
 
     @Override

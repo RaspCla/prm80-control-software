@@ -256,6 +256,22 @@ public interface Controler {
     }
 
     /**
+     * Set RX and TX frequency together (VFO).
+     * @param rx RX frequency in Hz
+     * @param tx TX frequency in Hz
+     */
+    public default void setFrequencies(int rx, int tx) throws CommunicationException {
+        this.setRxPLLFrequecny(rx);
+        this.setTxPLLFrequency(tx);
+    }
+
+    /**
+     * Remove the last channel (there is no command to delete a channel,
+     * the number of channels is reduced by one).
+     */
+    public void deleteLastChannel() throws CommunicationException;
+
+    /**
      * Write one channel (the "P" command). If the channel number is the
      * number of channels, a new channel is added.
      * @param channel channel to write, its id is the channel number

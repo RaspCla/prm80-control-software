@@ -38,6 +38,7 @@ Ready-to-use packages are on the
 
 | System | File | Start |
 |---|---|---|
+| Windows 10/11 (64 bit) | `PRM80-<version>.msi` | installer: double click, then *PRM80* in the start menu (not signed: if Windows warns, *More info* > *Run anyway*) |
 | Windows 10/11 (64 bit) | `PRM80-<version>-windows-x64.zip` | unzip anywhere, run `PRM80\PRM80.exe` |
 | Debian, Ubuntu, Mint (64-bit PC) | `prm80_<version>-1_amd64.deb` | `sudo apt install ./prm80_<version>-1_amd64.deb`, then *PRM80* in the menu (Ham Radio) |
 | other Linux (64-bit PC) | `PRM80-<version>-linux-x64.tar.gz` | unpack, run `PRM80/bin/PRM80` |
@@ -109,7 +110,8 @@ The version number is taken from `<version>` in `pom.xml`.
 ### Automatic build on GitHub
 
 The workflow [`.github/workflows/release.yml`](.github/workflows/release.yml)
-builds everything on GitHub (Linux and Windows):
+builds everything on GitHub (Linux and Windows: jar, Windows `.msi` and
+`.zip`, Linux `.deb` and `.tar.gz`):
 
 - every push: build test, packages downloadable under *Actions > run > Artifacts*
 - a tag `v<version>` (e.g. `v2.0.0`): additionally a release with all

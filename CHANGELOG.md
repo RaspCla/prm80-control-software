@@ -23,6 +23,7 @@
 - `package-windows.bat` / `package-linux.sh` use the `jpackage` of the PATH
   if `JAVA_HOME` points to an old Java without `jpackage` (e.g. Java 8)
 - Windows installer: start menu folder "PRM80"
+- The GitHub workflow also builds the Windows installer (`.msi`, WiX Toolset 3.14)
 
 ### Display
 - The comment of the current channel (from the channel manager list) is

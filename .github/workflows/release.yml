@@ -73,6 +73,26 @@ jobs:
           $version = (mvn -q help:evaluate "-Dexpression=project.version" -DforceStdout)
           New-Item -ItemType Directory -Force -Path ..\..\release | Out-Null
           Compress-Archive -Path target\dist\PRM80 -DestinationPath "..\..\release\PRM80-$version-windows-x64.zip"
+      # Windows installer (.msi): jpackage needs the WiX Toolset 3 (candle, light).
+      # The WiX 3.14 tools are taken from the NuGet package "wix" (no setup
+      # needed). If this fails, the release is still created without the .msi.
+      - name: Install WiX Toolset 3.14
+        id: wix
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          Invoke-WebRequest https://www.nuget.org/api/v2/package/wix/3.14.1 -OutFile "$env:RUNNER_TEMP\wix.zip"
+          Expand-Archive "$env:RUNNER_TEMP\wix.zip" -DestinationPath "$env:RUNNER_TEMP\wix"
+          "$env:RUNNER_TEMP\wix\tools" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+      - name: Windows installer (msi)
+        if: steps.wix.outcome == 'success'
+        continue-on-error: true
+        shell: cmd
+        run: |
+          where candle
+          call package-windows.bat msi
+          if errorlevel 1 exit /b 1
+          copy target\dist\*.msi ..\..\release\
       - uses: actions/upload-artifact@v4
         with:
           name: windows
@@ -96,7 +116,8 @@ jobs:
           generate_release_notes: true
           body: |
             Downloads:
-            - **Windows**: `PRM80-…-windows-x64.zip` – unzip, start `PRM80\PRM80.exe` (no Java installation needed)
+            - **Windows**: `PRM80-….msi` – installer (start menu and desktop shortcut). It is not signed: if Windows warns, click "More info" → "Run anyway".
+              Or `PRM80-…-windows-x64.zip` – unzip anywhere, start `PRM80\PRM80.exe`. No Java installation needed for both.
             - **Linux**: `prm80_…_amd64.deb` (Debian, Ubuntu, Mint on 64-bit PCs) or `PRM80-…-linux-x64.tar.gz` – unpack, start `PRM80/bin/PRM80`
             - **Any system with Java 21+** (also Raspberry Pi, macOS): `prm80-control-software-….jar` – `java -jar prm80-control-software-….jar`
 

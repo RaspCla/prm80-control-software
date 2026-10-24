@@ -14,7 +14,7 @@
  *
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
- * Created on 19 février 2008, 12:59
+ * Created on 19 February 2008, 12:59
  */
 
 package f4fez.prm80x0.gui.channelmanager;
@@ -24,26 +24,44 @@ import f4fez.prm80x0.Controler.ChannelList;
 import javax.swing.table.AbstractTableModel;
 
 /**
+ * Table model of the channel manager. The last row ("*") adds a new channel.
  *
  * @author fmazen
  */
 public class ChannelModel extends AbstractTableModel {
-    public static int COL_CHANNEL = 0;
-    public static int COL_FREQUENCY = 1;
-    public static int COL_SHIFTFREQ = 2;
-    public static int COL_SCANLOCK = 3;
-    public static int COL_SHIFTPOSNEG = 4;
-    public static int COL_SHIFTREVERSE = 5;
-    public static int COL_SHIFTENABLED = 6;
-    public static int COL_COMMENTS = 7;
+    private static final long serialVersionUID = 1L;
+
+    public static final int COL_CHANNEL = 0;
+    public static final int COL_FREQUENCY = 1;
+    public static final int COL_SHIFTFREQ = 2;
+    public static final int COL_SCANLOCK = 3;
+    public static final int COL_SHIFTPOSNEG = 4;
+    public static final int COL_SHIFTREVERSE = 5;
+    public static final int COL_SHIFTENABLED = 6;
+    public static final int COL_COMMENTS = 7;
+
+    private static final String[] COLUMN_NAMES = {
+        "Channel", "Frequency", "Shift Freq.", "Scan Lock", "Shift +/-", "Shift Reverse", "Shift Enabled", "Comment"
+    };
+
     private ChannelList channels;
     private Channel newChannel;
 
     public ChannelModel(ChannelList channels) {
         super();
-        this.channels = channels;
+        this.channels = channels == null ? new ChannelList() : channels;
         this.newChannel = new Channel();
+    }
 
+    /** Show another channel list. */
+    public void setChannels(ChannelList channels) {
+        this.channels = channels == null ? new ChannelList() : channels;
+        this.newChannel = new Channel();
+        this.fireTableDataChanged();
+    }
+
+    public ChannelList getChannels() {
+        return this.channels;
     }
 
     @Override
@@ -53,37 +71,37 @@ public class ChannelModel extends AbstractTableModel {
 
     @Override
     public int getColumnCount() {
-        return 8;
+        return COLUMN_NAMES.length;
+    }
+
+    private Channel channelAt(int row) {
+        if (row == this.channels.countChannel())
+            return this.newChannel;
+        return this.channels.getChannel(row);
     }
 
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
-        Channel editedChannel;
-        if (rowIndex == this.channels.countChannel())
-            editedChannel = this.newChannel;
-        else
-            editedChannel = this.channels.getChannel(rowIndex);
-
+        Channel editedChannel = this.channelAt(rowIndex);
         switch (columnIndex) {
-            case 0:
+            case COL_CHANNEL:
                 if (editedChannel.getId() == -1)
-                        return "*";
+                    return "*";
                 else
-                    return editedChannel.getId();
-            case 1:
-                return editedChannel.getFrequency();
-            case 2:
+                    return Integer.toString(editedChannel.getId());
+            case COL_FREQUENCY:
+                return editedChannel.getFrequency() == null ? "" : editedChannel.getFrequency();
+            case COL_SHIFTFREQ:
                 return editedChannel.getShiftFreq();
-            case 3:
+            case COL_SCANLOCK:
                 return editedChannel.getScanLock();
-            case 4:
-//                return editedChannel.getShiftPosNeg();
+            case COL_SHIFTPOSNEG:
                 return editedChannel.getShift();
-            case 5:
+            case COL_SHIFTREVERSE:
                 return editedChannel.getShiftReverse();
-            case 6:
+            case COL_SHIFTENABLED:
                 return editedChannel.getShiftEnabled();
-            case 7:
+            case COL_COMMENTS:
                 return editedChannel.getComments();
             default:
                 return "Internal Error";
@@ -92,34 +110,12 @@ public class ChannelModel extends AbstractTableModel {
 
     @Override
     public String getColumnName(int col){
-        switch (col) {
-            case 0:
-                return "Channel n°";
-            case 1:
-                return "Frequency";
-            case 2:
-                return "ShiftFrequency";
-            case 3:
-                return "ScanLock";
-            case 4:
-                return "ShiftPosNeg";
-            case 5:
-                return "ShiftReverse";
-            case 6:
-                return "ShiftEnabled";
-            case 7:
-                return "Comments";
-            default:
-                return "Internal Error";
-        }
+        return COLUMN_NAMES[col];
     }
 
     @Override
-    public Class getColumnClass(int c) {
-        /*if (c==2)
-            return Boolean.class;
-        else*/
-            return String.class;
+    public Class<?> getColumnClass(int c) {
+        return String.class;
     }
 
     @Override
@@ -129,41 +125,41 @@ public class ChannelModel extends AbstractTableModel {
 
     @Override
     public void setValueAt(Object value, int row, int col) {
-        Channel editedChannel;
-        if (row == this.channels.countChannel()) {
-            editedChannel = this.newChannel;
-        }
-        else {
-            editedChannel = this.channels.getChannel(row);
-        }
-
+        String text = value == null ? "" : value.toString().trim();
+        Channel editedChannel = this.channelAt(row);
         switch (col) {
-            case 1:
-                editedChannel.setFrequency((String) value);
+            case COL_FREQUENCY:
+                editedChannel.setFrequency(text);
                 break;
-            case 2:
-                editedChannel.setShiftFreq((String) value);
+            case COL_SHIFTFREQ:
+                editedChannel.setShiftFreq(text);
                 break;
-            case 3:
-                editedChannel.setScanLock((String) value);
-                break;             
-            case 4:
-                /*String shift = "";
-                if ( (Boolean) value )
-                    shift = "-";
-                editedChannel.setShift(shift);*/
-                editedChannel.setShift((String) value);
-                break;                
-            case 8:
-                editedChannel.setComments((String) value);
+            case COL_SCANLOCK:
+                editedChannel.setScanLock(text);
                 break;
+            case COL_SHIFTPOSNEG:
+                editedChannel.setShift(text);
+                break;
+            case COL_SHIFTREVERSE:
+                editedChannel.setShiftReverse(text);
+                break;
+            case COL_SHIFTENABLED:
+                editedChannel.setShiftEnabled(text);
+                break;
+            case COL_COMMENTS:
+                editedChannel.setComments(value == null ? "" : value.toString());
+                break;
+            default:
+                return;
         }
-
         if ( (row == this.channels.countChannel()) && (this.newChannel.getFrequency() != null) )  {
+            // new channel complete (it has a frequency): add it to the list
+            if (this.newChannel.getShiftFreq().isEmpty())
+                this.newChannel.setShiftFreq("0.0");
             this.channels.addChannel(newChannel);
             this.newChannel = new Channel();
+            this.fireTableRowsInserted(row + 1, row + 1);
         }
+        this.fireTableRowsUpdated(row, row);
     }
-
-
 }

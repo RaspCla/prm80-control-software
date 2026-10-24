@@ -107,11 +107,11 @@ public class SelectFrequencyDialog extends javax.swing.JDialog {
                 this.setVisible(false);
             }
             else {
-                JOptionPane.showMessageDialog(this, "La fréquence doit être un multiple du pas de la PLL.", "Erreur de format", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "The frequency must be a multiple of the PLL step (12.5 kHz).", "Invalid frequency", JOptionPane.ERROR_MESSAGE);
             }
         }
         else {
-            JOptionPane.showMessageDialog(this, "Le format de la fréquence n'est pas corecte.", "Erreur de format", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Please enter the frequency in MHz, e.g. 145.5125", "Invalid frequency", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_okButtonActionPerformed
 

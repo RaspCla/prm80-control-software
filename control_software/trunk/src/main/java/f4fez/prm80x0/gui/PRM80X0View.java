@@ -19,7 +19,16 @@
 package f4fez.prm80x0.gui;
 
 import f4fez.prm80x0.*;
+import f4fez.prm80x0.Controler.ChannelList;
+import f4fez.prm80x0.Controler.CommunicationException;
+import f4fez.prm80x0.Controler.Controler;
+import f4fez.prm80x0.Controler.DummyControler;
+import f4fez.prm80x0.Controler.PRMControler;
+import f4fez.prm80x0.Controler.PRMStateChangeListener;
+import f4fez.prm80x0.Controler.SerialControler;
+import f4fez.prm80x0.Controler.TcpControler;
 import f4fez.prm80x0.gui.channelmanager.ChannelManager;
+import f4fez.prm80x0.gui.serialterminal.TerminalDialog;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
@@ -28,37 +37,62 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
-import javax.swing.AbstractAction;
-import javax.swing.JComponent;
-import javax.swing.JMenuItem;
-import javax.swing.JRootPane;
-import javax.swing.KeyStroke;
-import javax.swing.Timer;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.File;
 import java.io.InputStream;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.AbstractAction;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
-import javax.swing.JOptionPane;
-import f4fez.prm80x0.Controler.CommunicationException;
-import f4fez.prm80x0.Controler.DummyControler;
-import f4fez.prm80x0.Controler.Controler;
-import f4fez.prm80x0.Controler.PRMStateChangeListener;
-import f4fez.prm80x0.Controler.SerialControler;
-import f4fez.prm80x0.Controler.TcpControler;
-import f4fez.prm80x0.gui.serialterminal.TerminalDialog;
-import java.awt.event.MouseEvent;
 import javax.swing.JFileChooser;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JRootPane;
+import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
+import javax.swing.Timer;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 
 
 /**
  * The application's main frame.
  */
 public class PRM80X0View extends javax.swing.JFrame {
+    private static final long serialVersionUID = 1L;
 
     private VirtualDeviceFirmware vdf;
     private Option config;
     private TerminalDialog serialSpy;
-            
+
+    /** All communication with the PRM80 runs in this background worker. */
+    private final PrmWorker worker = new PrmWorker(this::busyChanged);
+    /** Reads the state of the PRM80 regularly (front panel changes). */
+    private Timer pollTimer;
+    /** true while the display is updated: the change listeners must not send anything */
+    private boolean updatingDisplay;
+    /** true while a connection is being established */
+    private boolean connecting;
+
+    // values shown in the display, changed at once when the user clicks
+    // (the PRM80 answers later)
+    private int shownChannel;
+    private int shownRx;
+    private int shownTx;
+    private boolean shownHighPower;
+
+    // volume and squelch: only the last value is sent when the slider is moved fast
+    private final AtomicInteger wantedVolume = new AtomicInteger();
+    private final AtomicBoolean volumeQueued = new AtomicBoolean();
+    private final AtomicInteger wantedSquelch = new AtomicInteger();
+    private final AtomicBoolean squelchQueued = new AtomicBoolean();
+
     public PRM80X0View() {
             // zoom factor of the last session
             this.config = new Option();
@@ -68,12 +102,14 @@ public class PRM80X0View extends javax.swing.JFrame {
             
             // Disable all controls
             this.setEnableControls(false);
+            this.updateConnectControls();
             
             // Expert mode ?
             this.setVisibleExpertControls(this.config.isExpertMode());
 
             // status bar initialization
             progressBar.setVisible(false);
+            busyLabel.setVisible(false);
             this.setStatus("Not connected");
 
             // Load lcd font. The stream must be closed, otherwise Windows keeps
@@ -93,8 +129,18 @@ public class PRM80X0View extends javax.swing.JFrame {
             powerFont = powerFont.deriveFont(Font.BOLD, powerFont.getSize2D() * 0.85f);
             this.hpLabel.setFont(powerFont);
             this.lpLabel.setFont(powerFont);
+            this.busyLabel.setFont(powerFont);
 
+            this.initPortList();
             this.initZoom();
+
+            this.pollTimer = new Timer(1500, new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    poll();
+                }
+            });
+            this.pollTimer.start();
     }
 
     // ---- Zoom -------------------------------------------------------------
@@ -178,18 +224,40 @@ public class PRM80X0View extends javax.swing.JFrame {
         this.statusAnimationLabel.setText(Math.round(Zoom.get() * 100) + " %");
     }
 
+    // ---- Dialogs ----------------------------------------------------------
+
+    /**
+     * Show a modal dialog in front of the main window. On Windows a dialog
+     * opened from a menu sometimes appeared behind the main window.
+     */
+    private void showDialog(final java.awt.Window dialog) {
+        dialog.setLocationRelativeTo(this);
+        dialog.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowOpened(WindowEvent e) {
+                dialog.toFront();
+                dialog.requestFocus();
+            }
+        });
+        dialog.setVisible(true);
+    }
+
     public void showAboutBox() {
         if (aboutBox == null) {
             aboutBox = new PRM80X0AboutBox(this);
-            aboutBox.setLocationRelativeTo(this);
         }
-        aboutBox.setVisible(true);
+        this.showDialog(aboutBox);
     }
 
     /** Leave the application, closing the connection to the PRM80 first. */
     public void quit() {
-        if (this.vdf != null && this.disconnectMenuItem.isEnabled()) {
-            this.disconnect();
+        this.pollTimer.stop();
+        if (this.vdf != null) {
+            try {
+                this.vdf.disconnect();
+            } catch (Exception ex) {
+                Logger.getLogger(PRM80X0View.class.getName()).log(Level.FINE, null, ex);
+            }
         }
         this.dispose();
         System.exit(0);
@@ -198,12 +266,228 @@ public class PRM80X0View extends javax.swing.JFrame {
     private void setStatus(String text) {
         this.statusMessageLabel.setText(text);
     }
+
+    // ---- Serial port selection --------------------------------------------
+
+    private void initPortList() {
+        this.fillPortList();
+        // update the list each time it is opened (USB adapter plugged in)
+        this.portComboBox.addPopupMenuListener(new PopupMenuListener() {
+            @Override
+            public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+                fillPortList();
+            }
+
+            @Override
+            public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+            }
+
+            @Override
+            public void popupMenuCanceled(PopupMenuEvent e) {
+            }
+        });
+    }
+
+    private void fillPortList() {
+        Object current = this.portComboBox.getSelectedItem();
+        String selected = current != null && !current.toString().trim().isEmpty()
+                ? current.toString().trim() : this.config.getSerialPort();
+        this.portComboBox.removeAllItems();
+        for (String port : SerialControler.listPortNames()) {
+            this.portComboBox.addItem(port);
+        }
+        this.portComboBox.setSelectedItem(selected);
+    }
+
+    private String selectedPort() {
+        Object port = this.portComboBox.getEditor().getItem();
+        if (port == null || port.toString().trim().isEmpty())
+            port = this.portComboBox.getSelectedItem();
+        return port == null ? "" : port.toString().trim();
+    }
+
+    // ---- Connection -------------------------------------------------------
+
+    /**
+     * Connect in the background.
+     * @param controler the controller to use (serial, TCP or virtual)
+     * @param address serial port or server address
+     * @param description shown in the status bar, e.g. "COM3"
+     */
+    private void connect(final Controler controler, final String address, final String description) {
+        if (this.vdf != null || this.connecting)
+            return;
+        this.connecting = true;
+        this.updateConnectControls();
+        this.setStatus("Connecting to " + description + " ...");
+        if (this.serialSpy != null && controler instanceof PRMControler)
+            ((PRMControler) controler).addSerialListener(this.serialSpy);
+        this.worker.run(() -> {
+            controler.connectPRM(address);
+            // read everything needed later now, so that the display can be
+            // updated without waiting for the PRM80
+            controler.getPLLStep();
+            controler.getMaxChan();
+            controler.refreshState();
+            return new VirtualDeviceFirmware(controler);
+        }, vdf -> {
+            this.connecting = false;
+            this.vdf = vdf;
+            controler.setPRMStateChangeListener(new PRMStateChangeListener() {
+                @Override
+                public void stateUpdated() {
+                    // called by the communication thread
+                    SwingUtilities.invokeLater(() -> refreshDisplay());
+                }
+            });
+            this.memToggleButton.setSelected(true);
+            this.setEnableControls(true);
+            this.updateConnectControls();
+            this.setStatus("Connected to " + description + this.describePrm());
+            this.refreshDisplay();
+        }, ex -> {
+            this.connecting = false;
+            controler.setPRMStateChangeListener(null);
+            try {
+                controler.disconnectPRM();
+            } catch (Exception e) {
+                Logger.getLogger(PRM80X0View.class.getName()).log(Level.FINE, null, e);
+            }
+            this.updateConnectControls();
+            this.setStatus("Not connected");
+            JOptionPane.showMessageDialog(this, "Cannot connect to " + description + ":\n" + message(ex),
+                    "Connection error", JOptionPane.ERROR_MESSAGE);
+        });
+    }
+
+    private String describePrm() {
+        try {
+            Controler c = this.vdf.getPRMControler();
+            return " - " + (c.getPRMType() == Controler.PRM8070 ? "PRM8070" : "PRM8060")
+                    + " V" + c.getMajorFirmwareVersion() + "." + c.getMinorFirmwareVersion()
+                    + " (" + c.getPRMFrequencyCode() + " MHz)";
+        } catch (Exception ex) {
+            return "";
+        }
+    }
+
+    private void disconnect() {
+        if (this.vdf == null)
+            return;
+        final VirtualDeviceFirmware old = this.vdf;
+        this.vdf = null;
+        old.getPRMControler().setPRMStateChangeListener(null);
+        this.setEnableControls(false);
+        this.updateConnectControls();
+        this.setStatus("Not connected");
+        this.worker.run(() -> {
+            old.disconnect();
+            return null;
+        }, null);
+    }
+
+    /** Enable / disable the connect and disconnect buttons and menu items. */
+    private void updateConnectControls() {
+        boolean connected = this.vdf != null;
+        boolean free = !connected && !this.connecting;
+        this.connectMenuItem.setEnabled(free);
+        this.connectTcpMenuItem.setEnabled(free);
+        this.connectVirtualMenuItem.setEnabled(free);
+        this.disconnectMenuItem.setEnabled(connected);
+        this.portComboBox.setEnabled(free);
+        this.connectButton.setEnabled(!this.connecting);
+        this.connectButton.setText(connected ? "Disconnect" : "Connect");
+    }
+
+    // ---- Communication with the PRM80 -------------------------------------
+
+    /** Run a command in the background, the display is updated afterwards. */
+    private void command(PrmWorker.Task<?> task) {
+        if (this.vdf == null)
+            return;
+        this.worker.run(task, ex -> {
+            this.setStatus("Error: " + message(ex));
+            JOptionPane.showMessageDialog(this, "Communication error:\n" + message(ex),
+                    "PRM80", JOptionPane.ERROR_MESSAGE);
+        });
+    }
+
+    /** Read the state of the PRM80 when nothing else is to do. */
+    private void poll() {
+        final VirtualDeviceFirmware v = this.vdf;
+        if (v == null || !this.worker.isIdle())
+            return;
+        this.worker.poll(() -> {
+            v.getPRMControler().refreshState();
+            return null;
+        }, null);
+    }
+
+    /** Called by the worker (GUI thread) when commands start or end. */
+    private void busyChanged() {
+        boolean busy = this.worker.isBusy();
+        this.busyLabel.setVisible(busy && this.vdf != null);
+        if (!busy)
+            this.refreshDisplay();
+    }
+
+    private static String message(Exception ex) {
+        String msg = ex.getMessage();
+        if (msg == null || msg.isEmpty())
+            msg = "No valid answer from the PRM80 (" + ex.getClass().getSimpleName() + ")";
+        return msg;
+    }
+
+    private static String formatFrequency(int hz) {
+        String freq = Integer.toString(hz);
+        if (freq.length() != 9)
+            return freq;
+        return freq.substring(0, 3)+"."+freq.substring(3, 6)+"."+freq.substring(6, 9);
+    }
+
+    private static String formatChannel(int channel) {
+        return channel < 10 ? "0" + channel : Integer.toString(channel);
+    }
+
+    /**
+     * Show the values of the PRM80 (as read by the last command or poll).
+     * Not while commands are waiting: the display shows what the user
+     * clicked, the PRM80 values are shown when all commands are done.
+     */
+    private void refreshDisplay() {
+        if (this.vdf == null || this.worker.isBusy())
+            return;
+        try {
+            Controler c = this.vdf.getPRMControler();
+            this.shownChannel = c.getCurrentChannel();
+            this.shownRx = c.getRxPLLFrequency();
+            this.shownTx = c.getTxPLLFrequency();
+            this.shownHighPower = this.vdf.isHighPower();
+
+            this.chanLabel.setText(formatChannel(this.shownChannel));
+            this.freqLabel.setText(formatFrequency(this.shownRx));
+            this.txFreqLabel.setText(formatFrequency(this.shownTx));
+            this.hpLabel.setVisible(this.shownHighPower);
+            this.lpLabel.setVisible(!this.shownHighPower);
+            this.infoLabel.setText(this.vdf.isPLLLocked() ? "" : "-- Synthesizer ERROR --");
+
+            this.updatingDisplay = true;
+            if (!this.volumeSlider.getValueIsAdjusting() && !this.volumeQueued.get())
+                this.volumeSlider.setValue(this.vdf.getVolume());
+            if (!this.squelchQueued.get())
+                this.squelchSpinner.setValue(this.vdf.getSquelch());
+        } catch (CommunicationException | RuntimeException ex) {
+            Logger.getLogger(PRM80X0View.class.getName()).log(Level.WARNING, null, ex);
+        } finally {
+            this.updatingDisplay = false;
+        }
+    }
     
     private void setEnableControls(boolean enable) {
         this.upButton.setEnabled(enable);
         this.downButton.setEnabled(enable);
         this.volumeLabel.setEnabled(enable);
-        this.volumeSlider.setEnabled(/*false*/enable);
+        this.volumeSlider.setEnabled(enable);
         this.squelchLabel.setEnabled(enable);
         this.squelchSpinner.setEnabled(enable);
         this.vfoToggleButton.setEnabled(enable);
@@ -213,12 +497,12 @@ public class PRM80X0View extends javax.swing.JFrame {
         this.memoryMenu.setEnabled(enable);
         this.freqLabel.setVisible(enable);
         this.txFreqLabel.setVisible(enable);
-        this.chanLabel.setVisible(enable && !this.vdf.isVfoMode());
+        this.chanLabel.setVisible(enable && this.vdf != null && !this.vdf.isVfoMode());
         this.infoLabel.setVisible(enable);
-        this.channelManagerMenuItem.setEnabled(enable);
         if (!enable) {
             this.hpLabel.setVisible(false);
             this.lpLabel.setVisible(false);
+            this.busyLabel.setVisible(false);
         }
         this.powerButton.setEnabled(enable);
         this.exportA51MenuItem.setEnabled(enable);
@@ -226,7 +510,7 @@ public class PRM80X0View extends javax.swing.JFrame {
     }
     
     private void setVisibleExpertControls(boolean enable) {
-        this.connectVirtualMenuItem.setVisible(enable & CmdLineOptions.getInstance().isDebug());
+        this.connectVirtualMenuItem.setVisible(enable);
         this.resetMenuItem.setVisible(enable);
         this.razMenuItem.setVisible(enable);
         this.memoryMenu.setVisible(enable);
@@ -247,6 +531,10 @@ public class PRM80X0View extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        connectPanel = new javax.swing.JPanel();
+        portLabel = new javax.swing.JLabel();
+        portComboBox = new javax.swing.JComboBox<>();
+        connectButton = new javax.swing.JButton();
         mainPanel = new javax.swing.JPanel();
         jPanel1 = new javax.swing.JPanel();
         freqLabel = new javax.swing.JLabel();
@@ -255,6 +543,7 @@ public class PRM80X0View extends javax.swing.JFrame {
         lpLabel = new javax.swing.JLabel();
         txFreqLabel = new javax.swing.JLabel();
         infoLabel = new javax.swing.JLabel();
+        busyLabel = new javax.swing.JLabel();
         jPanel2 = new javax.swing.JPanel();
         vfoToggleButton = new javax.swing.JToggleButton();
         memToggleButton = new javax.swing.JToggleButton();
@@ -313,6 +602,30 @@ public class PRM80X0View extends javax.swing.JFrame {
                 formWindowClosing(evt);
             }
         });
+
+        connectPanel.setName("connectPanel"); // NOI18N
+        connectPanel.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
+
+        portLabel.setText("Serial port:"); // NOI18N
+        portLabel.setName("portLabel"); // NOI18N
+        connectPanel.add(portLabel);
+
+        portComboBox.setEditable(true);
+        portComboBox.setToolTipText("Serial port of the PRM80, the list is updated when it is opened"); // NOI18N
+        portComboBox.setName("portComboBox"); // NOI18N
+        portComboBox.setPreferredSize(new java.awt.Dimension(160, 26));
+        connectPanel.add(portComboBox);
+
+        connectButton.setText("Connect"); // NOI18N
+        connectButton.setName("connectButton"); // NOI18N
+        connectButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                connectButtonActionPerformed(evt);
+            }
+        });
+        connectPanel.add(connectButton);
+
+        getContentPane().add(connectPanel, java.awt.BorderLayout.PAGE_START);
 
         mainPanel.setName("mainPanel"); // NOI18N
         mainPanel.setLayout(new javax.swing.BoxLayout(mainPanel, javax.swing.BoxLayout.Y_AXIS));
@@ -379,6 +692,14 @@ public class PRM80X0View extends javax.swing.JFrame {
         infoLabel.setText(""); // NOI18N
         infoLabel.setName("infoLabel"); // NOI18N
         jPanel1.add(infoLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 70, 390, 20));
+
+        busyLabel.setBackground(new java.awt.Color(255, 0, 0));
+        busyLabel.setForeground(new java.awt.Color(0, 0, 0));
+        busyLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        busyLabel.setText("BUSY"); // NOI18N
+        busyLabel.setName("busyLabel"); // NOI18N
+        busyLabel.setOpaque(true);
+        jPanel1.add(busyLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 50, 90, 16));
 
         mainPanel.add(jPanel1);
 
@@ -500,7 +821,7 @@ public class PRM80X0View extends javax.swing.JFrame {
         fileMenu.setText("File"); // NOI18N
         fileMenu.setName("fileMenu"); // NOI18N
 
-        connectMenuItem.setText("Connect"); // NOI18N
+        connectMenuItem.setText("Connect serial port"); // NOI18N
         connectMenuItem.setName("connectMenuItem"); // NOI18N
         connectMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -509,7 +830,7 @@ public class PRM80X0View extends javax.swing.JFrame {
         });
         fileMenu.add(connectMenuItem);
 
-        connectTcpMenuItem.setText("Connect  Server"); // NOI18N
+        connectTcpMenuItem.setText("Connect to server ..."); // NOI18N
         connectTcpMenuItem.setName("connectTcpMenuItem"); // NOI18N
         connectTcpMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -518,7 +839,7 @@ public class PRM80X0View extends javax.swing.JFrame {
         });
         fileMenu.add(connectTcpMenuItem);
 
-        connectVirtualMenuItem.setText("Connect PRM virtuel"); // NOI18N
+        connectVirtualMenuItem.setText("Connect virtual PRM (test)"); // NOI18N
         connectVirtualMenuItem.setName("connectVirtualMenuItem"); // NOI18N
         connectVirtualMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -551,8 +872,7 @@ public class PRM80X0View extends javax.swing.JFrame {
         ToolsMenu.setText("Tools"); // NOI18N
         ToolsMenu.setName("ToolsMenu"); // NOI18N
 
-        channelManagerMenuItem.setText("Channels"); // NOI18N
-        channelManagerMenuItem.setEnabled(false);
+        channelManagerMenuItem.setText("Channel manager ..."); // NOI18N
         channelManagerMenuItem.setName("channelManagerMenuItem"); // NOI18N
         channelManagerMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -561,7 +881,7 @@ public class PRM80X0View extends javax.swing.JFrame {
         });
         ToolsMenu.add(channelManagerMenuItem);
 
-        configurationMenuItem.setText("Configuration"); // NOI18N
+        configurationMenuItem.setText("Configuration ..."); // NOI18N
         configurationMenuItem.setEnabled(false);
         configurationMenuItem.setName("configurationMenuItem"); // NOI18N
         configurationMenuItem.addActionListener(new java.awt.event.ActionListener() {
@@ -584,7 +904,7 @@ public class PRM80X0View extends javax.swing.JFrame {
         });
         ToolsMenu.add(resetMenuItem);
 
-        razMenuItem.setText("R.A.Z."); // NOI18N
+        razMenuItem.setText("Reload RAM"); // NOI18N
         razMenuItem.setEnabled(false);
         razMenuItem.setName("razMenuItem"); // NOI18N
         razMenuItem.addActionListener(new java.awt.event.ActionListener() {
@@ -630,7 +950,7 @@ public class PRM80X0View extends javax.swing.JFrame {
 
         ToolsMenu.add(memoryMenu);
 
-        serialSpyMenuItem.setText("Spy series"); // NOI18N
+        serialSpyMenuItem.setText("Serial monitor"); // NOI18N
         serialSpyMenuItem.setName("serialSpyMenuItem"); // NOI18N
         serialSpyMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -651,7 +971,7 @@ public class PRM80X0View extends javax.swing.JFrame {
         expertSeparator.setName("expertSeparator"); // NOI18N
         ToolsMenu.add(expertSeparator);
 
-        optionMenuItem.setText("Options"); // NOI18N
+        optionMenuItem.setText("Options ..."); // NOI18N
         optionMenuItem.setName("optionMenuItem"); // NOI18N
         optionMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -752,67 +1072,68 @@ public class PRM80X0View extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void connectMenuActionPerformed(java.awt.event.ActionEvent evt) {                                            
-        try {
-            SerialControler prmControler = new SerialControler();
-            prmControler.connectPRM(this.config.getSerialPort());
-            this.setStatus("Connected to " + this.config.getSerialPort());
-                        
-            // Si terminal ouvert alors ajouter listener
-            if (this.serialSpy != null )
-                prmControler.addSerialListener(this.serialSpy);
-            
-            this.vdf = new VirtualDeviceFirmware(prmControler);
-            
-            this.disconnectMenuItem.setEnabled(true);
-            this.connectMenuItem.setEnabled(false);
-            this.connectVirtualMenuItem.setEnabled(false);
-            this.memToggleButton.setSelected(true);
-            this.connectTcpMenuItem.setEnabled(false);
-            
-            this.updateValues();
-            
-            this.vdf.getPRMControler().setPRMStateChangeListener(new PRMStateChangeListener() {
-                    @Override
-                    public void stateUpdated() {
-                        try {
-                            updateValues();
-                        } catch (CommunicationException ex) {
-                            Logger.getLogger(PRM80X0View.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    }
-                
-            });
-            
-            this.setEnableControls(true);
-       } catch (CommunicationException ex) {
-            this.disconnectMenuItem.setEnabled(false);
-            this.connectMenuItem.setEnabled(true);
-            JOptionPane.showMessageDialog(this, "Erreur de connexion : "+ex.getMessage(), "Erreur de connexion", JOptionPane.ERROR_MESSAGE);
-            Logger.getLogger(PRM80X0View.class.getName()).log(Level.WARNING, null, ex);
-        }
+        this.connectSerial();
     }                                                                                      
 
-    private void upButtonActionPerformed(java.awt.event.ActionEvent evt) {                                         
-        try {
-            this.vdf.increment();
-            this.updateValues();
-        } catch (CommunicationException ex) {
-            Logger.getLogger(PRM80X0View.class.getName()).log(Level.WARNING, null, ex);
+    private void connectButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_connectButtonActionPerformed
+        if (this.vdf != null)
             this.disconnect();
-            JOptionPane.showMessageDialog(this, "Erreur de connexion : "+ex.getMessage(), "Erreur de connexion", JOptionPane.ERROR_MESSAGE);
+        else
+            this.connectSerial();
+    }//GEN-LAST:event_connectButtonActionPerformed
+
+    private void connectSerial() {
+        String port = this.selectedPort();
+        if (port.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please select the serial port of the PRM80.",
+                    "Connect", JOptionPane.WARNING_MESSAGE);
+            return;
         }
+        this.config.setSerialPort(port);
+        this.connect(new SerialControler(), port, port);
+    }
+
+    private void upButtonActionPerformed(java.awt.event.ActionEvent evt) {                                         
+        this.step(+1);
     }                                                                                
 
     private void downButtonActionPerformed(java.awt.event.ActionEvent evt) {                                           
+        this.step(-1);
+    }                                                                                    
+
+    /** Channel or frequency up / down: shown at once, sent in the background. */
+    private void step(final int direction) {
+        if (this.vdf == null)
+            return;
         try {
-            this.vdf.decrement();
-            this.updateValues();
+            Controler c = this.vdf.getPRMControler();
+            if (this.vdf.isVfoMode()) {
+                int pllStep = c.getPLLStep();
+                this.shownRx += direction * pllStep;
+                this.shownTx += direction * pllStep;
+                this.freqLabel.setText(formatFrequency(this.shownRx));
+                this.txFreqLabel.setText(formatFrequency(this.shownTx));
+            } else {
+                int max = c.getMaxChan();
+                this.shownChannel += direction;
+                if (this.shownChannel > max)
+                    this.shownChannel = 0;
+                if (this.shownChannel < 0)
+                    this.shownChannel = max;
+                this.chanLabel.setText(formatChannel(this.shownChannel));
+            }
         } catch (CommunicationException ex) {
             Logger.getLogger(PRM80X0View.class.getName()).log(Level.WARNING, null, ex);
-            this.disconnect();
-            JOptionPane.showMessageDialog(this, "Erreur de connexion : "+ex.getMessage(), "Erreur de connexion", JOptionPane.ERROR_MESSAGE);
         }
-    }                                                                                    
+        final VirtualDeviceFirmware v = this.vdf;
+        this.command(() -> {
+            if (direction > 0)
+                v.increment();
+            else
+                v.decrement();
+            return null;
+        });
+    }
 
     private void zoomInMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_zoomInMenuItemActionPerformed
         this.setZoom(Zoom.stepUp(Zoom.get()));
@@ -843,322 +1164,278 @@ public class PRM80X0View extends javax.swing.JFrame {
     }//GEN-LAST:event_disconnectMenuItemActionPerformed
 
     private void memToggleButtonActionPerformed(java.awt.event.ActionEvent evt) {                                                
-        try {
-            this.vdf.setVfoMode(false);
-            this.chanLabel.setVisible(true);
-            this.updateValues();
-        } catch (CommunicationException ex) {
-            Logger.getLogger(PRM80X0View.class.getName()).log(Level.WARNING, null, ex);
-            this.disconnect();
-            JOptionPane.showMessageDialog(this, "Erreur de connexion : "+ex.getMessage(), "Erreur de connexion", JOptionPane.ERROR_MESSAGE);
-        }
+        if (this.vdf == null)
+            return;
+        this.chanLabel.setVisible(true);
+        final VirtualDeviceFirmware v = this.vdf;
+        this.command(() -> {
+            v.setVfoMode(false);
+            return null;
+        });
     }                                                                                              
 
     private void vfoToggleButtonActionPerformed(java.awt.event.ActionEvent evt) {                                                
-        try {
-            this.vdf.setVfoMode(true);
-            this.chanLabel.setVisible(false);
-        } catch (CommunicationException ex) {
-            Logger.getLogger(PRM80X0View.class.getName()).log(Level.WARNING, null, ex);
-            this.disconnect();
-            JOptionPane.showMessageDialog(this, "Erreur de connexion : "+ex.getMessage(), "Erreur de connexion", JOptionPane.ERROR_MESSAGE);
-        }
+        if (this.vdf == null)
+            return;
+        this.chanLabel.setVisible(false);
+        final VirtualDeviceFirmware v = this.vdf;
+        this.command(() -> {
+            v.setVfoMode(true);
+            return null;
+        });
     }                                                                                              
 
     private void squelchSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {                                            
-        try {
-            int value = Integer.parseInt(this.squelchSpinner.getValue().toString());
-            if (value < 0) {
-                value = 0;
-            }
-            if (value > 15) {
-                value = 15;
-            }
-            this.squelchSpinner.setValue(value);
-            this.vdf.setSquelch(value);
-        } catch (CommunicationException ex) {
-            Logger.getLogger(PRM80X0View.class.getName()).log(Level.WARNING, null, ex);
-            this.disconnect();
-            JOptionPane.showMessageDialog(this, "Erreur de connexion : "+ex.getMessage(), "Erreur de connexion", JOptionPane.ERROR_MESSAGE);
+        if (this.updatingDisplay || this.vdf == null)
+            return;
+        int value = Integer.parseInt(this.squelchSpinner.getValue().toString());
+        if (value < 0 || value > 15) {
+            this.squelchSpinner.setValue(Math.max(0, Math.min(15, value)));
+            return;     // the corrected value fires a new event
+        }
+        this.wantedSquelch.set(value);
+        if (this.squelchQueued.compareAndSet(false, true)) {
+            final VirtualDeviceFirmware v = this.vdf;
+            this.command(() -> {
+                this.squelchQueued.set(false);
+                v.setSquelch(this.wantedSquelch.get());
+                return null;
+            });
         }
     }                                                                                      
 
     private void volumeSliderStateChanged(javax.swing.event.ChangeEvent evt) {                                          
-        try {
-            this.vdf.setVolume(this.volumeSlider.getValue());
-        } catch (CommunicationException ex) {
-            Logger.getLogger(PRM80X0View.class.getName()).log(Level.WARNING, null, ex);
-            this.disconnect();
-            JOptionPane.showMessageDialog(this, "Erreur de connexion : "+ex.getMessage(), "Erreur de connexion", JOptionPane.ERROR_MESSAGE);
+        if (this.updatingDisplay || this.vdf == null)
+            return;
+        this.wantedVolume.set(this.volumeSlider.getValue());
+        if (this.volumeQueued.compareAndSet(false, true)) {
+            final VirtualDeviceFirmware v = this.vdf;
+            this.command(() -> {
+                this.volumeQueued.set(false);
+                v.setVolume(this.wantedVolume.get());
+                return null;
+            });
         }
     }                                                                                  
 
     private void channelManagerMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_channelManagerMenuItemActionPerformed
-            javax.swing.JFrame mainFrame = this;
-            try {
-                ChannelManager cm = new ChannelManager(mainFrame, true, this.vdf.getPRMControler().getChannels());
-                cm.setLocationRelativeTo(mainFrame);
-                cm.setVisible(true);
-                if (cm.isChannelListValid()) {
-                    this.vdf.getPRMControler().setChannels(cm.getChannelList());
-                    this.vdf.reset();
-                    this.vdf.setCurrentChannel(0);
-                    updateValues();
-                }
-            } catch (CommunicationException ex) {
-                this.disconnectMenuItem.setEnabled(false);
-                this.connectMenuItem.setEnabled(true);
-                JOptionPane.showMessageDialog(this, "Erreur de connexion : "+ex.getMessage(), "Erreur de connexion", JOptionPane.ERROR_MESSAGE);
-                Logger.getLogger(PRM80X0View.class.getName()).log(Level.WARNING, null, ex);
+        ChannelManager cm = new ChannelManager(this, new ChannelManager.PrmAccess() {
+            @Override
+            public boolean isConnected() {
+                return vdf != null;
             }
+
+            @Override
+            public void readChannels(Consumer<ChannelList> done, Consumer<String> error) {
+                final VirtualDeviceFirmware v = vdf;
+                if (v == null) {
+                    error.accept("Not connected");
+                    return;
+                }
+                worker.run(() -> {
+                    ChannelList list = v.getPRMControler().getChannels();
+                    if (list == null)
+                        throw new Exception("No valid answer from the PRM80");
+                    return list;
+                }, done, ex -> error.accept(message(ex)));
+            }
+
+            @Override
+            public void writeChannels(ChannelList channels, Runnable done, Consumer<String> error) {
+                final VirtualDeviceFirmware v = vdf;
+                if (v == null) {
+                    error.accept("Not connected");
+                    return;
+                }
+                worker.run(() -> {
+                    v.getPRMControler().setChannels(channels);
+                    v.reset();
+                    v.setCurrentChannel(0);
+                    return null;
+                }, result -> {
+                    memToggleButton.setSelected(true);
+                    chanLabel.setVisible(true);
+                    done.run();
+                }, ex -> error.accept(message(ex)));
+            }
+        });
+        this.showDialog(cm);
     }//GEN-LAST:event_channelManagerMenuItemActionPerformed
 
     private void optionMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_optionMenuItemActionPerformed
-        javax.swing.JFrame mainFrame = this;
-        OptionsDialog cd = new OptionsDialog(mainFrame, true);
-        cd.setLocationRelativeTo(mainFrame);
+        OptionsDialog cd = new OptionsDialog(this, true);
         cd.setConfiguration(this.config);           
-        cd.setVisible(true);
+        this.showDialog(cd);
         this.setVisibleExpertControls(this.config.isExpertMode());
-}//GEN-LAST:event_optionMenuItemActionPerformed
+        if (this.portComboBox.isEnabled())
+            this.portComboBox.setSelectedItem(this.config.getSerialPort());
+    }//GEN-LAST:event_optionMenuItemActionPerformed
 
     private void connectVirtualMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_connectVirtualMenuItemActionPerformed
-        try {
-        Controler prmControler = new DummyControler();
-        prmControler.connectPRM("");
-        this.setStatus("Connected to virtual PRM");
-        this.vdf = new VirtualDeviceFirmware(prmControler);
-        this.disconnectMenuItem.setEnabled(true);
-        this.connectMenuItem.setEnabled(false);
-        this.connectVirtualMenuItem.setEnabled(false);
-        this.connectTcpMenuItem.setEnabled(false);
-
-        this.updateValues();
-        
-        this.setEnableControls(true);
-        } catch (CommunicationException ex) {
-            this.disconnectMenuItem.setEnabled(true);
-            this.connectMenuItem.setEnabled(false);
-            this.connectVirtualMenuItem.setEnabled(false);
-            Logger.getLogger(PRM80X0View.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        this.connect(new DummyControler(), "", "virtual PRM");
     }//GEN-LAST:event_connectVirtualMenuItemActionPerformed
 
     private void serialSpyMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_serialSpyMenuItemActionPerformed
-        javax.swing.JFrame mainFrame = this;
+        if (this.serialSpy == null) {
             this.serialSpy = new TerminalDialog();
-            this.serialSpy.setLocationRelativeTo(mainFrame);
-            if (this.vdf != null && this.vdf.getPRMControler().getClass().getName().endsWith("SerialControler")) {
-                ((SerialControler) this.vdf.getPRMControler()).addSerialListener(this.serialSpy);
-            }            
-            this.serialSpy.setVisible(true);
+            this.serialSpy.setLocationRelativeTo(this);
+            if (this.vdf != null && this.vdf.getPRMControler() instanceof PRMControler) {
+                ((PRMControler) this.vdf.getPRMControler()).addSerialListener(this.serialSpy);
+            }
+        }
+        this.serialSpy.setVisible(true);
+        this.serialSpy.toFront();
     }//GEN-LAST:event_serialSpyMenuItemActionPerformed
 
     private void powerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_powerButtonActionPerformed
-        try {
-            boolean power = !this.vdf.isHighPower();
-            this.hpLabel.setVisible(power);
-            this.lpLabel.setVisible(!power);
-            this.vdf.setHighPower(power);
-        } catch (CommunicationException ex) {
-            Logger.getLogger(PRM80X0View.class.getName()).log(Level.WARNING, null, ex);
-            this.disconnect();
-            JOptionPane.showMessageDialog(this, "Erreur de connexion : "+ex.getMessage(), "Erreur de connexion", JOptionPane.ERROR_MESSAGE);
-        }
+        if (this.vdf == null)
+            return;
+        final boolean power = !this.shownHighPower;
+        this.shownHighPower = power;
+        this.hpLabel.setVisible(power);
+        this.lpLabel.setVisible(!power);
+        final VirtualDeviceFirmware v = this.vdf;
+        this.command(() -> {
+            v.setHighPower(power);
+            return null;
+        });
     }//GEN-LAST:event_powerButtonActionPerformed
 
 private void connectTcpMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_connectTcpMenuItemActionPerformed
     ConnectDialog cd = new ConnectDialog(this, true);
-    cd.setLocationRelativeTo(this);
-    cd.setVisible(true);
-    if (cd.getServerAdress() != null) {        
-        try {
-            TcpControler prmControler = new TcpControler();
-            prmControler.connectPRM(cd.getServerAdress());
-            this.setStatus("Connected to " + cd.getServerAdress());
-            
-            this.config.setLastServerURI(cd.getServerAdress());
-            // Si terminal ouvert alors ajouter listener
-            if (this.serialSpy != null )
-                prmControler.addSerialListener(this.serialSpy);
-            
-            this.vdf = new VirtualDeviceFirmware(prmControler);
-            
-            this.disconnectMenuItem.setEnabled(true);
-            this.connectMenuItem.setEnabled(false);
-            this.connectVirtualMenuItem.setEnabled(false);
-            this.memToggleButton.setSelected(true);
-            this.connectTcpMenuItem.setEnabled(false);
-            
-            this.updateValues();
-            
-            this.vdf.getPRMControler().setPRMStateChangeListener(new PRMStateChangeListener() {
-                    @Override
-                    public void stateUpdated() {
-                        try {
-                            updateValues();
-                        } catch (CommunicationException ex) {
-                            Logger.getLogger(PRM80X0View.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    }
-                
-            });
-            
-            this.setEnableControls(true);
-        } catch (CommunicationException ex) {
-            this.disconnectMenuItem.setEnabled(false);
-            this.connectMenuItem.setEnabled(true);
-            JOptionPane.showMessageDialog(this, "Erreur de connexion : "+ex.getMessage(), "Erreur de connexion", JOptionPane.ERROR_MESSAGE);
-            Logger.getLogger(PRM80X0View.class.getName()).log(Level.WARNING, null, ex);
-        }
+    this.showDialog(cd);
+    final String server = cd.getServerAdress();
+    if (server != null) {        
+        this.config.setLastServerURI(server);
+        this.connect(new TcpControler(), server, server);
     }
 }//GEN-LAST:event_connectTcpMenuItemActionPerformed
 
 private void exportA51MenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exportA51MenuItemActionPerformed
+    if (this.vdf == null)
+        return;
     JFileChooser fc = new JFileChooser();
-    int value = fc.showSaveDialog(this);
-    if (value == JFileChooser.APPROVE_OPTION)  {
-            try {
-                A51Export.exportA51(this.vdf.getPRMControler(), fc.getSelectedFile());
-            } catch (Exception ex) {
-                Logger.getLogger(PRM80X0View.class.getName()).log(Level.INFO, null, ex);
-            }
+    if (fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION)  {
+        final File file = fc.getSelectedFile();
+        final VirtualDeviceFirmware v = this.vdf;
+        this.command(() -> {
+            A51Export.exportA51(v.getPRMControler(), file);
+            return null;
+        });
     }
 }//GEN-LAST:event_exportA51MenuItemActionPerformed
 
 private void resetMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resetMenuItemActionPerformed
-        try {
-            this.vdf.reset();
-            updateValues();
-        } catch (CommunicationException ex) {
-            this.disconnectMenuItem.setEnabled(false);
-            this.connectMenuItem.setEnabled(true);
-            Logger.getLogger(PRM80X0View.class.getName()).log(Level.WARNING, null, ex);
-            JOptionPane.showMessageDialog(this, "Erreur de connexion : "+ex.getMessage(), "Erreur de connexion", JOptionPane.ERROR_MESSAGE);
-        }
+    final VirtualDeviceFirmware v = this.vdf;
+    this.command(() -> {
+        v.reset();
+        return null;
+    });
 }//GEN-LAST:event_resetMenuItemActionPerformed
 
 private void configurationMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_configurationMenuItemActionPerformed
-//     DriverManager.getInstance().loadDrivers();
-    javax.swing.JFrame mainFrame = this;
-        ConfigurationDialog cd = new ConfigurationDialog(mainFrame, this.vdf);
-        cd.setLocationRelativeTo(mainFrame);
-        cd.setVisible(true);
+    if (this.vdf == null)
+        return;
+    final ConfigurationDialog cd = new ConfigurationDialog(this, this.vdf);
+    this.showDialog(cd);
+    if (cd.isSaved()) {
+        final Controler c = this.vdf.getPRMControler();
+        this.command(() -> {
+            if (cd.getPllStep() != c.getPLLStep())
+                c.setPLLStep(cd.getPllStep());
+            if (c.supportsTxShift() && cd.getTxShift() != c.getTxFrequencyShift())
+                c.setTxFrequencyShift(cd.getTxShift());
+            if (c.supportsScanSpeed() && cd.getScanSpeed() != c.getScanSpeed())
+                c.setScanSpeed(cd.getScanSpeed());
+            c.refreshState();
+            return null;
+        });
+    }
 }//GEN-LAST:event_configurationMenuItemActionPerformed
 
 private void ram2eepromMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ram2eepromMenuItemActionPerformed
-        try {
-            this.vdf.getPRMControler().RAM2EEPROM();
-        } catch (CommunicationException ex) {
-            Logger.getLogger(PRM80X0View.class.getName()).log(Level.WARNING, null, ex);
-            JOptionPane.showMessageDialog(this, "Erreur de connexion : "+ex.getMessage(), "Erreur de connexion", JOptionPane.ERROR_MESSAGE);
-        }
+    final VirtualDeviceFirmware v = this.vdf;
+    this.command(() -> {
+        v.getPRMControler().RAM2EEPROM();
+        return null;
+    });
 }//GEN-LAST:event_ram2eepromMenuItemActionPerformed
 
 private void eeprom2ramMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_eeprom2ramMenuItemActionPerformed
-        try {
-            this.vdf.getPRMControler().EEPROM2RAM();
-        } catch (CommunicationException ex) {
-            Logger.getLogger(PRM80X0View.class.getName()).log(Level.WARNING, null, ex);
-            JOptionPane.showMessageDialog(this, "Erreur de connexion : "+ex.getMessage(), "Erreur de connexion", JOptionPane.ERROR_MESSAGE);
-        }
+    final VirtualDeviceFirmware v = this.vdf;
+    this.command(() -> {
+        v.getPRMControler().EEPROM2RAM();
+        return null;
+    });
 }//GEN-LAST:event_eeprom2ramMenuItemActionPerformed
 
 private void razMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_razMenuItemActionPerformed
-        try {
-            this.vdf.getPRMControler().reloadRAM();
-        } catch (CommunicationException ex) {
-            Logger.getLogger(PRM80X0View.class.getName()).log(Level.WARNING, null, ex);
-            JOptionPane.showMessageDialog(this, "Erreur de connexion : "+ex.getMessage(), "Erreur de connexion", JOptionPane.ERROR_MESSAGE);
-        }
+    final VirtualDeviceFirmware v = this.vdf;
+    this.command(() -> {
+        v.getPRMControler().reloadRAM();
+        return null;
+    });
 }//GEN-LAST:event_razMenuItemActionPerformed
 
 private void chanLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_chanLabelMouseClicked
-        try {
-            if (evt.getButton() == MouseEvent.BUTTON1) {
-                SelectChannelDialog d = new SelectChannelDialog(this, true);
-                d.setChannel(Integer.parseInt(this.vdf.getChannel()));
-                d.setVisible(true);
-                if (d.getChannel() != -1) {
-                    this.vdf.setCurrentChannel(d.getChannel());
-                    this.updateValues();
-                }
-            }
-        } catch (CommunicationException ex) {
-            Logger.getLogger(PRM80X0View.class.getName()).log(Level.WARNING, null, ex);
-            JOptionPane.showMessageDialog(this, "Erreur de connexion : "+ex.getMessage(), "Erreur de connexion", JOptionPane.ERROR_MESSAGE);
-        }
-
+    if (this.vdf == null || evt.getButton() != MouseEvent.BUTTON1)
+        return;
+    SelectChannelDialog d = new SelectChannelDialog(this, true);
+    d.setChannel(this.shownChannel);
+    this.showDialog(d);
+    final int channel = d.getChannel();
+    if (channel != -1) {
+        this.shownChannel = channel;
+        this.chanLabel.setText(formatChannel(channel));
+        final VirtualDeviceFirmware v = this.vdf;
+        this.command(() -> {
+            v.setCurrentChannel(channel);
+            return null;
+        });
+    }
 }//GEN-LAST:event_chanLabelMouseClicked
 
 private void freqLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_freqLabelMouseClicked
-     try {
-            if (evt.getButton() == MouseEvent.BUTTON1) {
-                SelectFrequencyDialog d = new SelectFrequencyDialog(this, true);
-                d.setRxFrequency(this.vdf.getPRMControler().getRxPLLFrequency());
-                d.setVisible(true);
-                if (d.getRxFrequency() != -1) {
-                    this.vdf.getPRMControler().setRxPLLFrequecny(d.getRxFrequency());
-
-            if (this.ShiftEnabledCheckbox.isSelected()) {             // ShiftEnabled
-                if (this.ShiftPositiveCheckbox.isSelected())           // ShiftPositiv
-                    this.vdf.getPRMControler().setTxPLLFrequency(d.getRxFrequency()+Integer.parseInt(this.ShiftFreqSpinner.getValue().toString()));
-                else
-                    this.vdf.getPRMControler().setTxPLLFrequency(d.getRxFrequency()-Integer.parseInt(this.ShiftFreqSpinner.getValue().toString()));
-            }    
-            else
-                    this.vdf.getPRMControler().setTxPLLFrequency(d.getRxFrequency());
-                
-                    this.vdf.setVfoMode(true);
-                    this.chanLabel.setVisible(false);
-                    this.vfoToggleButton.setSelected(true);
-                    this.updateValues();
-                }
-            }
-        } catch (CommunicationException ex) {
-            Logger.getLogger(PRM80X0View.class.getName()).log(Level.WARNING, null, ex);
-            JOptionPane.showMessageDialog(this, "Erreur de connexion : "+ex.getMessage(), "Erreur de connexion", JOptionPane.ERROR_MESSAGE);
+    if (this.vdf == null || evt.getButton() != MouseEvent.BUTTON1)
+        return;
+    SelectFrequencyDialog d = new SelectFrequencyDialog(this, true);
+    d.setRxFrequency(this.shownRx);
+    this.showDialog(d);
+    final int rx = d.getRxFrequency();
+    if (rx != -1) {
+        int tx = rx;
+        if (this.ShiftEnabledCheckbox.isSelected()) {             // ShiftEnabled
+            int shift = Integer.parseInt(this.ShiftFreqSpinner.getValue().toString());
+            tx = this.ShiftPositiveCheckbox.isSelected() ? rx + shift : rx - shift;
         }
+        final int txFreq = tx;
+        // show at once
+        this.shownRx = rx;
+        this.shownTx = txFreq;
+        this.freqLabel.setText(formatFrequency(rx));
+        this.txFreqLabel.setText(formatFrequency(txFreq));
+        this.chanLabel.setVisible(false);
+        this.vfoToggleButton.setSelected(true);
+        final VirtualDeviceFirmware v = this.vdf;
+        this.command(() -> {
+            v.getPRMControler().setRxPLLFrequecny(rx);
+            v.getPRMControler().setTxPLLFrequency(txFreq);
+            v.setVfoMode(true);
+            return null;
+        });
+    }
 }//GEN-LAST:event_freqLabelMouseClicked
-    private void disconnect() {
-        try {
-            this.disconnectMenuItem.setEnabled(false);
-            this.connectMenuItem.setEnabled(true);
-            this.connectVirtualMenuItem.setEnabled(true);
-            this.connectTcpMenuItem.setEnabled(true);
-            this.setEnableControls(false);
-            this.vdf.disconnect();
-            this.setStatus("Not connected");
-        } catch (CommunicationException ex) {
-            Logger.getLogger(PRM80X0View.class.getName()).log(Level.WARNING, null, ex);
-        }
-    }
-    
-    private void updateValues() throws CommunicationException {
-        this.chanLabel.setText(this.vdf.getChannel());
-        this.freqLabel.setText(this.vdf.getRxFrequency());
-        this.txFreqLabel.setText(this.vdf.getTxFrequency());
-
-        this.squelchSpinner.setValue(this.vdf.getSquelch());
-        this.volumeSlider.setValue(this.vdf.getVolume());
-
-        this.hpLabel.setVisible(this.vdf.isHighPower());
-        this.lpLabel.setVisible(!this.vdf.isHighPower());
-
-        if (this.vdf.isPLLLocked()) {
-            this.infoLabel.setText("");
-        }
-        else {
-            this.infoLabel.setText("-- Synthesizer ERROR --");
-        }
-
-    }
     
     public Option getConfiguration() {
         return this.config;
     }
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel busyLabel;
+    private javax.swing.JButton connectButton;
+    private javax.swing.JPanel connectPanel;
+    private javax.swing.JComboBox<String> portComboBox;
+    private javax.swing.JLabel portLabel;
     private javax.swing.JMenu ToolsMenu;
     private javax.swing.JLabel chanLabel;
     private javax.swing.JMenuItem channelManagerMenuItem;

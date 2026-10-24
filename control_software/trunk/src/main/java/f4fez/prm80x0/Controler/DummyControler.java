@@ -222,7 +222,9 @@ public class DummyControler implements Controler{
             int statePos = i + MemoryImageV3.RAM_AREA_ADRESS_STATE*256;
             byte state = this.image.getRamData(statePos);
             String shift = "";
+            String shiftEnabled = "";
             if ((state & 1) == 1) {
+                shiftEnabled = "Enabled";
                 if ((state & 4) == 4) {
                     shift = "+";
                 }
@@ -230,7 +232,8 @@ public class DummyControler implements Controler{
                     shift = "-";
                 }
             }
-            list.addChannel(new Channel(freq, "0.000000", "", shift, "", "Enabled"));               // here we have to add a real shift freq
+            Channel chan = new Channel(freq, "0.600000", "", shift, "", shiftEnabled);
+            list.addChannel(chan);
         }
         return list;
     }
@@ -246,7 +249,7 @@ public class DummyControler implements Controler{
             this.image.setRamData(ramPos+1, wordHi);     
             int statePos = i + MemoryImageV3.RAM_AREA_ADRESS_STATE*256;
             byte state = 0;
-            if (list.getChannel(i).isShift()) {
+            if (list.getChannel(i).isShiftEnabled()) {
                 state += 1;
                 if ("+".equals(list.getChannel(i).getShift()))
                     state += 4;
@@ -254,6 +257,10 @@ public class DummyControler implements Controler{
             this.image.setRamData(statePos,state);
         }
         this.image.setRamData(MemoryImageV3.RAM_ADRESS_MAX_CHAN, (byte)(list.countChannel()-1));
+    }
+
+    @Override
+    public void refreshState() {
     }
 
     @Override

@@ -97,8 +97,9 @@ public class TerminalDialog extends javax.swing.JFrame implements SerialListener
         //this.terminalTextArea.append(data);
     }
 
-    public void dataReceived(String data) {
-        this.terminalTextArea.append(data);
+    public void dataReceived(final String data) {
+        // called by the communication thread
+        javax.swing.SwingUtilities.invokeLater(() -> this.terminalTextArea.append(data));
     }
     
 }

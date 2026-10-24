@@ -36,6 +36,7 @@ public class Option {
     private final static String prefExpertMode = "expertMode";
     private final static String prefLastURI = "lastServerURI";   
     private final static String prefZoom = "zoom";
+    private final static String prefChannelFile = "channelFile";
     public Option() {
         this.prefs = Preferences.userRoot().node(prefRoot);
         // Last used serial port, otherwise the first one found
@@ -77,6 +78,15 @@ public class Option {
 
     public void setZoom(float zoom) {
         this.prefs.putFloat(Option.prefZoom, zoom);
+    }
+
+    /** Channel file (CSV) last read or saved in the channel manager, "" if none. */
+    public String getChannelFile() {
+        return this.prefs.get(Option.prefChannelFile, "");
+    }
+
+    public void setChannelFile(String file) {
+        this.prefs.put(Option.prefChannelFile, file == null ? "" : file);
     }
 
     public String getLastServerURI() {

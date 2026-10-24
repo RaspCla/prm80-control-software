@@ -94,6 +94,9 @@ public class SerialControler extends PRMControler{
             if (this.prmFreqCode != PRMControler.FREQ144 && this.prmFreqCode != PRMControler.FREQ430)
                 throw new SerialPortException("unknown PRM80x0 frequency variant: "+this.prmFreqCode);
             this.connected = true;
+            this.getPLLStep();
+            this.getMaxChan();
+            this.updateState();
         } catch (SerialPortException ex) {
             serialPort.closePort();
             throw ex;
@@ -161,63 +164,13 @@ public class SerialControler extends PRMControler{
             }
             rx.append((char) r);
             for (int j = 0; (j < chars.length) && !found ; j++)
-                found = r != chars[j];
+                found = r == chars[j];
         } while (!found);
         return rx.toString();
     }
 
-    @Override
-    public int getRxPLLFrequency() {      
-        Integer pllFreq;
-        String ident = this.sendCommand("e", "^[0-9A-F]{22}\r\n>$");
-//        this.waitChar('>', PRMControler.serialTimeout);
-// this.wait does always run into timeout because ">" was already received in line above
-        pllFreq = Integer.parseUnsignedInt(ident.substring(12, 16),16)* this.getPLLStep();        // PLL Frequency
-        if (this.prmFreqCode == PRMControler.FREQ144) 
-            this.rxFreq = pllFreq - 21400000;                                                       // If 430 Mhz Band Receive frequency is 21.4 Mhz higher than Receive PLL frequency (IF) 
-        else
-            this.rxFreq = pllFreq + 21400000;                                                       // If 144 Mhz Band Receive frequency is 21.4 Mhz higher than Receive PLL frequency (IF) 
-         
-        return this.rxFreq;
-    }
-    
-    @Override
-    public int getTxPLLFrequency() {      
-        Integer pllFreq;
-        String ident = this.sendCommand("e", "^[0-9A-F]{22}\r\n>$");
-//        this.waitChar('>', PRMControler.serialTimeout);
-     
-        pllFreq = Integer.parseUnsignedInt(ident.substring(16, 20),16)* this.getPLLStep();        // PLL Frequency
-        this.txFrreq = pllFreq;                                                       // If 430 Mhz Band Receive frequency is 21.4 Mhz higher than Receive PLL frequency (IF) 
-         
-        return this.txFrreq;
-    }
-    
-   @Override
-    public int getCurrentChannel() {        
-        String ident = this.sendCommand("e", "^[0-9A-F]{22}\r\n>$");
-//        this.waitChar('>', PRMControler.serialTimeout);
-        this.channel = Integer.parseUnsignedInt(ident.substring(2, 4),16);
-
-        return this.channel;
-    }   
-    
-   @Override
-    public boolean isPllLocked() {
-        String ident = this.sendCommand("e", "^[0-9A-F]{22}\r\n>$");
-//        this.waitChar('>', PRMControler.serialTimeout);
-        this.mode = Integer.parseUnsignedInt(ident.substring(0, 2),16);
-        return (this.mode & 16) == 16;
-    }
- 
-    public int getPower() {
-        String ident = this.sendCommand("e", "^[0-9A-F]{22}\r\n>$");
-//        this.waitChar('>', PRMControler.serialTimeout);
-        this.mode = Integer.parseUnsignedInt(ident.substring(0, 2),16);
-        if ( (this.mode & 2) == 2)
-            return SerialControler.POWER_LO;
-        else
-            return SerialControler.POWER_HI;
-    }
-
+    // The current values (frequencies, channel, power, PLL lock) are read
+    // with the "e" command in PRMControler.updateState() and cached there.
+    // Before, every getter sent its own "e" command, so each click caused
+    // more than ten serial round trips.
 }

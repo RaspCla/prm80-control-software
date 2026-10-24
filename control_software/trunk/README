@@ -45,6 +45,23 @@ group "dialout":   sudo usermod -aG dialout $USER   (then log in again)
 Ports are named /dev/ttyUSB0, /dev/ttyACM0, /dev/ttyS0, ... on Linux and
 COM1, COM2, ... on Windows. Select the port in Tools > Options.
 
+Connecting
+----------
+Select the serial port in the main window and press "Connect". The list of
+ports is updated each time it is opened (e.g. after plugging in a USB adapter).
+All communication with the PRM80 runs in the background: the display changes
+at once, "BUSY" is shown in the display until the PRM80 has answered.
+The state of the PRM80 is read every 1.5 s (changes made at the radio).
+
+Channel manager
+---------------
+Tools > Channel manager. It shows the channel file used last time.
+  Read from PRM80 / Write to PRM80   exchange the channels with the radio
+  Read / Save / Save As              channel file (CSV, separator ";", UTF-8)
+The PRM80 has no memory for comments: they are only kept in the file. When the
+channels are read from the PRM80, the comments of the list shown before are
+kept for channels with the same number and frequency.
+
 Zoom
 ----
 The window can be resized with the mouse, the whole user interface zooms

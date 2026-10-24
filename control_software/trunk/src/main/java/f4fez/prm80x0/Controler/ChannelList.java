@@ -18,22 +18,21 @@
 package f4fez.prm80x0.Controler;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
+import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.StringTokenizer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
  * @author fmazen
  */
 public class ChannelList{
+    private static final String CSV_HEADER = "Chan Id;Frequency;ShiftFrequency;ScanLock;ShiftPosNeg;ShiftReverse;ShiftEnabled;Comments";
     private ArrayList<Channel> list;
 
     public ChannelList() {
@@ -57,101 +56,127 @@ public class ChannelList{
         this.list.clear();
     }
     
+    /**
+     * Write the channel list to a CSV file (UTF-8, separator ";").
+     * @param fileName File to write
+     * @throws Exception on error, with a message for the user
+     */
     public void exportCSV(String fileName) throws Exception {
-        PrintWriter out = null;
-        try {
-            File file = new File(fileName);
-            if (file.exists()) {
-                file.delete();
-            }
-            out = new PrintWriter(file);
-            out.println( "Chan Id;Frequency;ShiftFrequency;ScanLock;ShifPosNeg;ShiftReverse;ShiftEnabled;Comments");
+        try (PrintWriter out = new PrintWriter(fileName, StandardCharsets.UTF_8.name())) {
+            out.println(CSV_HEADER);
             for (int i = 0; i < this.list.size(); i++) {
                 Channel chan = this.list.get(i);
-                out.println(    Integer.toString(chan.getId()) 
-                                + ";"  + chan.getFrequency()
-                                + ";"  + chan.getShiftFreq()
-                                + ";"  + chan.getScanLock()
-                                + ";"  + chan.getShift()
-//                                + ";"  + chan.getShiftPosNeg()
-                                + ";"  + chan.getShiftReverse()
-                                + ";"  + chan.getShiftEnabled()
-                                + ";"  + chan.getComments()
+                out.println(    Integer.toString(i)
+                                + ";"  + nullToEmpty(chan.getFrequency())
+                                + ";"  + nullToEmpty(chan.getShiftFreq())
+                                + ";"  + nullToEmpty(chan.getScanLock())
+                                + ";"  + nullToEmpty(chan.getShift())
+                                + ";"  + nullToEmpty(chan.getShiftReverse())
+                                + ";"  + nullToEmpty(chan.getShiftEnabled())
+                                // a ";" in the comment would start a new column
+                                + ";"  + nullToEmpty(chan.getComments()).replace(';', ',').replace('\n', ' ')
                                 );
             }
-
-            out.flush();
-            out.close();
+            if (out.checkError())
+                throw new Exception("Error writing file " + fileName);
         } catch (FileNotFoundException ex) {
-            throw new Exception("File not found");
-        } finally {
-            out.close();
+            throw new Exception("Cannot write file " + fileName);
         }
     }
-    
+
+    /**
+     * Read the channel list from a CSV file written by exportCSV().
+     * The list is only changed if the whole file could be read.
+     * @param fileName File to read
+     * @throws Exception on error, with a message for the user
+     */
     public void importCSV(String fileName) throws Exception {
-        this.list.clear();
-        File file = new File(fileName);
-        FileReader fr = new FileReader(file);
-        BufferedReader in = new BufferedReader(fr);
-        String line;
-        int lineCount = 0;
         ArrayList<Channel> newList = new ArrayList<Channel>();
-        while((line = in.readLine()) != null) {
-            try {
-                Object[] elements = lineTokenizer(line);
-                if ((elements.length < 3) || (elements.length > 8))
-                    throw new Exception("Invalid parameters count");
-                int id = Integer.parseInt( (String)elements[0]);
-                if (id != lineCount)
-                    throw new Exception("Invalid sequence number. Value read : "+Integer.toString(id)+" instead of "+Integer.toString(lineCount));
-                String frequency =      ((String) elements[1]).trim();
-                String shiftFreq =      ((String) elements[2]).trim();
-                String scanLock =       ((String) elements[3]).trim();
-                String shift =          ((String) elements[4]).trim();
-                String shiftReverse =   ((String) elements[5]).trim();
-                String shiftEnabled =   ((String) elements[6]).trim();
-
-                if (!(("Locked".equals(scanLock)) || ("".equals(scanLock))))
-                    throw new Exception("Invalid ScanLock value for channel Id : "+Integer.toString(id));
+        try (BufferedReader in = Files.newBufferedReader(Paths.get(fileName), csvCharset(fileName))) {
+            String line;
+            int lineNumber = 0;
+            while((line = in.readLine()) != null) {
+                lineNumber++;
+                if (line.startsWith("\uFEFF"))           // byte order mark (Excel)
+                    line = line.substring(1);
+                if (line.trim().isEmpty() || line.startsWith("Chan"))   // header / empty line
+                    continue;
+                String[] elements = line.split(";", -1);
+                if (elements.length < 7)
+                    throw new Exception("Line " + lineNumber + ": " + elements.length + " columns instead of 7 or 8");
+                int id;
+                try {
+                    id = Integer.parseInt(elements[0].trim());
+                } catch (NumberFormatException e) {
+                    throw new Exception("Line " + lineNumber + ": invalid channel number \"" + elements[0] + "\"");
+                }
+                if (id != newList.size())
+                    throw new Exception("Line " + lineNumber + ": channel " + id + " instead of " + newList.size());
+                String frequency =      elements[1].trim();
+                String shiftFreq =      elements[2].trim();
+                String scanLock =       elements[3].trim();
+                String shift =          elements[4].trim();
+                String shiftReverse =   elements[5].trim();
+                String shiftEnabled =   elements[6].trim();
+                if ("Locked".equals(scanLock))
+                    scanLock = "Lock";
+                if (!frequency.matches("^[0-9]{2,4}\\.[0-9]{1,6}$"))
+                    throw new Exception("Channel " + id + ": invalid frequency \"" + frequency + "\"");
+                if (shiftFreq.isEmpty())
+                    shiftFreq = "0.000000";
+                if (!shiftFreq.matches("^[0-9]{1,3}\\.[0-9]{1,6}$"))
+                    throw new Exception("Channel " + id + ": invalid shift frequency \"" + shiftFreq + "\"");
+                if (!(("Lock".equals(scanLock)) || ("".equals(scanLock))))
+                    throw new Exception("Channel " + id + ": invalid ScanLock value \"" + scanLock + "\"");
                 if (!shift.matches("^[\\+-]?$"))
-                    throw new Exception("Invalid ShiftEnabled value for channel Id : "+Integer.toString(id));
+                    throw new Exception("Channel " + id + ": invalid ShiftPosNeg value \"" + shift + "\"");
                 if (!(("Reverse".equals(shiftReverse)) || ("".equals(shiftReverse))))
-                    throw new Exception("Invalid ShiftReverse value for channel Id : "+Integer.toString(id));
+                    throw new Exception("Channel " + id + ": invalid ShiftReverse value \"" + shiftReverse + "\"");
                 if (!(("Enabled".equals(shiftEnabled)) || ("".equals(shiftEnabled))))
-                    throw new Exception("Invalid ShiftEnabled value for channel Id : "+Integer.toString(id));
-
+                    throw new Exception("Channel " + id + ": invalid ShiftEnabled value \"" + shiftEnabled + "\"");
                 String comments = "";
                 if (elements.length > 7)
-                    comments =  ((String)elements[7]).trim();
+                    comments = elements[7].trim();
                 Channel chan = new Channel(frequency, shiftFreq, scanLock, shift, shiftReverse, shiftEnabled);
                 chan.setId(id);
                 chan.setComments(comments);
                 newList.add(chan);
-                lineCount++;
-            } catch (NumberFormatException e) {
-                if (lineCount > 0)
-                    throw new Exception("Invalid file format. Channel Id "+Integer.toString(lineCount)+" : Invalid number");
-            }            
+            }
+        } catch (NoSuchFileException ex) {
+            throw new Exception("File not found: " + fileName);
         }
-        
-        in.close();
-        fr.close();
         this.list = newList;
     }
-    
-    private static Object[] lineTokenizer(String line) {
-        ArrayList<String> list = new ArrayList<String>();
-        int firstPos = 0;
-        int lastPos = 0;
-        while ( firstPos < line.length()) {
-            lastPos = line.indexOf(';', firstPos);
-            if (lastPos == -1)
-                lastPos = line.length();
-            String token = line.substring(firstPos,lastPos);
-            list.add(token);
-            firstPos = lastPos+1;
+
+    /** Files of older versions were written in the system charset (Windows: Cp1252). */
+    private static java.nio.charset.Charset csvCharset(String fileName) throws IOException {
+        byte[] data = Files.readAllBytes(Paths.get(fileName));
+        try {
+            StandardCharsets.UTF_8.newDecoder().decode(java.nio.ByteBuffer.wrap(data));
+            return StandardCharsets.UTF_8;
+        } catch (java.nio.charset.CharacterCodingException e) {
+            return java.nio.charset.Charset.defaultCharset();
         }
-        return list.toArray();
+    }
+
+    private static String nullToEmpty(String s) {
+        return s == null ? "" : s;
+    }
+
+    /**
+     * Copy the comments of another list to the channels of this list that
+     * have the same number and frequency. The PRM80 has no memory for
+     * comments, so they are taken from the list shown before.
+     * @param other list with comments
+     */
+    public void takeCommentsFrom(ChannelList other) {
+        if (other == null)
+            return;
+        for (int i = 0; i < this.list.size() && i < other.countChannel(); i++) {
+            Channel c = this.list.get(i);
+            Channel o = other.getChannel(i);
+            if (c.getFrequency() != null && c.getFrequency().equals(o.getFrequency()))
+                c.setComments(o.getComments());
+        }
     }
 }

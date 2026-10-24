@@ -492,11 +492,13 @@ public abstract class PRMControler implements Controler{
     }
 
     @Override
-    public void setChannels(ChannelList list) {
-        for (int i=0; i < list.countChannel();i++)
-            this.setChannel(list.getChannel(i));
-        
-        this.setMaxChan(list.countChannel() - 1);
+    public void setChannels(ChannelList list) throws CommunicationException {
+        for (int i=0; i < list.countChannel();i++) {
+            if (!this.setChannel(list.getChannel(i)))
+                throw new SerialPortException("Channel " + i + " could not be written");
+        }
+        if (!this.setMaxChan(list.countChannel() - 1))
+            throw new SerialPortException("The number of channels could not be written");
     }
 
     /**
@@ -554,6 +556,21 @@ public abstract class PRMControler implements Controler{
         this.updateThread.start();
     }
     
+    @Override
+    public void refreshState() {
+        this.updateState();
+    }
+
+    @Override
+    public boolean supportsTxShift() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsScanSpeed() {
+        return false;
+    }
+
     @Override
     public void setPRMStateChangeListener(PRMStateChangeListener listener) {
         this.changeListener = listener;
@@ -854,9 +871,9 @@ public abstract class PRMControler implements Controler{
             }
             
             int state = 0;
-            if (chan.isShift()){
+            if (chan.isShiftEnabled()){
                 state = state | 1;
-                if ("+".equals(chan.shiftPosNeg))
+                if ("+".equals(chan.getShift()))
                     state = state | 4; 
                 }    
             if ("Reverse".equals(chan.shiftReverse))
@@ -868,9 +885,10 @@ public abstract class PRMControler implements Controler{
             if (stateStr.length() == 1)
                 stateStr = "0" + stateStr;
             send(stateStr);
+            // answer ends with ">" for an existing channel, with "?" when
+            // the PRM80 asks whether a new channel shall be added
             char[] chars = {'>', '?'};
-//            commandResponse = this.waitChar(chars, serialTimeout);
-            commandResponse = this.waitChar('>', serialTimeout);
+            commandResponse = this.waitChar(chars, serialTimeout);
             if (commandResponse == null) {
                 ok = false;
                 continue;

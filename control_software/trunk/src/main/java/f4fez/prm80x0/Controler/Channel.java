@@ -30,6 +30,7 @@ public class Channel {
 
     public Channel() {
         this.id = -1;
+        this.comments = "";
     }
     
     public Channel(String frequency, String shiftFreq, String scanLock, String shift, String shiftReverse, String shiftEnabled) {
@@ -176,6 +177,9 @@ public class Channel {
      * @param frequency new value of frequency
      */
     public void setFrequency(String frequency) {
+        frequency = frequency.trim().replace(',', '.');
+        if (frequency.matches("^[0-9]+$"))         // "145" -> "145.0"
+            frequency = frequency + ".0";
         int sepPos = frequency.indexOf('.');
         if (sepPos > 0) {
             String left = frequency.substring(0, sepPos);
@@ -187,9 +191,8 @@ public class Channel {
     }
     
     public void setFrequency(int frequency) {
-        int left = frequency / 1000000;
-        int right = frequency % 1000000;
-        this.setFrequency(left+"."+right);
+        // e.g. 145012500 -> "145.012500" (leading zeros of the fraction matter)
+        this.setFrequency(String.format("%d.%06d", frequency / 1000000, frequency % 1000000));
     }
     /**
      * Set the value of shift frequency
@@ -197,6 +200,9 @@ public class Channel {
      * @param ShiftFreq new value of shift frequency
      */
     public void setShiftFreq(String shiftFreq) {
+        shiftFreq = shiftFreq.trim().replace(',', '.');
+        if (shiftFreq.matches("^[0-9]+$"))
+            shiftFreq = shiftFreq + ".0";
         int sepPos = shiftFreq.indexOf('.');
         if (sepPos > 0) {
             String left = shiftFreq.substring(0, sepPos);
@@ -208,9 +214,7 @@ public class Channel {
     }
     
     public void setShiftFreq(int shiftFreq) {
-        int left = shiftFreq / 1000000;
-        int right = shiftFreq % 1000000;
-        this.setShiftFreq(left+"."+right);
+        this.setShiftFreq(String.format("%d.%06d", shiftFreq / 1000000, shiftFreq % 1000000));
     }
 
     
@@ -231,6 +235,22 @@ public class Channel {
      */
     public boolean isShift() {
         return !shift.equals("");
+    }
+
+    /**
+     * Is the shift of this channel enabled ("Enabled" in the channel table)
+     * @return true if enabled
+     */
+    public boolean isShiftEnabled() {
+        return "Enabled".equals(this.shiftEnabled);
+    }
+
+    public void setShiftEnabled(String shiftEnabled) {
+        this.shiftEnabled = shiftEnabled == null ? "" : shiftEnabled;
+    }
+
+    public void setShiftReverse(String shiftReverse) {
+        this.shiftReverse = shiftReverse == null ? "" : shiftReverse;
     }
 
     /**
@@ -262,11 +282,11 @@ public class Channel {
      * @param comments new value of comments
      */
     public void setComments(String comments) {
-        this.comments = comments;
+        this.comments = comments == null ? "" : comments;
     }
 
-    public void setScanLock(String string) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void setScanLock(String scanLock) {
+        this.scanLock = scanLock == null ? "" : scanLock;
     }
 
 }

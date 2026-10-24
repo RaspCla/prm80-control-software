@@ -201,8 +201,8 @@ public interface Controler {
     public void EEPROM2RAM() throws CommunicationException;
     
     /** 
-     * Permet d'obtenir une copie de la mémoire du PRM
-     * @return
+     * Get a copy of the PRM memory
+     * @return memory image
      */
     public MemoryImage getMemoryImage();
 
@@ -218,6 +218,26 @@ public interface Controler {
      */
     public void setChannels(ChannelList list) throws CommunicationException;
     
+    /**
+     * Read the current state (frequencies, channel, volume, squelch, power)
+     * from the PRM. The getters return the values read here.
+     */
+    public void refreshState() throws CommunicationException;
+
+    /**
+     * @return true if the default TX shift can be read and written
+     */
+    public default boolean supportsTxShift() {
+        return true;
+    }
+
+    /**
+     * @return true if the scanner speed can be read and written
+     */
+    public default boolean supportsScanSpeed() {
+        return true;
+    }
+
     /**
      * Set listener called when state change
      * @param listener

@@ -9,6 +9,7 @@ package f4fez.prm80x0.gui;
 import f4fez.prm80x0.Controler.CommunicationException;
 import f4fez.prm80x0.Controler.Controler;
 import f4fez.prm80x0.VirtualDeviceFirmware;
+import java.math.BigDecimal;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
@@ -20,33 +21,84 @@ import javax.swing.JOptionPane;
 public class ConfigurationDialog extends javax.swing.JDialog {
 
     private VirtualDeviceFirmware vdf;
+    private boolean saved;
+    private int pllStep;
+    private int txShift;
+    private int scanSpeed;
 
-    /** Creates new form ConfigurationDialog */
+    /**
+     * Creates new form ConfigurationDialog. The values are taken from the
+     * last state read from the PRM80, nothing is sent here: after the dialog
+     * is closed with "Save", the main window sends the changed values.
+     */
     public ConfigurationDialog(java.awt.Frame parent, VirtualDeviceFirmware vdf) {
         super(parent, true);
         initComponents();
         Zoom.install(this);
         this.vdf = vdf;
+        Controler c = this.vdf.getPRMControler();
         try {
-            float pllStep = ((float)this.vdf.getPRMControler().getPLLStep()) / 1000f;
-            float shift = ((float)this.vdf.getPRMControler().getTxFrequencyShift()) /1000f;
-            int scanSpeed = this.vdf.getPRMControler().getScanSpeed();
-            this.pllStepComboBox.setSelectedItem(Float.toString(pllStep));
-            this.shiftComboBox.setSelectedItem(Float.toString(shift));
-            this.scanSpeedSpinner.setValue(scanSpeed);
+            this.pllStep = c.getPLLStep();
+            this.pllStepComboBox.setSelectedItem(kHz(this.pllStep));
+            if (c.supportsTxShift()) {
+                this.txShift = c.getTxFrequencyShift();
+                this.shiftComboBox.setSelectedItem(kHz(this.txShift));
+            } else {
+                this.shiftComboBox.setSelectedItem("");
+                this.shiftComboBox.setEnabled(false);
+                this.shiftComboBox.setToolTipText("Not supported by the PRM80 firmware");
+            }
+            if (c.supportsScanSpeed()) {
+                this.scanSpeed = c.getScanSpeed();
+                this.scanSpeedSpinner.setValue(this.scanSpeed);
+            } else {
+                this.scanSpeedSpinner.setEnabled(false);
+                this.scanSpeedSpinner.setToolTipText("Not supported by the PRM80 firmware");
+            }
             String version;
-            if (this.vdf.getPRMControler().getPRMType() == Controler.PRM8060)
+            if (c.getPRMType() == Controler.PRM8060)
                 version = "PRM8060 ";
             else
                 version = "PRM8070 ";
-            version += "V"+Integer.toString(this.vdf.getPRMControler().getMajorFirmwareVersion()) + "." + Integer.toString(this.vdf.getPRMControler().getMinorFirmwareVersion());
+            version += "V"+Integer.toString(c.getMajorFirmwareVersion()) + "." + Integer.toString(c.getMinorFirmwareVersion())
+                    + " " + c.getPRMFrequencyCode() + " MHz";
 
             this.versionTextField.setText(version);
 
-        } catch (CommunicationException ex) {
+        } catch (CommunicationException | RuntimeException ex) {
             Logger.getLogger(ConfigurationDialog.class.getName()).log(Level.WARNING, null, ex);
-            JOptionPane.showMessageDialog(this, "Erreur de connexion : "+ex.getMessage(), "Erreur de connexion", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(parent, "Communication error: "+ex.getMessage(), "PRM80 configuration", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    /** 12500 Hz -> "12.5" */
+    private static String kHz(int hz) {
+        return new BigDecimal(hz).divide(new BigDecimal(1000)).stripTrailingZeros().toPlainString();
+    }
+
+    /** "12.5" -> 12500 Hz */
+    private static int hz(Object kHz) {
+        return new BigDecimal(kHz.toString().trim().replace(',', '.')).multiply(new BigDecimal(1000)).intValueExact();
+    }
+
+    /** @return true if the dialog was closed with "Save" */
+    public boolean isSaved() {
+        return this.saved;
+    }
+
+    /** @return PLL step in Hz */
+    public int getPllStep() {
+        return this.pllStep;
+    }
+
+    /** @return default TX shift in Hz */
+    public int getTxShift() {
+        return this.txShift;
+    }
+
+    /** @return scanner speed in ms */
+    public int getScanSpeed() {
+        return this.scanSpeed;
     }
 
     /** This method is called from within the constructor to
@@ -82,15 +134,15 @@ public class ConfigurationDialog extends javax.swing.JDialog {
         jPanel1.setPreferredSize(new java.awt.Dimension(300, 240));
         jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        jLabel1.setText("No PLL :"); // NOI18N
+        jLabel1.setText("PLL step (kHz):"); // NOI18N
         jLabel1.setName("jLabel1"); // NOI18N
         jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 65, -1, -1));
 
-        jLabel2.setText("Shift broadcast :"); // NOI18N
+        jLabel2.setText("Shift (kHz):"); // NOI18N
         jLabel2.setName("jLabel2"); // NOI18N
         jPanel1.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 105, -1, -1));
 
-        jLabel3.setText("Scanner speed :"); // NOI18N
+        jLabel3.setText("Scan speed (ms):"); // NOI18N
         jLabel3.setName("jLabel3"); // NOI18N
         jPanel1.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 145, -1, -1));
 
@@ -110,10 +162,20 @@ public class ConfigurationDialog extends javax.swing.JDialog {
 
         jButton1.setText("Save"); // NOI18N
         jButton1.setName("jButton1"); // NOI18N
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
         jPanel1.add(jButton1, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 200, 100, -1));
 
         jButton2.setText("Cancel"); // NOI18N
         jButton2.setName("jButton2"); // NOI18N
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
         jPanel1.add(jButton2, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 200, 100, -1));
 
         jLabel4.setText("Version :"); // NOI18N
@@ -123,12 +185,35 @@ public class ConfigurationDialog extends javax.swing.JDialog {
         versionTextField.setText("PRM8060 144 V3.0"); // NOI18N
         versionTextField.setEnabled(false);
         versionTextField.setName("versionTextField"); // NOI18N
-        jPanel1.add(versionTextField, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 20, 140, -1));
+        jPanel1.add(versionTextField, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 20, 200, -1));
 
         getContentPane().add(jPanel1);
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        try {
+            int step = hz(this.pllStepComboBox.getSelectedItem());
+            if (step <= 0)
+                throw new NumberFormatException();
+            int shift = this.txShift;
+            if (this.shiftComboBox.isEnabled())
+                shift = hz(this.shiftComboBox.getSelectedItem());
+            this.pllStep = step;
+            this.txShift = shift;
+            this.scanSpeed = Integer.parseInt(this.scanSpeedSpinner.getValue().toString());
+            this.saved = true;
+            this.setVisible(false);
+        } catch (RuntimeException ex) {
+            JOptionPane.showMessageDialog(this, "Please enter the PLL step and the shift in kHz, e.g. 12.5",
+                    "PRM80 configuration", JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        this.setVisible(false);
+    }//GEN-LAST:event_jButton2ActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

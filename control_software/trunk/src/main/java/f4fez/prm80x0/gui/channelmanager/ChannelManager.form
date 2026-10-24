@@ -1,6 +1,6 @@
-<?xml version="1.1" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8" ?>
 
-<Form version="1.5" maxVersion="1.5" type="org.netbeans.modules.form.forminfo.JDialogFormInfo">
+<Form version="1.5" maxVersion="1.9" type="org.netbeans.modules.form.forminfo.JDialogFormInfo">
   <NonVisualComponents>
     <Menu class="javax.swing.JMenuBar" name="jMenuBar1">
       <Properties>
@@ -13,38 +13,6 @@
             <Property name="name" type="java.lang.String" value="fileMenu" noResource="true"/>
           </Properties>
           <SubComponents>
-            <MenuItem class="javax.swing.JMenuItem" name="importCSVMenuItem">
-              <Properties>
-                <Property name="text" type="java.lang.String" value="Import CSV"/>
-                <Property name="name" type="java.lang.String" value="importCSVMenuItem" noResource="true"/>
-              </Properties>
-              <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="importCSVMenuItemActionPerformed"/>
-              </Events>
-            </MenuItem>
-            <MenuItem class="javax.swing.JMenuItem" name="exportCSVMenuItem">
-              <Properties>
-                <Property name="text" type="java.lang.String" value="Export CSV"/>
-                <Property name="name" type="java.lang.String" value="exportCSVMenuItem" noResource="true"/>
-              </Properties>
-              <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="exportCSVMenuItemActionPerformed"/>
-              </Events>
-            </MenuItem>
-            <MenuItem class="javax.swing.JSeparator" name="jSeparator1">
-              <Properties>
-                <Property name="name" type="java.lang.String" value="jSeparator1" noResource="true"/>
-              </Properties>
-            </MenuItem>
-            <MenuItem class="javax.swing.JMenuItem" name="saveCloseMenuItem">
-              <Properties>
-                <Property name="text" type="java.lang.String" value="Save and close"/>
-                <Property name="name" type="java.lang.String" value="saveCloseMenuItem" noResource="true"/>
-              </Properties>
-              <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="saveCloseMenuItemActionPerformed"/>
-              </Events>
-            </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="closeMenuItem">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Close"/>
@@ -56,18 +24,11 @@
             </MenuItem>
           </SubComponents>
         </Menu>
-        <Menu class="javax.swing.JMenu" name="editMenu">
-          <Properties>
-            <Property name="text" type="java.lang.String" value="Edition"/>
-            <Property name="enabled" type="boolean" value="false"/>
-            <Property name="name" type="java.lang.String" value="editMenu" noResource="true"/>
-          </Properties>
-        </Menu>
       </SubComponents>
     </Menu>
   </NonVisualComponents>
   <Properties>
-    <Property name="defaultCloseOperation" type="int" value="2"/>
+    <Property name="defaultCloseOperation" type="int" value="0"/>
     <Property name="title" type="java.lang.String" value="Channel manager"/>
     <Property name="name" type="java.lang.String" value="Form" noResource="true"/>
   </Properties>
@@ -75,6 +36,9 @@
     <SyntheticProperty name="menuBar" type="java.lang.String" value="jMenuBar1"/>
     <SyntheticProperty name="formSizePolicy" type="int" value="1"/>
   </SyntheticProperties>
+  <Events>
+    <EventHandler event="windowClosing" listener="java.awt.event.WindowListener" parameters="java.awt.event.WindowEvent" handler="formWindowClosing"/>
+  </Events>
   <AuxValues>
     <AuxValue name="FormSettings_autoResourcing" type="java.lang.Integer" value="0"/>
     <AuxValue name="FormSettings_autoSetComponentName" type="java.lang.Boolean" value="true"/>
@@ -85,14 +49,13 @@
     <AuxValue name="FormSettings_listenerGenerationStyle" type="java.lang.Integer" value="0"/>
     <AuxValue name="FormSettings_variablesLocal" type="java.lang.Boolean" value="false"/>
     <AuxValue name="FormSettings_variablesModifier" type="java.lang.Integer" value="2"/>
-    <AuxValue name="designerSize" type="java.awt.Dimension" value="-84,-19,0,5,115,114,0,18,106,97,118,97,46,97,119,116,46,68,105,109,101,110,115,105,111,110,65,-114,-39,-41,-84,95,68,20,2,0,2,73,0,6,104,101,105,103,104,116,73,0,5,119,105,100,116,104,120,112,0,0,1,44,0,0,1,-112"/>
   </AuxValues>
 
   <Layout class="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout"/>
   <SubComponents>
-    <Container class="javax.swing.JPanel" name="buttonsBar">
+    <Container class="javax.swing.JPanel" name="bottomPanel">
       <Properties>
-        <Property name="name" type="java.lang.String" value="buttonsBar" noResource="true"/>
+        <Property name="name" type="java.lang.String" value="bottomPanel" noResource="true"/>
       </Properties>
       <Constraints>
         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout" value="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout$BorderConstraintsDescription">
@@ -100,36 +63,116 @@
         </Constraint>
       </Constraints>
 
-      <Layout class="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout"/>
+      <Layout class="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout"/>
       <SubComponents>
-        <Component class="javax.swing.JButton" name="saveButton">
+        <Container class="javax.swing.JPanel" name="statusPanel">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Save"/>
-            <Property name="name" type="java.lang.String" value="saveButton" noResource="true"/>
+            <Property name="name" type="java.lang.String" value="statusPanel" noResource="true"/>
           </Properties>
-          <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="saveButtonActionPerformed"/>
-          </Events>
           <Constraints>
-            <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
-              <GridBagConstraints gridX="-1" gridY="-1" gridWidth="1" gridHeight="1" fill="0" ipadX="0" ipadY="0" insetsTop="0" insetsLeft="0" insetsBottom="0" insetsRight="0" anchor="10" weightX="0.0" weightY="0.0"/>
+            <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout" value="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout$BorderConstraintsDescription">
+              <BorderConstraints direction="First"/>
             </Constraint>
           </Constraints>
-        </Component>
-        <Component class="javax.swing.JButton" name="cancelButton">
+
+          <Layout class="org.netbeans.modules.form.compat2.layouts.DesignFlowLayout">
+            <Property name="alignment" type="int" value="0"/>
+          </Layout>
+          <SubComponents>
+          <Component class="javax.swing.JLabel" name="statusLabel">
+            <Properties>
+              <Property name="text" type="java.lang.String" value=" "/>
+              <Property name="name" type="java.lang.String" value="statusLabel" noResource="true"/>
+            </Properties>
+          </Component>
+          </SubComponents>
+        </Container>
+        <Container class="javax.swing.JPanel" name="prmButtonsPanel">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Cancel"/>
-            <Property name="name" type="java.lang.String" value="cancelButton" noResource="true"/>
+            <Property name="name" type="java.lang.String" value="prmButtonsPanel" noResource="true"/>
           </Properties>
-          <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="cancelButtonActionPerformed"/>
-          </Events>
           <Constraints>
-            <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
-              <GridBagConstraints gridX="-1" gridY="-1" gridWidth="1" gridHeight="1" fill="0" ipadX="0" ipadY="0" insetsTop="0" insetsLeft="0" insetsBottom="0" insetsRight="0" anchor="10" weightX="0.0" weightY="0.0"/>
+            <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout" value="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout$BorderConstraintsDescription">
+              <BorderConstraints direction="West"/>
             </Constraint>
           </Constraints>
-        </Component>
+
+          <Layout class="org.netbeans.modules.form.compat2.layouts.DesignFlowLayout">
+            <Property name="alignment" type="int" value="0"/>
+          </Layout>
+          <SubComponents>
+          <Component class="javax.swing.JButton" name="readPrmButton">
+            <Properties>
+              <Property name="text" type="java.lang.String" value="Read from PRM80"/>
+              <Property name="name" type="java.lang.String" value="readPrmButton" noResource="true"/>
+            </Properties>
+            <Events>
+              <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="readPrmButtonActionPerformed"/>
+            </Events>
+          </Component>
+          <Component class="javax.swing.JButton" name="writePrmButton">
+            <Properties>
+              <Property name="text" type="java.lang.String" value="Write to PRM80"/>
+              <Property name="name" type="java.lang.String" value="writePrmButton" noResource="true"/>
+            </Properties>
+            <Events>
+              <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="writePrmButtonActionPerformed"/>
+            </Events>
+          </Component>
+          </SubComponents>
+        </Container>
+        <Container class="javax.swing.JPanel" name="fileButtonsPanel">
+          <Properties>
+            <Property name="name" type="java.lang.String" value="fileButtonsPanel" noResource="true"/>
+          </Properties>
+          <Constraints>
+            <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout" value="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout$BorderConstraintsDescription">
+              <BorderConstraints direction="East"/>
+            </Constraint>
+          </Constraints>
+
+          <Layout class="org.netbeans.modules.form.compat2.layouts.DesignFlowLayout">
+            <Property name="alignment" type="int" value="2"/>
+          </Layout>
+          <SubComponents>
+          <Component class="javax.swing.JButton" name="readFileButton">
+            <Properties>
+              <Property name="text" type="java.lang.String" value="Read"/>
+              <Property name="name" type="java.lang.String" value="readFileButton" noResource="true"/>
+            </Properties>
+            <Events>
+              <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="readFileButtonActionPerformed"/>
+            </Events>
+          </Component>
+          <Component class="javax.swing.JButton" name="saveButton">
+            <Properties>
+              <Property name="text" type="java.lang.String" value="Save"/>
+              <Property name="name" type="java.lang.String" value="saveButton" noResource="true"/>
+            </Properties>
+            <Events>
+              <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="saveButtonActionPerformed"/>
+            </Events>
+          </Component>
+          <Component class="javax.swing.JButton" name="saveAsButton">
+            <Properties>
+              <Property name="text" type="java.lang.String" value="Save As"/>
+              <Property name="name" type="java.lang.String" value="saveAsButton" noResource="true"/>
+            </Properties>
+            <Events>
+              <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="saveAsButtonActionPerformed"/>
+            </Events>
+          </Component>
+          <Component class="javax.swing.JButton" name="closeButton">
+            <Properties>
+              <Property name="text" type="java.lang.String" value="Close"/>
+              <Property name="name" type="java.lang.String" value="closeButton" noResource="true"/>
+            </Properties>
+            <Events>
+              <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="closeButtonActionPerformed"/>
+            </Events>
+          </Component>
+          </SubComponents>
+        </Container>
       </SubComponents>
     </Container>
     <Container class="javax.swing.JScrollPane" name="tableScroll">
@@ -150,20 +193,10 @@
         <Component class="javax.swing.JTable" name="table">
           <Properties>
             <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
-              <Connection code="new ChannelModel(this.channels)" type="code"/>
-            </Property>
-            <Property name="columnModel" type="javax.swing.table.TableColumnModel" editor="org.netbeans.modules.form.editors2.TableColumnModelEditor">
-              <TableColumnModel selectionModel="0"/>
+              <Connection code="model" type="code"/>
             </Property>
             <Property name="name" type="java.lang.String" value="table" noResource="true"/>
-            <Property name="tableHeader" type="javax.swing.table.JTableHeader" editor="org.netbeans.modules.form.editors2.JTableHeaderEditor">
-              <TableHeader reorderingAllowed="true" resizingAllowed="true"/>
-            </Property>
           </Properties>
-          <AuxValues>
-            <AuxValue name="JavaCodeGenerator_InitCodePost" type="java.lang.String" value="table.getModel().addTableModelListener(new TableModelListener() {&#xa;            public void tableChanged(TableModelEvent e) {&#xa;                tableTableChanged(e);&#xa;            }            &#xa;        });&#xa;        table.getColumnModel().getColumn(3).setCellEditor(new DefaultCellEditor(getScanLockCombo()));&#xa;        table.getColumnModel().getColumn(4).setCellEditor(new DefaultCellEditor(getShiftPosNegCombo()));&#xa;        table.getColumnModel().getColumn(5).setCellEditor(new DefaultCellEditor(getShiftReverseCombo()));&#xa;        table.getColumnModel().getColumn(6).setCellEditor(new DefaultCellEditor(getShiftEnabledCombo()));"/>
-            <AuxValue name="JavaCodeGenerator_SerializeTo" type="java.lang.String" value="ChannelManager_table"/>
-          </AuxValues>
         </Component>
       </SubComponents>
     </Container>

@@ -43,10 +43,9 @@ public class TcpControler extends PRMControler{
     @Override
     public synchronized int connectPRM(String server) throws SerialPortException {
         if (this.connected)
-            throw new SerialPortException("Already conedcted");
+            throw new SerialPortException("Already connected");
         this.openSocket(server);        
         updateState();
-        this.runUpdateThread(1000);
         return this.prmType;
     }
 
@@ -93,13 +92,13 @@ public class TcpControler extends PRMControler{
                 this.prmType = Controler.PRM8070;
             else {
                 this.disconnectPRM();
-                throw new SerialPortException("Unknow PRM80 device");
+                throw new SerialPortException("Unknown PRM80 device");
             }
 
             this.prmFreqCode = Integer.parseInt(ident.substring(13, 16));
             if (this.prmFreqCode != 144 && this.prmFreqCode != 430) {
                 this.disconnectPRM();
-                throw new SerialPortException("Unknow PRM80 frequency code");
+                throw new SerialPortException("Unknown PRM80 frequency code");
             }
             this.majorFirmwareVersion = Integer.parseInt(ident.substring(9, 10));
             this.minorFirmwareVersion = Integer.parseInt(ident.substring(11, 12));                        

@@ -31,7 +31,13 @@ public class A51Export {
             out = new PrintWriter(file);
             out.println("CONFIG_CHAN_COUNT        EQU    0"+chanCount+"h");            
             
-            String shift = Integer.toHexString(controler.getTxFrequencyShift()/ controler.getPLLStep());
+            // the firmware F4FEZ/F8EGQ has no command to read the default shift
+            int txShift;
+            if (controler.supportsTxShift())
+                txShift = controler.getTxFrequencyShift();
+            else
+                txShift = controler.getPRMFrequencyCode() == Controler.FREQ430 ? 7600000 : 600000;
+            String shift = Integer.toHexString(txShift / controler.getPLLStep());
             while(shift.length() < 4)
                     shift = "0" + shift;
             out.println("CONFIG_SHIFT_LO          EQU    0"+shift.substring(2, 4)+"h");

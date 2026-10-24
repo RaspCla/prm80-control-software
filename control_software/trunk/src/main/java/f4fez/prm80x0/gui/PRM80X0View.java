@@ -160,21 +160,27 @@ public class PRM80X0View extends javax.swing.JFrame {
             this.rxUnitLabel.setFont(unitFont);
             this.txUnitLabel.setFont(unitFont);
             this.chnlUnitLabel.setFont(unitFont);
+            // comment of the channel (channel manager list) below the channel number
+            Font commentFont = this.commentLabel.getFont();
+            this.commentLabel.setFont(commentFont.deriveFont(Font.BOLD, commentFont.getSize2D() * 1.1f));
             // "Rx", "Tx", "Chnl" stand on the baseline of the LCD digits
             this.rxUnitLabel.putClientProperty(Zoom.BASELINE_OF, this.freqLabel);
             this.txUnitLabel.putClientProperty(Zoom.BASELINE_OF, this.txFreqLabel);
             this.chnlUnitLabel.putClientProperty(Zoom.BASELINE_OF, this.chanLabel);
             // "Chnl" is shown together with the channel number (not in VFO mode)
             this.chnlUnitLabel.setVisible(false);
+            this.commentLabel.setVisible(false);
             this.chanLabel.addComponentListener(new ComponentAdapter() {
                 @Override
                 public void componentShown(ComponentEvent e) {
                     chnlUnitLabel.setVisible(true);
+                    commentLabel.setVisible(true);
                 }
 
                 @Override
                 public void componentHidden(ComponentEvent e) {
                     chnlUnitLabel.setVisible(false);
+                    commentLabel.setVisible(false);
                 }
             });
 
@@ -528,6 +534,7 @@ public class PRM80X0View extends javax.swing.JFrame {
             this.shownHighPower = this.vdf.isHighPower();
 
             this.chanLabel.setText(formatChannel(this.shownChannel));
+            this.showChannelComment(c);
             this.freqLabel.setText(formatFrequency(this.shownRx));
             this.txFreqLabel.setText(formatFrequency(this.shownTx));
             this.hpLabel.setVisible(this.shownHighPower);
@@ -554,6 +561,34 @@ public class PRM80X0View extends javax.swing.JFrame {
         }
     }
     
+    /**
+     * Show the comment of the current channel from the list of the channel
+     * manager (the PRM80 has no memory for comments). Only if the channel
+     * in the list has the frequency of the channel in the PRM80, so that no
+     * comment of another channel list is shown.
+     */
+    private void showChannelComment(Controler c) {
+        String comment = "";
+        try {
+            int chan = c.getCurrentChannel();
+            ChannelList list = ChannelManager.getSessionList();
+            if (chan >= 0 && chan < list.countChannel()) {
+                Channel ch = list.getChannel(chan);
+                int state = c.getChannelState();
+                // channel frequency: RX, with reverse TX (TX = channel frequency)
+                int base = state >= 0 && (state & 3) == 3 ? c.getTxPLLFrequency() : c.getRxPLLFrequency();
+                if (ch.getComments() != null && ch.getIntFrequency() == base)
+                    comment = ch.getComments().trim();
+            }
+        } catch (CommunicationException | RuntimeException ex) {
+            Logger.getLogger(PRM80X0View.class.getName()).log(Level.FINE, null, ex);
+        }
+        if (!comment.equals(this.commentLabel.getText())) {
+            this.commentLabel.setText(comment);
+            this.commentLabel.setToolTipText(comment.isEmpty() ? null : comment);
+        }
+    }
+
     /** channel, state and frequencies the shift fields were last set for */
     private String shownShiftKey = "";
 
@@ -677,6 +712,7 @@ public class PRM80X0View extends javax.swing.JFrame {
         rxUnitLabel = new javax.swing.JLabel();
         txUnitLabel = new javax.swing.JLabel();
         chnlUnitLabel = new javax.swing.JLabel();
+        commentLabel = new javax.swing.JLabel();
         busyLabel = new javax.swing.JLabel();
         scanLabel = new javax.swing.JLabel();
         jPanel2 = new javax.swing.JPanel();
@@ -847,6 +883,11 @@ public class PRM80X0View extends javax.swing.JFrame {
         chnlUnitLabel.setText("Chnl"); // NOI18N
         chnlUnitLabel.setName("chnlUnitLabel"); // NOI18N
         jPanel1.add(chnlUnitLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 22, -1, -1));
+
+        commentLabel.setForeground(new java.awt.Color(255, 51, 51));
+        commentLabel.setText(""); // NOI18N
+        commentLabel.setName("commentLabel"); // NOI18N
+        jPanel1.add(commentLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(215, 45, 180, 20));
 
         busyLabel.setBackground(new java.awt.Color(255, 0, 0));
         busyLabel.setForeground(new java.awt.Color(0, 0, 0));
@@ -1485,6 +1526,7 @@ public class PRM80X0View extends javax.swing.JFrame {
             }
         });
         this.showDialog(cm);
+        this.refreshDisplay();      // comments may have changed
     }//GEN-LAST:event_channelManagerMenuItemActionPerformed
 
     private void expertModeMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_expertModeMenuItemActionPerformed
@@ -1582,6 +1624,7 @@ public class PRM80X0View extends javax.swing.JFrame {
             }
         });
         this.showDialog(d);
+        this.refreshDisplay();
     }
 
     /**
@@ -1905,6 +1948,7 @@ private void freqLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:e
     private javax.swing.JLabel rxUnitLabel;
     private javax.swing.JLabel txUnitLabel;
     private javax.swing.JLabel chnlUnitLabel;
+    private javax.swing.JLabel commentLabel;
     private javax.swing.JCheckBox ShiftReverseCheckbox;
     private javax.swing.JButton connectButton;
     private javax.swing.JPanel connectPanel;

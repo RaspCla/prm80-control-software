@@ -13,6 +13,11 @@
   (the firmware has no serial command for its own scan)
 - Virtual PRM80 simulates some stations for testing the scan
 
+### Display
+- The comment of the current channel (from the channel manager list) is
+  shown in red below the channel number (full text as tooltip); only if the
+  channel in the list has the same frequency as in the PRM80
+
 ## 2.0.0 – 2026-10
 
 Modernisation of the PRM80 control software: runs on Windows and Linux,

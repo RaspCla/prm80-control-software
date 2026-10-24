@@ -60,7 +60,9 @@ Channel manager
 Tools > Channel manager. It shows the channel file used last time.
   Read from PRM80 / Write to PRM80   exchange the channels with the radio
   Read / Save / Save As              channel file (CSV, separator ";", UTF-8)
-The PRM80 has no memory for comments: they are only kept in the file. When the
+The PRM80 has no memory for comments: they are only kept in the file.
+The main window shows the comment of the current channel below the channel
+number (if the channel in the list has the same frequency as in the PRM80). When the
 channels are read from the PRM80, the comments of the list shown before are
 kept for channels with the same number and frequency.
 

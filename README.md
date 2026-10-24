@@ -12,7 +12,7 @@ e.g. macOS or a Raspberry Pi).
 
 ## Features
 
-- Display of RX/TX frequency, channel, power, BUSY – the window can be zoomed
+- Display of RX/TX frequency, channel with its comment, power, BUSY – the window can be zoomed
   freely (resize with the mouse or Ctrl + / Ctrl −)
 - Channel up/down, VFO and memory mode, volume, squelch, power
 - Shift: enabled, positive/negative, reverse, frequency – in VFO mode the

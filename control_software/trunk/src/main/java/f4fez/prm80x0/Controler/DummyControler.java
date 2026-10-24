@@ -286,12 +286,13 @@ public class DummyControler implements Controler{
 
     @Override
     public int getTxFrequencyShift() {
-        return 600000;
+        return this.txShift;
     }
+    private int txShift = 600000;
 
     @Override
     public void setTxFrequencyShift(int frequency) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        this.txShift = frequency;
     }
 
     @Override

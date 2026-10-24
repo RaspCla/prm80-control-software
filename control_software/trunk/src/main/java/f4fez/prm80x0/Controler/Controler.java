@@ -225,6 +225,14 @@ public interface Controler {
     public void refreshState() throws CommunicationException;
 
     /**
+     * @return false if the PRM did not answer when its state was read the
+     * last time, the values of the getters may be outdated then
+     */
+    public default boolean isStateValid() {
+        return true;
+    }
+
+    /**
      * @return true if the default TX shift can be read and written
      */
     public default boolean supportsTxShift() {

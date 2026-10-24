@@ -47,6 +47,10 @@ public abstract class PRMControler implements Controler{
      * Hold Memory dump
      */
     protected MemoryImage memoryImage = null;
+
+    private int txShift = -1;       // default shift in Hz, -1 = not read yet
+    private int scanSpeed = -1;     // scan speed in ms, -1 = not read yet
+    private volatile boolean stateValid = true;
     
     /**
      * Default PRMControler constructor
@@ -77,8 +81,11 @@ public abstract class PRMControler implements Controler{
             ramPos = MemoryImageV3.RAM_ADRESS_PLL_DIV_HI;
         else
             ramPos = MemoryImageV4.RAM_ADRESS_PLL_DIV_HI;
-        if (this.writeRamByte(ramPos, data))
-            this.pllStep = frequency;        
+        if (this.writeRamByte(ramPos, data)) {
+            this.pllStep = frequency;
+            this.txShift = -1;              // stored in PLL words: read again
+            this.updateConfigChecksum();
+        }
     }
 
     @Override
@@ -506,6 +513,7 @@ public abstract class PRMControler implements Controler{
      */
     protected synchronized void updateState() {
         String stateLine = this.sendCommand("e", "^[0-9A-F]{22}\r\n>$");
+        this.stateValid = stateLine != null;
         
         if (stateLine != null) {
             try {
@@ -562,13 +570,8 @@ public abstract class PRMControler implements Controler{
     }
 
     @Override
-    public boolean supportsTxShift() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsScanSpeed() {
-        return false;
+    public boolean isStateValid() {
+        return this.stateValid;
     }
 
     @Override
@@ -587,7 +590,19 @@ public abstract class PRMControler implements Controler{
      */
     public boolean sendEscapeCommand() {
         this.send("!");
-        return waitCommandAnswer(PRMControler.serialTimeout) != null;
+        boolean ok = waitCommandAnswer(PRMControler.serialTimeout) != null;
+        // After an error the PRM80 may still be busy with characters sent
+        // before: wait until the line is quiet, so that the next command is
+        // not mixed up with old answers.
+        this.waitForQuietLine();
+        return ok;
+    }
+
+    /**
+     * Wait until no more characters arrive and drop them.
+     * Used after errors to get in step with the PRM80 again.
+     */
+    protected void waitForQuietLine() {
     }
     
     /**
@@ -925,23 +940,92 @@ public abstract class PRMControler implements Controler{
         return ok;
     }
     
+    /*
+     * Default shift and scan speed are stored in the configuration area of
+     * the external RAM (firmware V4/V5: inc_xram.a51):
+     *   $14/$15 RAM_SHIFT_HI/LO     default shift as PLL word (used for channels
+     *                               without channel specific shift)
+     *   $18     RAM_SCAN_DURATION   time per channel while scanning, * 50 ms
+     * Firmware V3 has a one byte shift at $14 and no scan duration.
+     * They are read and written with the "M" command. "M" does not update
+     * the RAM checksum, so a "F" command (set squelch, which recalculates
+     * the checksum of the configuration area) is sent afterwards.
+     */
+
     @Override
-    public int getTxFrequencyShift() {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public boolean supportsTxShift() {
+        return true;
     }
 
     @Override
-    public void setTxFrequencyShift(int frequency) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-        @Override
-    public int getScanSpeed() throws CommunicationException {
-        return 10;
+    public boolean supportsScanSpeed() {
+        return this.getMajorFirmwareVersion() >= 4;
     }
 
     @Override
-    public void setScanSpeed(int speed) throws CommunicationException {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public synchronized int getTxFrequencyShift() throws CommunicationException {
+        if (this.txShift < 0) {
+            int words;
+            if (this.getMajorFirmwareVersion() == 3) {
+                int[] data = this.readRamByte(MemoryImageV3.RAM_ADRESS_SHIFT, 1);
+                if (data == null)
+                    throw new SerialPortException("Default shift could not be read");
+                words = data[0];
+            } else {
+                int[] data = this.readRamByte(MemoryImageV4.RAM_ADRESS_SHIFT_HI, 2);
+                if (data == null)
+                    throw new SerialPortException("Default shift could not be read");
+                words = (data[0] << 8) + data[1];
+            }
+            this.txShift = words * this.getPLLStep();
+        }
+        return this.txShift;
+    }
+
+    @Override
+    public synchronized void setTxFrequencyShift(int frequency) throws CommunicationException {
+        int words = frequency / this.getPLLStep();
+        boolean ok;
+        if (this.getMajorFirmwareVersion() == 3) {
+            if (words > 255)
+                throw new SerialPortException("Shift too large for firmware V3");
+            ok = this.writeRamByte(MemoryImageV3.RAM_ADRESS_SHIFT, new int[] {words});
+        } else {
+            ok = this.writeRamByte(MemoryImageV4.RAM_ADRESS_SHIFT_HI, new int[] {(words >> 8) & 255, words & 255});
+        }
+        if (!ok)
+            throw new SerialPortException("Default shift could not be written");
+        this.txShift = words * this.getPLLStep();
+        this.updateConfigChecksum();
+    }
+
+    @Override
+    public synchronized int getScanSpeed() throws CommunicationException {
+        if (!this.supportsScanSpeed())
+            throw new UnsupportedOperationException("Scan speed needs firmware V4 or newer");
+        if (this.scanSpeed < 0) {
+            int[] data = this.readRamByte(MemoryImageV4.RAM_ADRESS_SCAN_DURATION, 1);
+            if (data == null)
+                throw new SerialPortException("Scan speed could not be read");
+            this.scanSpeed = data[0] * 50;
+        }
+        return this.scanSpeed;
+    }
+
+    @Override
+    public synchronized void setScanSpeed(int speed) throws CommunicationException {
+        if (!this.supportsScanSpeed())
+            throw new UnsupportedOperationException("Scan speed needs firmware V4 or newer");
+        int value = Math.max(1, Math.min(255, Math.round(speed / 50f)));
+        if (!this.writeRamByte(MemoryImageV4.RAM_ADRESS_SCAN_DURATION, new int[] {value}))
+            throw new SerialPortException("Scan speed could not be written");
+        this.scanSpeed = value * 50;
+        this.updateConfigChecksum();
+    }
+
+    /** After "M" writes: let the firmware recalculate the RAM checksum. */
+    private void updateConfigChecksum() {
+        this.writeSquelch(this.squelch);
     }
 
     @Override

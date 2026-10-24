@@ -138,7 +138,8 @@ public class ConfigurationDialog extends javax.swing.JDialog {
         jLabel1.setName("jLabel1"); // NOI18N
         jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 65, -1, -1));
 
-        jLabel2.setText("Shift (kHz):"); // NOI18N
+        jLabel2.setText("Shift (kHz):");
+        jLabel2.setToolTipText("Default shift, used for channels without their own shift"); // NOI18N // NOI18N
         jLabel2.setName("jLabel2"); // NOI18N
         jPanel1.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 105, -1, -1));
 
@@ -157,6 +158,8 @@ public class ConfigurationDialog extends javax.swing.JDialog {
         shiftComboBox.setName("shiftComboBox"); // NOI18N
         jPanel1.add(shiftComboBox, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 100, 100, -1));
 
+        scanSpeedSpinner.setModel(new javax.swing.SpinnerNumberModel(400, 50, 12750, 50));
+        scanSpeedSpinner.setToolTipText("Time per channel while scanning (steps of 50 ms)"); // NOI18N
         scanSpeedSpinner.setName("scanSpeedSpinner"); // NOI18N
         jPanel1.add(scanSpeedSpinner, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 140, 100, -1));
 

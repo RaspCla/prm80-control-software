@@ -79,6 +79,8 @@ public class PRM80X0View extends javax.swing.JFrame {
     private boolean updatingDisplay;
     /** true while a connection is being established */
     private boolean connecting;
+    /** status bar text while connected */
+    private String connectedStatus = "";
 
     // values shown in the display, changed at once when the user clicks
     // (the PRM80 answers later)
@@ -343,7 +345,8 @@ public class PRM80X0View extends javax.swing.JFrame {
             this.memToggleButton.setSelected(true);
             this.setEnableControls(true);
             this.updateConnectControls();
-            this.setStatus("Connected to " + description + this.describePrm());
+            this.connectedStatus = "Connected to " + description + this.describePrm();
+            this.setStatus(this.connectedStatus);
             this.refreshDisplay();
         }, ex -> {
             this.connecting = false;
@@ -470,6 +473,8 @@ public class PRM80X0View extends javax.swing.JFrame {
             this.hpLabel.setVisible(this.shownHighPower);
             this.lpLabel.setVisible(!this.shownHighPower);
             this.infoLabel.setText(this.vdf.isPLLLocked() ? "" : "-- Synthesizer ERROR --");
+            this.setStatus(c.isStateValid() ? this.connectedStatus
+                    : "No answer from the PRM80 - the display may be outdated");
 
             this.updatingDisplay = true;
             if (!this.volumeSlider.getValueIsAdjusting() && !this.volumeQueued.get())
@@ -1336,6 +1341,26 @@ private void resetMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN
 private void configurationMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_configurationMenuItemActionPerformed
     if (this.vdf == null)
         return;
+    final VirtualDeviceFirmware v = this.vdf;
+    final Controler pc = v.getPRMControler();
+    // read the configuration values in the background, then show the dialog
+    this.worker.run(() -> {
+        pc.getPLLStep();
+        if (pc.supportsTxShift())
+            pc.getTxFrequencyShift();
+        if (pc.supportsScanSpeed())
+            pc.getScanSpeed();
+        return null;
+    }, r -> this.showConfiguration(v), ex -> {
+        this.setStatus("Error: " + message(ex));
+        JOptionPane.showMessageDialog(this, "The configuration could not be read:\n" + message(ex),
+                "PRM80", JOptionPane.ERROR_MESSAGE);
+    });
+}//GEN-LAST:event_configurationMenuItemActionPerformed
+
+private void showConfiguration(VirtualDeviceFirmware v) {
+    if (this.vdf != v)
+        return;     // disconnected meanwhile
     final ConfigurationDialog cd = new ConfigurationDialog(this, this.vdf);
     this.showDialog(cd);
     if (cd.isSaved()) {
@@ -1351,7 +1376,7 @@ private void configurationMenuItemActionPerformed(java.awt.event.ActionEvent evt
             return null;
         });
     }
-}//GEN-LAST:event_configurationMenuItemActionPerformed
+}
 
 private void ram2eepromMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ram2eepromMenuItemActionPerformed
     final VirtualDeviceFirmware v = this.vdf;

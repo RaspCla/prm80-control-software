@@ -33,6 +33,8 @@ import java.util.List;
  */
 public class SerialControler extends PRMControler{
     private SerialPort serialPort;
+    /** read timeout the port is configured with */
+    private int configuredTimeout = Integer.MIN_VALUE;
 
     /**
      * List the serial ports of this computer.
@@ -73,6 +75,8 @@ public class SerialControler extends PRMControler{
         }
         serialPort.setComPortParameters(4800, 7, SerialPort.ONE_STOP_BIT, SerialPort.EVEN_PARITY);
         serialPort.setFlowControl(SerialPort.FLOW_CONTROL_DISABLED);
+        serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, PRMControler.serialTimeout, 0);
+        this.configuredTimeout = PRMControler.serialTimeout;
         if (!serialPort.openPort()) {
             throw new SerialPortException("Cannot open serial port " + port
                     + " (in use, missing or no permission"
@@ -105,6 +109,11 @@ public class SerialControler extends PRMControler{
 
     @Override
     protected void send(String data) {
+        // A new command (one letter, e.g. "e", "n", "!"): throw away characters
+        // that arrived too late for the previous command, otherwise they would
+        // be taken as the answer to this one.
+        if (data.length() == 1 && !"\r".equals(data))
+            this.discardInput();
         byte[] bytes = data.getBytes(StandardCharsets.ISO_8859_1);
         if (this.serialPort.writeBytes(bytes, bytes.length) < 0) {
             Logger.getLogger(SerialControler.class.getName()).log(Level.SEVERE, "Serial write error");
@@ -116,17 +125,56 @@ public class SerialControler extends PRMControler{
         }
     }
 
+    @Override
+    protected void waitForQuietLine() {
+        long end = System.currentTimeMillis() + 3000;
+        try {
+            do {
+                Thread.sleep(150);
+                if (this.serialPort.bytesAvailable() <= 0)
+                    return;
+                this.discardInput();
+            } while (System.currentTimeMillis() < end);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    /** Read and drop all characters received but not read yet. */
+    private void discardInput() {
+        int available = this.serialPort.bytesAvailable();
+        if (available <= 0)
+            return;
+        byte[] junk = new byte[available];
+        int n = this.serialPort.readBytes(junk, available);
+        if (n > 0)
+            Logger.getLogger(SerialControler.class.getName()).log(Level.INFO,
+                    "Discarded {0} late characters: {1}", new Object[] {n,
+                    new String(junk, 0, n, StandardCharsets.ISO_8859_1).replace("\r", "\\r").replace("\n", "\\n")});
+    }
+
+    /**
+     * Change the read timeout only if needed: jSerialComm reconfigures the
+     * whole port for that, on Windows characters can get lost meanwhile.
+     */
+    private void setReadTimeout(int waitTime) {
+        if (waitTime == this.configuredTimeout)
+            return;
+        if (waitTime > 0) {
+            this.serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, waitTime, 0);
+        } else {
+            this.serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, 0, 0);
+        }
+        this.configuredTimeout = waitTime;
+    }
+
     /**
      * Read one character from the serial port.
      * @param waitTime timeout in ms, 0 or less waits without limit
      * @return the character, or -1 on timeout / error
      */
     private int readChar(int waitTime) {
-        if (waitTime > 0) {
-            this.serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, waitTime, 0);
-        } else {
-            this.serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, 0, 0);
-        }
+        this.setReadTimeout(waitTime);
         byte[] b = new byte[1];
         if (this.serialPort.readBytes(b, 1) != 1) {
             return -1;

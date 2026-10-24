@@ -22,6 +22,7 @@ public class MemoryImageV4 extends MemoryImage{
     public static int RAM_ADRESS_SHIFT_LO = 0x15;
     public static int RAM_ADRESS_PLL_DIV_HI = 0x16;
     public static int RAM_ADRESS_PLL_DIV_LO = 0x17;
+    public static int RAM_ADRESS_SCAN_DURATION = 0x18;
 
     public static int RAM_AREA_ADRESS_CONFIG = 0x00;
     public static int RAM_AREA_ADRESS_FREQ = 0x01;

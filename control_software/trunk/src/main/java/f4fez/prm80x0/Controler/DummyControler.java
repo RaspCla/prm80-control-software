@@ -94,6 +94,11 @@ public class DummyControler implements Controler{
     public int getCurrentChannel() {
         return this.image.getRamData(MemoryImageV3.RAM_ADRESS_CHAN);
     }
+    @Override
+    public int getChannelState() {
+        int statePos = this.getCurrentChannel() + MemoryImageV3.RAM_AREA_ADRESS_STATE*256;
+        return this.image.getRamData(statePos) & 0xFF;
+    }
 
     @Override
     public void setCurrentChannel(int channel) {

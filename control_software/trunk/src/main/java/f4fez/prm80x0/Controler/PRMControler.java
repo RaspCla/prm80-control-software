@@ -51,6 +51,7 @@ public abstract class PRMControler implements Controler{
     private int txShift = -1;       // default shift in Hz, -1 = not read yet
     private int scanSpeed = -1;     // scan speed in ms, -1 = not read yet
     private volatile boolean stateValid = true;
+    private int channelState = -1;  // state byte of the current channel
     
     /**
      * Default PRMControler constructor
@@ -532,6 +533,7 @@ public abstract class PRMControler implements Controler{
                     this.squelch = (Integer.parseInt(stateLine.substring(6, 8), 16)) & 15;
                     this.channel = Integer.parseInt(stateLine.substring(2, 4), 16);
                     this.mode = Integer.parseInt(stateLine.substring(0, 2), 16);
+                    this.channelState = Integer.parseInt(stateLine.substring(4, 6), 16);
                     this.holdStateString = stateLine;
                     if (this.changeListener != null)
                         this.changeListener.stateUpdated();
@@ -567,6 +569,11 @@ public abstract class PRMControler implements Controler{
     @Override
     public void refreshState() {
         this.updateState();
+    }
+
+    @Override
+    public int getChannelState() {
+        return this.channelState;
     }
 
     @Override

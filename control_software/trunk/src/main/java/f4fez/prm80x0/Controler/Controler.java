@@ -225,6 +225,15 @@ public interface Controler {
     public void refreshState() throws CommunicationException;
 
     /**
+     * State byte of the current channel (as read with the "E" command):
+     * b0 shift enabled, b1 reverse, b2 positive shift, b3 scan lock out.
+     * @return state byte, -1 if unknown
+     */
+    public default int getChannelState() {
+        return -1;
+    }
+
+    /**
      * @return false if the PRM did not answer when its state was read the
      * last time, the values of the getters may be outdated then
      */

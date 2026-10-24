@@ -335,6 +335,7 @@ public class PRM80X0View extends javax.swing.JFrame {
         }, vdf -> {
             this.connecting = false;
             this.vdf = vdf;
+            this.shownShiftKey = "";
             controler.setPRMStateChangeListener(new PRMStateChangeListener() {
                 @Override
                 public void stateUpdated() {
@@ -473,6 +474,7 @@ public class PRM80X0View extends javax.swing.JFrame {
             this.hpLabel.setVisible(this.shownHighPower);
             this.lpLabel.setVisible(!this.shownHighPower);
             this.infoLabel.setText(this.vdf.isPLLLocked() ? "" : "-- Synthesizer ERROR --");
+            this.showChannelShift(c);
             this.setStatus(c.isStateValid() ? this.connectedStatus
                     : "No answer from the PRM80 - the display may be outdated");
 
@@ -488,6 +490,47 @@ public class PRM80X0View extends javax.swing.JFrame {
         }
     }
     
+    /** channel, state and frequencies the shift fields were last set for */
+    private String shownShiftKey = "";
+
+    /**
+     * Show the shift of the current channel in "Shift enabled",
+     * "Shift positive" and "Shift Frequency" (memory mode only: in VFO mode
+     * the fields are the settings for entering a frequency).
+     * Only done when channel, state or frequencies change, so the fields can
+     * still be changed by hand.
+     */
+    private void showChannelShift(Controler c) throws CommunicationException {
+        int state = c.getChannelState();
+        if (state < 0 || this.vdf.isVfoMode())
+            return;
+        int rx = c.getRxPLLFrequency();
+        int tx = c.getTxPLLFrequency();
+        String key = c.getCurrentChannel() + "/" + state + "/" + rx + "/" + tx;
+        if (key.equals(this.shownShiftKey))
+            return;
+        this.shownShiftKey = key;
+        boolean enabled = (state & 1) != 0;
+        this.ShiftEnabledCheckbox.setSelected(enabled);
+        this.ShiftPositiveCheckbox.setSelected((state & 4) != 0);
+        int shift = Math.abs(tx - rx);
+        if (enabled && shift > 0)
+            this.setShiftSpinner(shift);
+    }
+
+    /** Select a shift in Hz in the spinner, add it to the list if needed. */
+    private void setShiftSpinner(int hz) {
+        String value = Integer.toString(hz);
+        javax.swing.SpinnerListModel model = (javax.swing.SpinnerListModel) this.ShiftFreqSpinner.getModel();
+        java.util.List<Object> values = new java.util.ArrayList<Object>(model.getList());
+        if (!values.contains(value)) {
+            values.add(value);
+            values.sort((a, b) -> Integer.compare(Integer.parseInt(b.toString()), Integer.parseInt(a.toString())));
+            model.setList(values);
+        }
+        this.ShiftFreqSpinner.setValue(value);
+    }
+
     private void setEnableControls(boolean enable) {
         this.upButton.setEnabled(enable);
         this.downButton.setEnabled(enable);
@@ -1172,6 +1215,7 @@ public class PRM80X0View extends javax.swing.JFrame {
         if (this.vdf == null)
             return;
         this.chanLabel.setVisible(true);
+        this.shownShiftKey = "";       // show the shift of the channel again
         final VirtualDeviceFirmware v = this.vdf;
         this.command(() -> {
             v.setVfoMode(false);

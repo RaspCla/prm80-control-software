@@ -18,10 +18,21 @@ set TYPE=app-image
 if not "%~1"=="" set TYPE=%~1
 
 set EXTRA=
-if not "%TYPE%"=="app-image" set EXTRA=--win-menu --win-shortcut --win-dir-chooser
+if not "%TYPE%"=="app-image" set EXTRA=--win-menu --win-menu-group PRM80 --win-shortcut --win-dir-chooser
 
-set JPACKAGE=jpackage
-if defined JAVA_HOME set JPACKAGE="%JAVA_HOME%\bin\jpackage"
+rem jpackage of JAVA_HOME, if JAVA_HOME is a JDK (an old JRE in JAVA_HOME,
+rem e.g. Java 8, has no jpackage: then the one in the PATH is used)
+set JPACKAGE=
+if defined JAVA_HOME if exist "%JAVA_HOME%\bin\jpackage.exe" set JPACKAGE="%JAVA_HOME%\bin\jpackage.exe"
+if not defined JPACKAGE (
+    where jpackage >nul 2>nul
+    if errorlevel 1 (
+        echo jpackage not found - install a JDK 21 or newer and add its bin folder
+        echo to the PATH, or set JAVA_HOME to the JDK folder.
+        exit /b 1
+    )
+    set JPACKAGE=jpackage
+)
 
 set JAR=
 for %%f in (target\prm80-control-software-*.jar) do set JAR=%%~nxf

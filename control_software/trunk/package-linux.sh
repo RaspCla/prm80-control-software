@@ -19,9 +19,14 @@ if [ "$TYPE" != "app-image" ]; then
     EXTRA="--linux-shortcut --linux-menu-group HamRadio"
 fi
 
+# jpackage of JAVA_HOME if JAVA_HOME is a JDK, otherwise the one in the PATH
 JPACKAGE=jpackage
-if [ -n "$JAVA_HOME" ]; then
+if [ -n "$JAVA_HOME" ] && [ -x "$JAVA_HOME/bin/jpackage" ]; then
     JPACKAGE="$JAVA_HOME/bin/jpackage"
+fi
+if ! command -v "$JPACKAGE" >/dev/null 2>&1; then
+    echo "jpackage not found - install a JDK 21 or newer (JAVA_HOME or PATH)."
+    exit 1
 fi
 
 JAR=$(cd target 2>/dev/null && ls prm80-control-software-*.jar 2>/dev/null | head -n 1)

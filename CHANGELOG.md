@@ -19,6 +19,11 @@
   selected rows (after a question), e.g. scan lock or shift for many channels
 - Changing only a comment no longer marks the list as different from the PRM80
 
+### Packages
+- `package-windows.bat` / `package-linux.sh` use the `jpackage` of the PATH
+  if `JAVA_HOME` points to an old Java without `jpackage` (e.g. Java 8)
+- Windows installer: start menu folder "PRM80"
+
 ### Display
 - The comment of the current channel (from the channel manager list) is
   shown in red below the channel number (full text as tooltip); only if the

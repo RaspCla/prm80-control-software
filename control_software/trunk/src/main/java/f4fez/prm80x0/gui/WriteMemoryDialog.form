@@ -174,6 +174,16 @@
               <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="undoButtonActionPerformed"/>
             </Events>
           </Component>
+          <Component class="javax.swing.JButton" name="cancelButton">
+            <Properties>
+              <Property name="text" type="java.lang.String" value="Cancel"/>
+              <Property name="toolTipText" type="java.lang.String" value="Close the window (channels already written stay in the PRM80, use Undo to take them back)"/>
+              <Property name="name" type="java.lang.String" value="cancelButton" noResource="true"/>
+            </Properties>
+            <Events>
+              <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="cancelButtonActionPerformed"/>
+            </Events>
+          </Component>
           <Component class="javax.swing.JButton" name="okButton">
             <Properties>
               <Property name="text" type="java.lang.String" value="OK"/>

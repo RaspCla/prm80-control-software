@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    NetBeans "Run" and "Debug" for this project.
+    The only difference to the NetBeans defaults is the JVM option
+    "enable-native-access": FlatLaf (window decorations on Windows) and
+    jSerialComm load native libraries; without the option Java 24 and newer
+    print "WARNING: A restricted method in java.lang.System has been called".
+-->
+<actions>
+    <action>
+        <actionName>run</actionName>
+        <packagings>
+            <packaging>jar</packaging>
+        </packagings>
+        <goals>
+            <goal>process-classes</goal>
+            <goal>org.codehaus.mojo:exec-maven-plugin:3.6.3:exec</goal>
+        </goals>
+        <properties>
+            <exec.vmArgs>--enable-native-access=ALL-UNNAMED</exec.vmArgs>
+            <exec.args>${exec.vmArgs} -classpath %classpath ${exec.mainClass} ${exec.appArgs}</exec.args>
+            <exec.appArgs></exec.appArgs>
+            <exec.mainClass>f4fez.prm80x0.PRM80X0App</exec.mainClass>
+            <exec.executable>java</exec.executable>
+        </properties>
+    </action>
+    <action>
+        <actionName>debug</actionName>
+        <packagings>
+            <packaging>jar</packaging>
+        </packagings>
+        <goals>
+            <goal>process-classes</goal>
+            <goal>org.codehaus.mojo:exec-maven-plugin:3.6.3:exec</goal>
+        </goals>
+        <properties>
+            <exec.vmArgs>--enable-native-access=ALL-UNNAMED -agentlib:jdwp=transport=dt_socket,server=n,address=${jpda.address}</exec.vmArgs>
+            <exec.args>${exec.vmArgs} -classpath %classpath ${exec.mainClass} ${exec.appArgs}</exec.args>
+            <exec.appArgs></exec.appArgs>
+            <exec.mainClass>f4fez.prm80x0.PRM80X0App</exec.mainClass>
+            <exec.executable>java</exec.executable>
+            <jpda.listen>true</jpda.listen>
+        </properties>
+    </action>
+</actions>

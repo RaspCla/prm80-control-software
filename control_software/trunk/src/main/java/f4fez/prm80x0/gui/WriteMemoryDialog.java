@@ -112,6 +112,7 @@ public class WriteMemoryDialog extends javax.swing.JDialog {
         buttonPanel = new javax.swing.JPanel();
         writeButton = new javax.swing.JButton();
         undoButton = new javax.swing.JButton();
+        cancelButton = new javax.swing.JButton();
         okButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
@@ -195,6 +196,16 @@ public class WriteMemoryDialog extends javax.swing.JDialog {
         });
         buttonPanel.add(undoButton);
 
+        cancelButton.setText("Cancel"); // NOI18N
+        cancelButton.setToolTipText("Close the window (channels already written stay in the PRM80, use Undo to take them back)"); // NOI18N
+        cancelButton.setName("cancelButton"); // NOI18N
+        cancelButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cancelButtonActionPerformed(evt);
+            }
+        });
+        buttonPanel.add(cancelButton);
+
         okButton.setText("OK"); // NOI18N
         okButton.setName("okButton"); // NOI18N
         okButton.addActionListener(new java.awt.event.ActionListener() {
@@ -222,6 +233,10 @@ public class WriteMemoryDialog extends javax.swing.JDialog {
     private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonActionPerformed
         this.close();
     }//GEN-LAST:event_okButtonActionPerformed
+
+    private void cancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelButtonActionPerformed
+        this.close();
+    }//GEN-LAST:event_cancelButtonActionPerformed
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         this.close();
@@ -310,6 +325,7 @@ public class WriteMemoryDialog extends javax.swing.JDialog {
         this.writeButton.setEnabled(!this.busy && this.table.getSelectedRow() >= 0);
         this.undoButton.setEnabled(!this.busy && !this.changes.isEmpty());
         this.okButton.setEnabled(!this.busy);
+        this.cancelButton.setEnabled(!this.busy);
         this.commentField.setEnabled(!this.busy);
     }
 
@@ -360,6 +376,7 @@ public class WriteMemoryDialog extends javax.swing.JDialog {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel bottomPanel;
     private javax.swing.JPanel buttonPanel;
+    private javax.swing.JButton cancelButton;
     private javax.swing.JTextField commentField;
     private javax.swing.JLabel commentLabel;
     private javax.swing.JPanel commentPanel;

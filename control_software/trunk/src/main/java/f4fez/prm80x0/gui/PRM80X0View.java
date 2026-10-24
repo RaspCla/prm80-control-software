@@ -141,6 +141,24 @@ public class PRM80X0View extends javax.swing.JFrame {
             unitFont = unitFont.deriveFont(Font.BOLD, unitFont.getSize2D() * 0.85f);
             this.rxUnitLabel.setFont(unitFont);
             this.txUnitLabel.setFont(unitFont);
+            this.chnlUnitLabel.setFont(unitFont);
+            // "Rx", "Tx", "Chnl" stand on the baseline of the LCD digits
+            this.rxUnitLabel.putClientProperty(Zoom.BASELINE_OF, this.freqLabel);
+            this.txUnitLabel.putClientProperty(Zoom.BASELINE_OF, this.txFreqLabel);
+            this.chnlUnitLabel.putClientProperty(Zoom.BASELINE_OF, this.chanLabel);
+            // "Chnl" is shown together with the channel number (not in VFO mode)
+            this.chnlUnitLabel.setVisible(false);
+            this.chanLabel.addComponentListener(new ComponentAdapter() {
+                @Override
+                public void componentShown(ComponentEvent e) {
+                    chnlUnitLabel.setVisible(true);
+                }
+
+                @Override
+                public void componentHidden(ComponentEvent e) {
+                    chnlUnitLabel.setVisible(false);
+                }
+            });
 
             this.initPortList();
             this.initZoom();
@@ -626,6 +644,7 @@ public class PRM80X0View extends javax.swing.JFrame {
         infoLabel = new javax.swing.JLabel();
         rxUnitLabel = new javax.swing.JLabel();
         txUnitLabel = new javax.swing.JLabel();
+        chnlUnitLabel = new javax.swing.JLabel();
         busyLabel = new javax.swing.JLabel();
         jPanel2 = new javax.swing.JPanel();
         vfoToggleButton = new javax.swing.JToggleButton();
@@ -732,7 +751,7 @@ public class PRM80X0View extends javax.swing.JFrame {
                 freqLabelMouseClicked(evt);
             }
         });
-        jPanel1.add(freqLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 10, 170, 30));
+        jPanel1.add(freqLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 8, 170, 30));
 
         chanLabel.setForeground(new java.awt.Color(255, 51, 51)); // NOI18N
         chanLabel.setText("00"); // NOI18N
@@ -771,7 +790,7 @@ public class PRM80X0View extends javax.swing.JFrame {
                 freqLabelMouseClicked(evt);
             }
         });
-        jPanel1.add(txFreqLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 40, 170, 20));
+        jPanel1.add(txFreqLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 43, 170, 20));
 
         infoLabel.setForeground(new java.awt.Color(0, 255, 0)); // NOI18N
         infoLabel.setText(""); // NOI18N
@@ -782,13 +801,18 @@ public class PRM80X0View extends javax.swing.JFrame {
         rxUnitLabel.setText("Rx"); // NOI18N
         rxUnitLabel.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
         rxUnitLabel.setName("rxUnitLabel"); // NOI18N
-        jPanel1.add(rxUnitLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(174, 22, 30, 16));
+        jPanel1.add(rxUnitLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(174, 22, -1, -1));
 
         txUnitLabel.setForeground(new java.awt.Color(255, 204, 0));
         txUnitLabel.setText("Tx"); // NOI18N
         txUnitLabel.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
         txUnitLabel.setName("txUnitLabel"); // NOI18N
-        jPanel1.add(txUnitLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(174, 42, 30, 16));
+        jPanel1.add(txUnitLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(174, 45, -1, -1));
+
+        chnlUnitLabel.setForeground(new java.awt.Color(255, 51, 51));
+        chnlUnitLabel.setText("Chnl"); // NOI18N
+        chnlUnitLabel.setName("chnlUnitLabel"); // NOI18N
+        jPanel1.add(chnlUnitLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 22, -1, -1));
 
         busyLabel.setBackground(new java.awt.Color(255, 0, 0));
         busyLabel.setForeground(new java.awt.Color(0, 0, 0));
@@ -1738,6 +1762,7 @@ private void freqLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:e
     private javax.swing.JLabel busyLabel;
     private javax.swing.JLabel rxUnitLabel;
     private javax.swing.JLabel txUnitLabel;
+    private javax.swing.JLabel chnlUnitLabel;
     private javax.swing.JCheckBox ShiftReverseCheckbox;
     private javax.swing.JButton connectButton;
     private javax.swing.JPanel connectPanel;

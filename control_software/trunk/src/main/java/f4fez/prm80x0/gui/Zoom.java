@@ -64,6 +64,14 @@ public final class Zoom {
     private static final String BASE_FONT = "zoom.baseFontSize";
     private static final String BASE_VIEWPORT = "zoom.baseViewportSize";
 
+    /**
+     * Client property for components in an AbsoluteLayout: the value is
+     * another component of the same panel; the y position is then chosen so
+     * that both texts stand on the same baseline (e.g. "Rx" after the
+     * frequency, which has another font).
+     */
+    public static final String BASELINE_OF = "zoom.baselineOf";
+
     // for windows (they are no JComponents and have no client properties)
     private static final Map<Window, Dimension> windowBaseMin = new java.util.WeakHashMap<Window, Dimension>();
 
@@ -303,6 +311,19 @@ public final class Zoom {
                 }
                 Dimension d = size(c, ac, zoom, true);
                 c.setBounds(in.left + scale(ac.x, zoom), in.top + scale(ac.y, zoom), d.width, d.height);
+            }
+            // align texts on the baseline of another component
+            for (Component c : parent.getComponents()) {
+                if (!(c instanceof JComponent))
+                    continue;
+                Object ref = ((JComponent) c).getClientProperty(BASELINE_OF);
+                if (!(ref instanceof Component) || ((Component) ref).getParent() != parent)
+                    continue;
+                Component r = (Component) ref;
+                int refBaseline = r.getBaseline(r.getWidth(), r.getHeight());
+                int baseline = c.getBaseline(c.getWidth(), c.getHeight());
+                if (refBaseline >= 0 && baseline >= 0)
+                    c.setLocation(c.getX(), r.getY() + refBaseline - baseline);
             }
         }
     }

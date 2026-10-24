@@ -26,6 +26,8 @@ Build and run
                  java -jar target/prm80-control-software-2.0.0.jar
 
 The jar in target/ contains all libraries and runs on every computer with Java 21+.
+NetBeans "Run" / "Debug" use nbactions.xml (adds --enable-native-access=ALL-UNNAMED,
+needed by FlatLaf and jSerialComm from Java 24 on; java -jar gets it from the manifest).
 
 Stand-alone program (no Java installation needed)
 --------------------------------------------------
@@ -73,7 +75,8 @@ In memory mode the fields show the shift of the current channel.
 channel list of the channel manager is used; it is only read from the PRM80
 when it is not known to be the same (asks before a different list is
 replaced). The dialog stays open: write to further channels, "Undo" takes
-writes back, "OK" closes it. The channel manager shows the changes.
+writes back, "OK" or "Cancel" close it (written channels stay in the PRM80).
+The channel manager shows the changes.
 
 Expert mode
 -----------

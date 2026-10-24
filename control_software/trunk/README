@@ -43,7 +43,7 @@ Serial port on Linux
 The user needs access to the serial ports, usually by membership in the
 group "dialout":   sudo usermod -aG dialout $USER   (then log in again)
 Ports are named /dev/ttyUSB0, /dev/ttyACM0, /dev/ttyS0, ... on Linux and
-COM1, COM2, ... on Windows. Select the port in Tools > Options.
+COM1, COM2, ... on Windows. Select the port at the top of the main window.
 
 Connecting
 ----------
@@ -61,6 +61,18 @@ Tools > Channel manager. It shows the channel file used last time.
 The PRM80 has no memory for comments: they are only kept in the file. When the
 channels are read from the PRM80, the comments of the list shown before are
 kept for channels with the same number and frequency.
+
+VFO mode
+--------
+In VFO mode "Shift enabled", "Shift positive" and "Shift Frequency" set the TX
+frequency at once (TX = RX +/- shift). "Write to MEM" stores the VFO setting in
+a memory channel: the channels of the PRM80 are shown, choose one or a new one.
+In memory mode the three fields show the shift of the current channel.
+
+Expert mode
+-----------
+Tools > Expert mode shows the functions for experts (restart, RAM/EEPROM,
+serial monitor, A51 export, TCP server connection, virtual PRM for tests).
 
 Zoom
 ----

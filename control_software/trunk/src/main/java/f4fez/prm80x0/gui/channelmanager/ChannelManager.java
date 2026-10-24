@@ -62,6 +62,14 @@ public class ChannelManager extends javax.swing.JDialog {
     private static boolean sessionModified;
 
     private final ChannelModel model = new ChannelModel(null);
+
+    /**
+     * @return the channel list shown in the channel manager (file or PRM80),
+     * null if it was not opened yet. Used for the comments of the channels.
+     */
+    public static ChannelList getSessionList() {
+        return sessionList;
+    }
     private final PrmAccess prm;
     private final Option config = new Option();
     private boolean busy;

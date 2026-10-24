@@ -500,6 +500,17 @@ public abstract class PRMControler implements Controler{
     }
 
     @Override
+    public synchronized void writeChannel(Channel channel) throws CommunicationException {
+        int max = this.getMaxChan();
+        if (channel.getId() < 0 || channel.getId() > max + 1)
+            throw new SerialPortException("Invalid channel number " + channel.getId());
+        if (!this.setChannel(channel))
+            throw new SerialPortException("Channel " + channel.getId() + " could not be written");
+        if (channel.getId() > max)
+            this.maxChan = channel.getId();     // the PRM80 has added the channel
+    }
+
+    @Override
     public void setChannels(ChannelList list) throws CommunicationException {
         for (int i=0; i < list.countChannel();i++) {
             if (!this.setChannel(list.getChannel(i)))

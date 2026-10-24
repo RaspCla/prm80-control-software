@@ -187,13 +187,13 @@
                 <Property name="name" type="java.lang.String" value="expertSeparator" noResource="true"/>
               </Properties>
             </MenuItem>
-            <MenuItem class="javax.swing.JMenuItem" name="optionMenuItem">
+            <MenuItem class="javax.swing.JCheckBoxMenuItem" name="expertModeMenuItem">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Options ..."/>
-                <Property name="name" type="java.lang.String" value="optionMenuItem" noResource="true"/>
+                <Property name="text" type="java.lang.String" value="Expert mode"/>
+                <Property name="name" type="java.lang.String" value="expertModeMenuItem" noResource="true"/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="optionMenuItemActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="expertModeMenuItemActionPerformed"/>
               </Events>
             </MenuItem>
           </SubComponents>
@@ -567,6 +567,21 @@
                 </Constraint>
               </Constraints>
             </Component>
+            <Component class="javax.swing.JButton" name="writeMemButton">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Write to MEM"/>
+                <Property name="toolTipText" type="java.lang.String" value="Store the VFO frequency and shift in a memory channel"/>
+                <Property name="name" type="java.lang.String" value="writeMemButton" noResource="true"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="writeMemButtonActionPerformed"/>
+              </Events>
+              <Constraints>
+                <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
+                  <AbsoluteConstraints x="185" y="85" width="120" height="-1"/>
+                </Constraint>
+              </Constraints>
+            </Component>
             <Component class="javax.swing.JSlider" name="volumeSlider">
               <Properties>
                 <Property name="majorTickSpacing" type="int" value="5"/>
@@ -688,6 +703,9 @@
                 </Property>
                 <Property name="name" type="java.lang.String" value="ShiftFreqSpinner" noResource="true"/>
               </Properties>
+              <Events>
+                <EventHandler event="stateChanged" listener="javax.swing.event.ChangeListener" parameters="javax.swing.event.ChangeEvent" handler="ShiftFreqSpinnerStateChanged"/>
+              </Events>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
                   <AbsoluteConstraints x="310" y="100" width="100" height="22"/>
@@ -710,6 +728,9 @@
                 <Property name="text" type="java.lang.String" value="Shift enabled"/>
                 <Property name="name" type="java.lang.String" value="ShiftEna" noResource="true"/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="ShiftEnabledCheckboxActionPerformed"/>
+              </Events>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
                   <AbsoluteConstraints x="310" y="20" width="-1" height="20"/>
@@ -721,6 +742,9 @@
                 <Property name="text" type="java.lang.String" value="Shift positive"/>
                 <Property name="name" type="java.lang.String" value="ShiftPositiveCheckbox" noResource="true"/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="ShiftPositiveCheckboxActionPerformed"/>
+              </Events>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
                   <AbsoluteConstraints x="310" y="50" width="-1" height="20"/>

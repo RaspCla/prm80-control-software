@@ -43,6 +43,12 @@ public class ChannelList{
         return this.list.get(channel);
     }
 
+    /** Replace a channel. */
+    public void setChannel(int index, Channel channel) {
+        this.list.set(index, channel);
+        channel.setId(index);
+    }
+
     public void addChannel(Channel channel) {
         this.list.add(channel);
         channel.setId(this.list.indexOf(channel));

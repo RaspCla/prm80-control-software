@@ -256,6 +256,13 @@ public interface Controler {
     }
 
     /**
+     * Write one channel (the "P" command). If the channel number is the
+     * number of channels, a new channel is added.
+     * @param channel channel to write, its id is the channel number
+     */
+    public void writeChannel(Channel channel) throws CommunicationException;
+
+    /**
      * Set listener called when state change
      * @param listener
      */

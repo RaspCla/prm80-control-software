@@ -19,6 +19,7 @@
 package f4fez.prm80x0.gui;
 
 import f4fez.prm80x0.*;
+import f4fez.prm80x0.Controler.Channel;
 import f4fez.prm80x0.Controler.ChannelList;
 import f4fez.prm80x0.Controler.CommunicationException;
 import f4fez.prm80x0.Controler.Controler;
@@ -81,6 +82,8 @@ public class PRM80X0View extends javax.swing.JFrame {
     private boolean connecting;
     /** status bar text while connected */
     private String connectedStatus = "";
+    /** last answer state shown in the status bar */
+    private boolean lastStateValid = true;
 
     // values shown in the display, changed at once when the user clicks
     // (the PRM80 answers later)
@@ -107,7 +110,9 @@ public class PRM80X0View extends javax.swing.JFrame {
             this.updateConnectControls();
             
             // Expert mode ?
+            this.expertModeMenuItem.setSelected(this.config.isExpertMode());
             this.setVisibleExpertControls(this.config.isExpertMode());
+            this.writeMemButton.setVisible(false);
 
             // status bar initialization
             progressBar.setVisible(false);
@@ -346,7 +351,9 @@ public class PRM80X0View extends javax.swing.JFrame {
             this.memToggleButton.setSelected(true);
             this.setEnableControls(true);
             this.updateConnectControls();
+            this.updateModeControls();
             this.connectedStatus = "Connected to " + description + this.describePrm();
+            this.lastStateValid = true;
             this.setStatus(this.connectedStatus);
             this.refreshDisplay();
         }, ex -> {
@@ -475,8 +482,13 @@ public class PRM80X0View extends javax.swing.JFrame {
             this.lpLabel.setVisible(!this.shownHighPower);
             this.infoLabel.setText(this.vdf.isPLLLocked() ? "" : "-- Synthesizer ERROR --");
             this.showChannelShift(c);
-            this.setStatus(c.isStateValid() ? this.connectedStatus
-                    : "No answer from the PRM80 - the display may be outdated");
+            // status line only when the answer state changes (keeps other messages)
+            boolean valid = c.isStateValid();
+            if (valid != this.lastStateValid) {
+                this.lastStateValid = valid;
+                this.setStatus(valid ? this.connectedStatus
+                        : "No answer from the PRM80 - the display may be outdated");
+            }
 
             this.updatingDisplay = true;
             if (!this.volumeSlider.getValueIsAdjusting() && !this.volumeQueued.get())
@@ -520,6 +532,16 @@ public class PRM80X0View extends javax.swing.JFrame {
 
     /** Select a shift in Hz in the spinner, add it to the list if needed. */
     private void setShiftSpinner(int hz) {
+        boolean wasUpdating = this.updatingDisplay;
+        this.updatingDisplay = true;
+        try {
+            this.setShiftSpinnerValue(hz);
+        } finally {
+            this.updatingDisplay = wasUpdating;
+        }
+    }
+
+    private void setShiftSpinnerValue(int hz) {
         String value = Integer.toString(hz);
         javax.swing.SpinnerListModel model = (javax.swing.SpinnerListModel) this.ShiftFreqSpinner.getModel();
         java.util.List<Object> values = new java.util.ArrayList<Object>(model.getList());
@@ -551,6 +573,7 @@ public class PRM80X0View extends javax.swing.JFrame {
             this.hpLabel.setVisible(false);
             this.lpLabel.setVisible(false);
             this.busyLabel.setVisible(false);
+            this.writeMemButton.setVisible(false);
         }
         this.powerButton.setEnabled(enable);
         this.exportA51MenuItem.setEnabled(enable);
@@ -595,6 +618,7 @@ public class PRM80X0View extends javax.swing.JFrame {
         jPanel2 = new javax.swing.JPanel();
         vfoToggleButton = new javax.swing.JToggleButton();
         memToggleButton = new javax.swing.JToggleButton();
+        writeMemButton = new javax.swing.JButton();
         volumeSlider = new javax.swing.JSlider();
         squelchLabel = new javax.swing.JLabel();
         squelchSpinner = new javax.swing.JSpinner();
@@ -628,7 +652,7 @@ public class PRM80X0View extends javax.swing.JFrame {
         serialSpyMenuItem = new javax.swing.JMenuItem();
         exportA51MenuItem = new javax.swing.JMenuItem();
         expertSeparator = new javax.swing.JSeparator();
-        optionMenuItem = new javax.swing.JMenuItem();
+        expertModeMenuItem = new javax.swing.JCheckBoxMenuItem();
         viewMenu = new javax.swing.JMenu();
         zoomInMenuItem = new javax.swing.JMenuItem();
         zoomOutMenuItem = new javax.swing.JMenuItem();
@@ -782,6 +806,16 @@ public class PRM80X0View extends javax.swing.JFrame {
         });
         jPanel2.add(memToggleButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(215, 50, 70, -1));
 
+        writeMemButton.setText("Write to MEM"); // NOI18N
+        writeMemButton.setToolTipText("Store the VFO frequency and shift in a memory channel"); // NOI18N
+        writeMemButton.setName("writeMemButton"); // NOI18N
+        writeMemButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                writeMemButtonActionPerformed(evt);
+            }
+        });
+        jPanel2.add(writeMemButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(185, 85, 120, -1));
+
         volumeSlider.setMajorTickSpacing(5);
         volumeSlider.setMaximum(15);
         volumeSlider.setMinorTickSpacing(1);
@@ -846,6 +880,11 @@ public class PRM80X0View extends javax.swing.JFrame {
 
         ShiftFreqSpinner.setModel(new javax.swing.SpinnerListModel(new String[] {"9400000", "7600000", "1600000", "600000"}));
         ShiftFreqSpinner.setName("ShiftFreqSpinner"); // NOI18N
+        ShiftFreqSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                ShiftFreqSpinnerStateChanged(evt);
+            }
+        });
         jPanel2.add(ShiftFreqSpinner, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 100, 100, 22));
 
         label1.setName("ShiftFrequency"); // NOI18N
@@ -854,10 +893,20 @@ public class PRM80X0View extends javax.swing.JFrame {
 
         ShiftEnabledCheckbox.setText("Shift enabled"); // NOI18N
         ShiftEnabledCheckbox.setName("ShiftEna"); // NOI18N
+        ShiftEnabledCheckbox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ShiftEnabledCheckboxActionPerformed(evt);
+            }
+        });
         jPanel2.add(ShiftEnabledCheckbox, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 20, -1, 20));
 
         ShiftPositiveCheckbox.setText("Shift positive"); // NOI18N
         ShiftPositiveCheckbox.setName("ShiftPositiveCheckbox"); // NOI18N
+        ShiftPositiveCheckbox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ShiftPositiveCheckboxActionPerformed(evt);
+            }
+        });
         jPanel2.add(ShiftPositiveCheckbox, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 50, -1, 20));
 
         mainPanel.add(jPanel2);
@@ -1019,14 +1068,14 @@ public class PRM80X0View extends javax.swing.JFrame {
         expertSeparator.setName("expertSeparator"); // NOI18N
         ToolsMenu.add(expertSeparator);
 
-        optionMenuItem.setText("Options ..."); // NOI18N
-        optionMenuItem.setName("optionMenuItem"); // NOI18N
-        optionMenuItem.addActionListener(new java.awt.event.ActionListener() {
+        expertModeMenuItem.setText("Expert mode"); // NOI18N
+        expertModeMenuItem.setName("expertModeMenuItem"); // NOI18N
+        expertModeMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                optionMenuItemActionPerformed(evt);
+                expertModeMenuItemActionPerformed(evt);
             }
         });
-        ToolsMenu.add(optionMenuItem);
+        ToolsMenu.add(expertModeMenuItem);
 
         menuBar.add(ToolsMenu);
 
@@ -1216,6 +1265,7 @@ public class PRM80X0View extends javax.swing.JFrame {
             return;
         this.chanLabel.setVisible(true);
         this.shownShiftKey = "";       // show the shift of the channel again
+        this.updateModeControls();
         final VirtualDeviceFirmware v = this.vdf;
         this.command(() -> {
             v.setVfoMode(false);
@@ -1227,6 +1277,7 @@ public class PRM80X0View extends javax.swing.JFrame {
         if (this.vdf == null)
             return;
         this.chanLabel.setVisible(false);
+        this.updateModeControls();
         final VirtualDeviceFirmware v = this.vdf;
         this.command(() -> {
             v.setVfoMode(true);
@@ -1304,6 +1355,7 @@ public class PRM80X0View extends javax.swing.JFrame {
                 }, result -> {
                     memToggleButton.setSelected(true);
                     chanLabel.setVisible(true);
+                    updateModeControls();
                     done.run();
                 }, ex -> error.accept(message(ex)));
             }
@@ -1311,14 +1363,99 @@ public class PRM80X0View extends javax.swing.JFrame {
         this.showDialog(cm);
     }//GEN-LAST:event_channelManagerMenuItemActionPerformed
 
-    private void optionMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_optionMenuItemActionPerformed
-        OptionsDialog cd = new OptionsDialog(this, true);
-        cd.setConfiguration(this.config);           
-        this.showDialog(cd);
-        this.setVisibleExpertControls(this.config.isExpertMode());
-        if (this.portComboBox.isEnabled())
-            this.portComboBox.setSelectedItem(this.config.getSerialPort());
-    }//GEN-LAST:event_optionMenuItemActionPerformed
+    private void expertModeMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_expertModeMenuItemActionPerformed
+        boolean expert = this.expertModeMenuItem.isSelected();
+        this.config.setEpertMode(expert);
+        this.setVisibleExpertControls(expert);
+    }//GEN-LAST:event_expertModeMenuItemActionPerformed
+
+    private void ShiftEnabledCheckboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ShiftEnabledCheckboxActionPerformed
+        this.applyVfoShift();
+    }//GEN-LAST:event_ShiftEnabledCheckboxActionPerformed
+
+    private void ShiftPositiveCheckboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ShiftPositiveCheckboxActionPerformed
+        this.applyVfoShift();
+    }//GEN-LAST:event_ShiftPositiveCheckboxActionPerformed
+
+    private void ShiftFreqSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_ShiftFreqSpinnerStateChanged
+        this.applyVfoShift();
+    }//GEN-LAST:event_ShiftFreqSpinnerStateChanged
+
+    private void writeMemButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_writeMemButtonActionPerformed
+        if (this.vdf == null)
+            return;
+        final VirtualDeviceFirmware v = this.vdf;
+        final Controler c = v.getPRMControler();
+        final int rx = this.shownRx;
+        final int tx = this.shownTx;
+        final String description = "VFO  RX " + formatFrequency(rx) + "  TX " + formatFrequency(tx)
+                + (tx == rx ? "  (no shift)" : "  (shift " + (tx > rx ? "+" : "-")
+                + new java.math.BigDecimal(Math.abs(tx - rx)).movePointLeft(3).stripTrailingZeros().toPlainString() + " kHz)");
+        this.setStatus("Reading channels from PRM80 ...");
+        // read the current channels, then let the user choose one
+        this.worker.run(() -> {
+            ChannelList list = c.getChannels();
+            if (list == null)
+                throw new Exception("No valid answer from the PRM80");
+            return list;
+        }, list -> {
+            this.setStatus(this.connectedStatus);
+            if (this.vdf != v)
+                return;     // disconnected meanwhile
+            list.takeCommentsFrom(ChannelManager.getSessionList());
+            WriteMemoryDialog d = new WriteMemoryDialog(this, list, description);
+            this.showDialog(d);
+            final int number = d.getSelectedChannel();
+            if (number < 0)
+                return;
+            String scanLock = number < list.countChannel() ? list.getChannel(number).getScanLock() : "";
+            final Channel channel = new Channel(rx, Math.abs(tx - rx), scanLock, "",
+                    tx != rx ? "Enabled" : "", tx == rx ? "" : (tx > rx ? "+" : "-"));
+            channel.setId(number);
+            this.worker.run(() -> {
+                c.writeChannel(channel);
+                return null;
+            }, r -> this.setStatus("VFO stored in channel " + formatChannel(number)),
+            ex -> {
+                this.setStatus("Error: " + message(ex));
+                JOptionPane.showMessageDialog(this, "The channel could not be written:\n" + message(ex),
+                        "PRM80", JOptionPane.ERROR_MESSAGE);
+            });
+        }, ex -> {
+            this.setStatus("Error: " + message(ex));
+            JOptionPane.showMessageDialog(this, "The channels could not be read:\n" + message(ex),
+                    "PRM80", JOptionPane.ERROR_MESSAGE);
+        });
+    }//GEN-LAST:event_writeMemButtonActionPerformed
+
+    /** TX frequency for the VFO: RX frequency plus / minus the shift fields. */
+    private int vfoTxFrequency(int rx) {
+        if (!this.ShiftEnabledCheckbox.isSelected())
+            return rx;
+        int shift = Integer.parseInt(this.ShiftFreqSpinner.getValue().toString());
+        return this.ShiftPositiveCheckbox.isSelected() ? rx + shift : rx - shift;
+    }
+
+    /** VFO mode: a shift field was changed, set the TX frequency at once. */
+    private void applyVfoShift() {
+        if (this.vdf == null || this.updatingDisplay || !this.vfoToggleButton.isSelected())
+            return;
+        final int tx = this.vfoTxFrequency(this.shownRx);
+        if (tx == this.shownTx)
+            return;
+        this.shownTx = tx;
+        this.txFreqLabel.setText(formatFrequency(tx));
+        final Controler c = this.vdf.getPRMControler();
+        this.command(() -> {
+            c.setTxPLLFrequency(tx);
+            return null;
+        });
+    }
+
+    /** "Write to MEM" only in VFO mode. */
+    private void updateModeControls() {
+        this.writeMemButton.setVisible(this.vdf != null && this.vfoToggleButton.isSelected());
+    }
 
     private void connectVirtualMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_connectVirtualMenuItemActionPerformed
         this.connect(new DummyControler(), "", "virtual PRM");
@@ -1472,12 +1609,7 @@ private void freqLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:e
     this.showDialog(d);
     final int rx = d.getRxFrequency();
     if (rx != -1) {
-        int tx = rx;
-        if (this.ShiftEnabledCheckbox.isSelected()) {             // ShiftEnabled
-            int shift = Integer.parseInt(this.ShiftFreqSpinner.getValue().toString());
-            tx = this.ShiftPositiveCheckbox.isSelected() ? rx + shift : rx - shift;
-        }
-        final int txFreq = tx;
+        final int txFreq = this.vfoTxFrequency(rx);
         // show at once
         this.shownRx = rx;
         this.shownTx = txFreq;
@@ -1485,6 +1617,7 @@ private void freqLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:e
         this.txFreqLabel.setText(formatFrequency(txFreq));
         this.chanLabel.setVisible(false);
         this.vfoToggleButton.setSelected(true);
+        this.updateModeControls();
         final VirtualDeviceFirmware v = this.vdf;
         this.command(() -> {
             v.getPRMControler().setRxPLLFrequecny(rx);
@@ -1534,7 +1667,8 @@ private void freqLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:e
     private javax.swing.JMenu memoryMenu;
     private javax.swing.JMenuBar menuBar;
     private javax.swing.ButtonGroup modeButtonGroup;
-    private javax.swing.JMenuItem optionMenuItem;
+    private javax.swing.JCheckBoxMenuItem expertModeMenuItem;
+    private javax.swing.JButton writeMemButton;
     private javax.swing.JMenu viewMenu;
     private javax.swing.JMenuItem zoomInMenuItem;
     private javax.swing.JMenuItem zoomOutMenuItem;

@@ -267,6 +267,15 @@ public class DummyControler implements Controler{
     @Override
     public void refreshState() {
     }
+    @Override
+    public void writeChannel(Channel channel) {
+        ChannelList list = this.getChannels();
+        if (channel.getId() < list.countChannel())
+            list.setChannel(channel.getId(), channel);
+        else
+            list.addChannel(channel);
+        this.setChannels(list);
+    }
 
     @Override
     public void setPRMStateChangeListener(PRMStateChangeListener listener) {

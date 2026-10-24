@@ -162,7 +162,7 @@ public class PRM80X0View extends javax.swing.JFrame {
             this.chnlUnitLabel.setFont(unitFont);
             // comment of the channel (channel manager list) below the channel number
             Font commentFont = this.commentLabel.getFont();
-            this.commentLabel.setFont(commentFont.deriveFont(Font.BOLD, commentFont.getSize2D() * 1.1f));
+            this.commentLabel.setFont(commentFont.deriveFont(Font.PLAIN, commentFont.getSize2D() * 1.1f));
             // "Rx", "Tx", "Chnl" stand on the baseline of the LCD digits
             this.rxUnitLabel.putClientProperty(Zoom.BASELINE_OF, this.freqLabel);
             this.txUnitLabel.putClientProperty(Zoom.BASELINE_OF, this.txFreqLabel);
@@ -832,7 +832,7 @@ public class PRM80X0View extends javax.swing.JFrame {
                 chanLabelMouseClicked(evt);
             }
         });
-        jPanel1.add(chanLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(260, 10, 50, 30));
+        jPanel1.add(chanLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(215, 10, 50, 30));
 
         hpLabel.setBackground(new java.awt.Color(255, 0, 0));
         hpLabel.setForeground(new java.awt.Color(0, 0, 0));
@@ -882,7 +882,7 @@ public class PRM80X0View extends javax.swing.JFrame {
         chnlUnitLabel.setForeground(new java.awt.Color(255, 51, 51));
         chnlUnitLabel.setText("Chnl"); // NOI18N
         chnlUnitLabel.setName("chnlUnitLabel"); // NOI18N
-        jPanel1.add(chnlUnitLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 22, -1, -1));
+        jPanel1.add(chnlUnitLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(245, 22, -1, -1));
 
         commentLabel.setForeground(new java.awt.Color(255, 51, 51));
         commentLabel.setText(""); // NOI18N

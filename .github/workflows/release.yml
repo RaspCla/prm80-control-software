@@ -25,10 +25,10 @@ defaults:
 
 jobs:
   linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
@@ -48,7 +48,7 @@ jobs:
         run: |
           sh package-linux.sh deb
           cp target/dist/*.deb ../../release/
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: linux
           path: release/*
@@ -56,8 +56,8 @@ jobs:
   windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
@@ -93,7 +93,7 @@ jobs:
           call package-windows.bat msi
           if errorlevel 1 exit /b 1
           copy target\dist\*.msi ..\..\release\
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: windows
           path: release/*
@@ -101,16 +101,16 @@ jobs:
   release:
     if: startsWith(github.ref, 'refs/tags/v')
     needs: [ linux, windows ]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: .
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: release
           merge-multiple: true
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           files: release/*
           generate_release_notes: true

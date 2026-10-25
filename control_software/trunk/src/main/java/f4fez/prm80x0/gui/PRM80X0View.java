@@ -1463,8 +1463,16 @@ public class PRM80X0View extends javax.swing.JFrame {
         this.appliedReverse = this.ShiftReverseCheckbox.isSelected();
         this.updateModeControls();
         final VirtualDeviceFirmware v = this.vdf;
+        final boolean alreadyVfo = v.isVfoMode();
         this.command(() -> {
             v.setVfoMode(true);
+            if (!alreadyVfo) {
+                // set the current frequencies with "R" at once: the radio then
+                // hides its channel number now (as the program does), not only
+                // when the frequency is changed the first time
+                Controler c = v.getPRMControler();
+                c.setFrequencies(c.getRxPLLFrequency(), c.getTxPLLFrequency());
+            }
             return null;
         });
     }                                                                                              

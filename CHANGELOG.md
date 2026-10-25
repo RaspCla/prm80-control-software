@@ -6,6 +6,8 @@
   brings the program back to memory mode with the channel of the radio.
   Before, the program stayed in VFO mode and "MEM" set the channel the
   program had used before instead of the one of the radio.
+- Switching to VFO mode sets the current frequencies with "R" at once, so the
+  radio hides its channel number at the same time as the program.
 
 - Writing channels ("P" command): the channel state is sent as hex number as
   the firmware expects it. Before, states from 10 on were wrong, e.g. scan

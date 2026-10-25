@@ -2,6 +2,11 @@
 
 ## Not released yet
 
+- VFO mode: a channel key pressed at the radio (or a scan started there)
+  brings the program back to memory mode with the channel of the radio.
+  Before, the program stayed in VFO mode and "MEM" set the channel the
+  program had used before instead of the one of the radio.
+
 - Writing channels ("P" command): the channel state is sent as hex number as
   the firmware expects it. Before, states from 10 on were wrong, e.g. scan
   lock together with positive shift (12) arrived as 0x12.

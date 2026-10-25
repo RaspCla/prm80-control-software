@@ -133,6 +133,12 @@ public abstract class PRMControler implements Controler{
             rxfreq = (rxFreq - Controler.IF) / this.getPLLStep();
         }
         int txfreq = (txFreq) / this.getPLLStep();
+        // remember the channel of the radio, to see when it is changed there
+        // (channel keys); "R" does not change the channel number
+        if (!this.vfoSet) {
+            this.vfoChannel = this.channel;
+            this.vfoSet = true;
+        }
         this.send("r");
         this.waitChar(':', PRMControler.serialTimeout);
         String sFreq = Integer.toString(rxfreq, 16);
@@ -251,6 +257,7 @@ public abstract class PRMControler implements Controler{
 
     @Override
     public synchronized void setCurrentChannel(int channel) {
+        this.vfoSet = false;            // a channel is set: memory mode
         this.send("n");
         this.waitChar(':', PRMControler.serialTimeout);
         String sChan = Integer.toString(channel);
@@ -599,6 +606,29 @@ public abstract class PRMControler implements Controler{
     @Override
     public int getChannelState() {
         return this.channelState;
+    }
+
+    // VFO mode of the program: channel number of the radio when it began.
+    // Only the channel number is compared, not the frequencies: they also
+    // change by the program itself (R), a state read just before could
+    // be mistaken for a change at the radio.
+    private volatile boolean vfoSet;
+    private volatile int vfoChannel;
+
+    @Override
+    public boolean hasLeftVfo() {
+        return this.vfoSet && this.stateValid && this.channel != this.vfoChannel;
+    }
+
+    @Override
+    public void clearVfo() {
+        this.vfoSet = false;
+    }
+
+    @Override
+    public void beginVfo() {
+        this.vfoChannel = this.channel;
+        this.vfoSet = true;
     }
 
     @Override

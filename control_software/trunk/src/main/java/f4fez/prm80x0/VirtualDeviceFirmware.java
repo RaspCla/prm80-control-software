@@ -85,8 +85,23 @@ public class VirtualDeviceFirmware {
     
     public void setVfoMode(boolean mode) throws CommunicationException {
         this.vfoMode = mode;
-        if(!mode)
+        if (mode)
+            this.controler.beginVfo();
+        if (!mode) {
+            // back to the channel the radio has (RAM_CHAN is not changed by
+            // the VFO frequencies, but by the channel keys at the radio)
+            memChan = this.controler.getCurrentChannel();
             this.controler.setCurrentChannel(memChan);
+        }
+    }
+
+    /**
+     * The radio left the VFO frequencies itself (channel key at the radio):
+     * memory mode without sending anything.
+     */
+    public void leaveVfoMode() {
+        this.vfoMode = false;
+        this.controler.clearVfo();
     }
     
     public boolean isVfoMode() {

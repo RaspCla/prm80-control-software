@@ -545,6 +545,8 @@ public class PRM80X0View extends javax.swing.JFrame {
             this.shownTx = c.getTxPLLFrequency();
             this.shownHighPower = this.vdf.isHighPower();
 
+            if (this.vfoToggleButton.isSelected() && c.hasLeftVfo())
+                this.radioLeftVfo();
             this.chanLabel.setText(formatChannel(this.shownChannel));
             this.showChannelComment(c);
             this.freqLabel.setText(formatFrequency(this.shownRx));
@@ -599,6 +601,21 @@ public class PRM80X0View extends javax.swing.JFrame {
             this.commentLabel.setText(comment);
             this.commentLabel.setToolTipText(comment.isEmpty() ? null : comment);
         }
+    }
+
+    /**
+     * A channel key was pressed at the radio (or its scan started) while the
+     * program was in VFO mode: the radio is on a channel again, so the
+     * program changes to memory mode too.
+     */
+    private void radioLeftVfo() {
+        this.scanner.stop();
+        this.vdf.leaveVfoMode();
+        this.memToggleButton.setSelected(true);
+        this.chanLabel.setVisible(true);
+        this.shownShiftKey = "";
+        this.updateModeControls();
+        this.setStatus("Channel changed at the radio - memory mode");
     }
 
     /** channel, state and frequencies the shift fields were last set for */
@@ -1427,6 +1444,7 @@ public class PRM80X0View extends javax.swing.JFrame {
     private void memToggleButtonActionPerformed(java.awt.event.ActionEvent evt) {                                                
         if (this.vdf == null)
             return;
+        this.setStatus(this.connectedStatus);
         this.chanLabel.setVisible(true);
         this.shownShiftKey = "";       // show the shift of the channel again
         this.updateModeControls();
@@ -1440,6 +1458,7 @@ public class PRM80X0View extends javax.swing.JFrame {
     private void vfoToggleButtonActionPerformed(java.awt.event.ActionEvent evt) {                                                
         if (this.vdf == null)
             return;
+        this.setStatus(this.connectedStatus);
         this.chanLabel.setVisible(false);
         this.appliedReverse = this.ShiftReverseCheckbox.isSelected();
         this.updateModeControls();

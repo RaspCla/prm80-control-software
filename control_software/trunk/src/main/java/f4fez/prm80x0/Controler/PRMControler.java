@@ -938,9 +938,10 @@ public abstract class PRMControler implements Controler{
             if ("Lock".equals(chan.scanLock))
                 state = state | 8;
             
-            String stateStr = Integer.toString(state);
-            if (stateStr.length() == 1)
-                stateStr = "0" + stateStr;
+            // the firmware reads the state of the "P" command as hex number
+            // (as the "C" command shows it); decimal was wrong from 10 on,
+            // e.g. scan lock + positive shift (12) became 0x12
+            String stateStr = String.format("%02X", state);
             send(stateStr);
             // answer ends with ">" for an existing channel, with "?" when
             // the PRM80 asks whether a new channel shall be added

@@ -1,5 +1,11 @@
 # Changelog
 
+## Not released yet
+
+- Writing channels ("P" command): the channel state is sent as hex number as
+  the firmware expects it. Before, states from 10 on were wrong, e.g. scan
+  lock together with positive shift (12) arrived as 0x12.
+
 ## 2.1.0 – 2026-10
 
 ### Scan

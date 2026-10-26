@@ -1,8 +1,14 @@
 PRM80 control software
 ======================
 
-This software is for use with the F4FEZ/F8EGQ PRM80 firmware.
-Tested with PRM80xx Firmware V5 only (will have issues with earlier versions).
+This software is for use with the F4FEZ/F8EGQ/DC0CM PRM80 firmware.
+It needs PRM80xx firmware V5.1 or newer (https://github.com/RaspCla/prm80).
+Firmware older than V5.0 is refused when connecting. With V5.0 the program
+works, but warns: shift reverse, the scan of the PRM80 and the power switch in
+VFO mode do not work correctly, a new default shift or scan speed only works
+after a restart of the PRM80.
+
+Homepage: https://github.com/RaspCla/prm80-control-software
 
 Since version 2.0 the program runs on Windows and Linux (and should run on macOS):
 
@@ -139,7 +145,7 @@ serial monitor, A51 export in the channel manager, TCP server connection,
 virtual PRM for tests).
 
 The virtual PRM (File > Connect virtual PRM (test)) simulates a PRM8060 144 MHz with
-firmware V5.0 as it is meant to work: factory channels of src/inc_144.a51,
+firmware V5.1: factory channels of src/inc_144.a51,
 shift per channel, reverse, scan lock, default shift, scan duration, RAM with
 checksums and EEPROM (restart, Reload RAM, RAM <-> EEPROM). Known errors of the
 firmware are not simulated (reverse uses the channel in RAM and its own shift,
@@ -166,5 +172,9 @@ History
        2021 extensions for firmware V5 by Claus Moessner
   2.0  Maven, jSerialComm, FlatLaf, plain Swing; Windows and Linux; zoomable window,
        channel manager, Write to MEM, A51 export, virtual PRM80 V5
+  3.0  DC0CM: channel manager editing (insert, delete, move, undo/redo, verify),
+       VFO follows the radio, firmware check (V5.1 needed)
+       Modernisation and extensions since 2021 by DC0CM, with the support of
+       Claude (Anthropic)
 See CHANGELOG.md and README.md in the main folder of the repository (also for
 the tools needed to build the program and the packages).

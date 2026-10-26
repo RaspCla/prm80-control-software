@@ -1,7 +1,17 @@
 # Changelog
 
-## Not released yet
+## 3.0.0 – not released yet
 
+Needs PRM80 firmware **V5.1** or newer
+([RaspCla/prm80](https://github.com/RaspCla/prm80)).
+
+- Firmware check when connecting: firmware older than V5.0 is refused with a
+  message, with V5.0 the program warns that some functions do not work
+  correctly (reverse, scan of the PRM80, power switch in VFO mode, new
+  configuration only after a restart) and recommends V5.1
+- About: version taken from pom.xml (was always "2.0"), DC0CM as vendor,
+  homepage on GitHub, credits
+- Virtual PRM80 simulates firmware V5.1
 - Channel manager: **Insert**, **Delete**, **Move up/down** (also with the keys
   Insert, Del, Alt+Up/Down), **Undo** (Ctrl+Z, up to 50 steps) and **Redo**
   (Ctrl+Y or Ctrl+Shift+Z)

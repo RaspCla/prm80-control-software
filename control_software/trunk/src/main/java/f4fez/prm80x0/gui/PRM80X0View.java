@@ -389,6 +389,14 @@ public class PRM80X0View extends javax.swing.JFrame {
             ((PRMControler) controler).addSerialListener(this.serialSpy);
         this.worker.run(() -> {
             controler.connectPRM(address);
+            // the program uses the serial protocol of firmware V5
+            int major = controler.getMajorFirmwareVersion();
+            int minor = controler.getMinorFirmwareVersion();
+            if (!f4fez.prm80x0.AppVersion.isSupported(major, minor))
+                throw new IllegalStateException("The PRM80 has firmware V" + major + "." + minor
+                        + ", which is too old.\nThis program needs firmware "
+                        + f4fez.prm80x0.AppVersion.RECOMMENDED_FIRMWARE + " or newer:\n"
+                        + f4fez.prm80x0.AppVersion.FIRMWARE_HOMEPAGE);
             // read everything needed later now, so that the display can be
             // updated without waiting for the PRM80
             controler.getPLLStep();
@@ -415,6 +423,7 @@ public class PRM80X0View extends javax.swing.JFrame {
             this.lastStateValid = true;
             this.setStatus(this.connectedStatus);
             this.refreshDisplay();
+            this.warnOldFirmware(controler);
         }, ex -> {
             this.connecting = false;
             controler.setPRMStateChangeListener(null);
@@ -428,6 +437,33 @@ public class PRM80X0View extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Cannot connect to " + description + ":\n" + message(ex),
                     "Connection error", JOptionPane.ERROR_MESSAGE);
         });
+    }
+
+    /**
+     * Firmware V5.0 works with the program, but has errors that V5.1 corrects:
+     * tell the user once per connection.
+     */
+    private void warnOldFirmware(Controler c) {
+        int major, minor;
+        try {
+            major = c.getMajorFirmwareVersion();
+            minor = c.getMinorFirmwareVersion();
+        } catch (CommunicationException ex) {
+            return;
+        }
+        if (f4fez.prm80x0.AppVersion.isRecommended(major, minor))
+            return;
+        JOptionPane.showMessageDialog(this,
+                "The PRM80 has firmware V" + major + "." + minor + ". This program needs firmware "
+                + f4fez.prm80x0.AppVersion.RECOMMENDED_FIRMWARE + " or newer.\n\n"
+                + "With V" + major + "." + minor + " these functions do not work correctly:\n"
+                + "  - shift reverse (wrong frequency and shift)\n"
+                + "  - scan of the PRM80 (wrong channel, endless loop if all channels are locked)\n"
+                + "  - power switch in VFO mode (sets the channel frequency again)\n"
+                + "  - configuration: a new default shift or scan speed only works after a restart\n\n"
+                + "Firmware " + f4fez.prm80x0.AppVersion.RECOMMENDED_FIRMWARE + ": "
+                + f4fez.prm80x0.AppVersion.FIRMWARE_HOMEPAGE,
+                "Old firmware", JOptionPane.WARNING_MESSAGE);
     }
 
     private String describePrm() {

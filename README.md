@@ -2,8 +2,9 @@
 
 PC software to control a **Philips/Simoco PRM8060 / PRM8070** radio
 (converted for the 2 m or 70 cm amateur radio band) running the
-**F4FEZ/F8EGQ PRM80 firmware** (tested with firmware **V5**, DC0CM version with
-shift per channel) over the serial port.
+**F4FEZ/F8EGQ/DC0CM PRM80 firmware V5.1** or newer (shift per channel,
+[RaspCla/prm80](https://github.com/RaspCla/prm80)) over the serial port.
+Older firmware is refused, with V5.0 the program warns about its errors.
 
 Runs on **Windows and Linux** (and on every other system with Java 21 or newer,
 e.g. macOS or a Raspberry Pi).
@@ -26,7 +27,7 @@ e.g. macOS or a Raspberry Pi).
   (A51 file)** for building the firmware with your own default channels
 - Configuration: PLL step, default shift, scan speed
 - Expert mode: restart, RAM/EEPROM functions, serial monitor,
-  remote control over TCP, **virtual PRM80** (simulates firmware V5.0) for
+  remote control over TCP, **virtual PRM80** (simulates firmware V5.1) for
   tests without a radio
 
 User documentation: [control_software/trunk/README](control_software/trunk/README)  
@@ -153,8 +154,13 @@ control_software/trunk/
   Windows and Linux, zoomable and responsive user interface, new channel manager,
   Write to MEM, A51 export for firmware V5, virtual PRM80 V5
   (developed with the help of Claude, Anthropic)
+- **3.0** (2026) Claus Moessner, **DC0CM** – channel manager editing (insert,
+  delete, move, undo/redo, verify), VFO follows the radio, firmware V5.1 check
+  (developed with the help of Claude, Anthropic)
 
-PRM80 firmware: F4FEZ, F8EGQ, DC0CM.
+Modernisation and extensions since 2021: DC0CM (with the support of Claude,
+Anthropic). PRM80 firmware: F4FEZ, F8EGQ, DC0CM – version 5.1:
+[RaspCla/prm80](https://github.com/RaspCla/prm80).
 
 ## License
 

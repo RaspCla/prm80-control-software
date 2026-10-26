@@ -100,7 +100,8 @@ VFO mode
 In VFO mode "Shift enabled", "Shift positive", "Shift reverse" and "Shift
 Frequency" set the frequencies at once: TX = RX +/- shift, with reverse RX and
 TX are swapped (as the firmware does it for channels).
-In memory mode the fields show the shift of the current channel.
+In memory mode the fields only show the shift of the current channel and are
+greyed (the shift of a channel is changed in the channel manager).
 
 "Write to MEM" (VFO mode) stores the VFO setting in a memory channel. The
 channel list of the channel manager is used; it is only read from the PRM80

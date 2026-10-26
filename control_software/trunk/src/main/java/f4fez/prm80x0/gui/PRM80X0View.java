@@ -703,6 +703,7 @@ public class PRM80X0View extends javax.swing.JFrame {
             this.scanLabel.setVisible(false);
         }
         this.configurationMenuItem.setEnabled(enable);
+        this.updateModeControls();
     }
     
     private void setVisibleExpertControls(boolean enable) {
@@ -1724,7 +1725,31 @@ public class PRM80X0View extends javax.swing.JFrame {
 
     /** "Write to MEM" only in VFO mode. */
     private void updateModeControls() {
-        this.writeMemButton.setVisible(this.vdf != null && this.vfoToggleButton.isSelected());
+        boolean vfo = this.vdf != null && this.vfoToggleButton.isSelected();
+        this.writeMemButton.setVisible(vfo);
+        this.updateShiftControls(vfo);
+    }
+
+    private static final String REVERSE_TIP =
+            "Reverse: receive on the TX frequency of the repeater and transmit on its RX frequency";
+    private static final String MEM_SHIFT_TIP =
+            "Memory mode: shows the shift of the channel (change it in the channel manager)";
+
+    /**
+     * The shift fields only act in VFO mode. In memory mode (and without
+     * connection) they only show the shift of the channel and are greyed.
+     */
+    private void updateShiftControls(boolean vfo) {
+        this.ShiftEnabledCheckbox.setEnabled(vfo);
+        this.ShiftPositiveCheckbox.setEnabled(vfo);
+        this.ShiftReverseCheckbox.setEnabled(vfo);
+        this.ShiftFreqSpinner.setEnabled(vfo);
+        this.label1.setEnabled(vfo);
+        String tip = this.vdf != null && !vfo ? MEM_SHIFT_TIP : null;
+        this.ShiftEnabledCheckbox.setToolTipText(tip);
+        this.ShiftPositiveCheckbox.setToolTipText(tip);
+        this.ShiftReverseCheckbox.setToolTipText(tip != null ? tip : REVERSE_TIP);
+        this.ShiftFreqSpinner.setToolTipText(tip);
     }
 
     // ---- Scan -------------------------------------------------------------

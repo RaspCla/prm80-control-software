@@ -10,6 +10,8 @@
   enabled; comments separately). "Read from PRM80" first, then Verify,
   checks the radio against a file.
 
+- Main window: in memory mode the shift fields only show the shift of the
+  channel and are greyed (they only act in VFO mode).
 - VFO mode: a channel key pressed at the radio (or a scan started there)
   brings the program back to memory mode with the channel of the radio.
   Before, the program stayed in VFO mode and "MEM" set the channel the

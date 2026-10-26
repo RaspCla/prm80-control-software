@@ -46,6 +46,12 @@ public class ChannelModel extends AbstractTableModel {
 
     private ChannelList channels;
     private Channel newChannel;
+    /** called before a value is changed by editing */
+    private Runnable beforeEdit;
+
+    public void setBeforeEdit(Runnable beforeEdit) {
+        this.beforeEdit = beforeEdit;
+    }
 
     public ChannelModel(ChannelList channels) {
         super();
@@ -126,6 +132,8 @@ public class ChannelModel extends AbstractTableModel {
 
     @Override
     public void setValueAt(Object value, int row, int col) {
+        if (this.beforeEdit != null)
+            this.beforeEdit.run();      // e.g. remember the list for "Undo"
         String text = value == null ? "" : value.toString().trim();
         Channel editedChannel = this.channelAt(row);
         switch (col) {

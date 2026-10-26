@@ -1,5 +1,38 @@
 # Changelog
 
+## 3.0.0 – 2026-10-27
+
+Needs PRM80 firmware **V5.1** or newer
+([RaspCla/prm80](https://github.com/RaspCla/prm80)).
+
+- Firmware check when connecting: firmware older than V5.0 is refused with a
+  message, with V5.0 the program warns that some functions do not work
+  correctly (reverse, scan of the PRM80, power switch in VFO mode, new
+  configuration only after a restart) and recommends V5.1
+- About: version taken from pom.xml (was always "2.0"), F4FEZ as vendor,
+  DC0CM as contributor (modernisation and new functions), homepage on GitHub
+- Virtual PRM80 simulates firmware V5.1
+- Channel manager: **Insert**, **Delete**, **Move up/down** (also with the keys
+  Insert, Del, Alt+Up/Down), **Undo** (Ctrl+Z, up to 50 steps) and **Redo**
+  (Ctrl+Y or Ctrl+Shift+Z)
+- Channel manager: **Verify** compares the list shown with a channel file
+  (channel by channel: frequency, shift, scan lock, shift +/-, reverse,
+  enabled; comments separately). "Read from PRM80" first, then Verify,
+  checks the radio against a file.
+
+- Main window: in memory mode the shift fields only show the shift of the
+  channel and are greyed (they only act in VFO mode).
+- VFO mode: a channel key pressed at the radio (or a scan started there)
+  brings the program back to memory mode with the channel of the radio.
+  Before, the program stayed in VFO mode and "MEM" set the channel the
+  program had used before instead of the one of the radio.
+- Switching to VFO mode sets the current frequencies with "R" at once, so the
+  radio hides its channel number at the same time as the program.
+
+- Writing channels ("P" command): the channel state is sent as hex number as
+  the firmware expects it. Before, states from 10 on were wrong, e.g. scan
+  lock together with positive shift (12) arrived as 0x12.
+
 ## 2.1.0 – 2026-10
 
 ### Scan

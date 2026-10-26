@@ -24,8 +24,8 @@ package f4fez.prm80x0.Controler;
 /**
  * Virtual PRM80 for tests without a radio (Tools > Connect virtual PRM, expert mode).
  * <p>
- * Simulates a PRM8060 144 MHz with firmware V5.0 (F4FEZ/F8EGQ/DC0CM),
- * as the firmware is meant to work, without its known errors:
+ * Simulates a PRM8060 144 MHz with firmware V5.1 (F4FEZ/F8EGQ/DC0CM),
+ * as the firmware is meant to work, without the errors of V5.0:
  * <ul>
  * <li>external RAM with the V5 layout (config, frequency, shift and state
  *     area, checksums), EEPROM copy, factory defaults of src/inc_144.a51
@@ -127,7 +127,7 @@ public class DummyControler implements Controler {
 
     @Override
     public int getMinorFirmwareVersion() {
-        return 0;
+        return 1;
     }
 
     @Override

@@ -162,6 +162,16 @@
               <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="saveAsButtonActionPerformed"/>
             </Events>
           </Component>
+          <Component class="javax.swing.JButton" name="verifyButton">
+            <Properties>
+              <Property name="text" type="java.lang.String" value="Verify"/>
+              <Property name="toolTipText" type="java.lang.String" value="Compare the list shown with a channel file (e.g. after Read from PRM80)"/>
+              <Property name="name" type="java.lang.String" value="verifyButton" noResource="true"/>
+            </Properties>
+            <Events>
+              <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="verifyButtonActionPerformed"/>
+            </Events>
+          </Component>
           <Component class="javax.swing.JButton" name="exportA51Button">
             <Properties>
               <Property name="text" type="java.lang.String" value="Export A51"/>
@@ -183,6 +193,82 @@
           </Component>
           </SubComponents>
         </Container>
+      </SubComponents>
+    </Container>
+    <Container class="javax.swing.JPanel" name="editButtonsPanel">
+      <Properties>
+        <Property name="name" type="java.lang.String" value="editButtonsPanel" noResource="true"/>
+      </Properties>
+      <Constraints>
+        <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout" value="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout$BorderConstraintsDescription">
+          <BorderConstraints direction="First"/>
+        </Constraint>
+      </Constraints>
+
+      <Layout class="org.netbeans.modules.form.compat2.layouts.DesignFlowLayout">
+        <Property name="alignment" type="int" value="0"/>
+      </Layout>
+      <SubComponents>
+        <Component class="javax.swing.JButton" name="insertButton">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Insert"/>
+            <Property name="toolTipText" type="java.lang.String" value="Insert a copy of the selected channel before it (Insert key)"/>
+            <Property name="name" type="java.lang.String" value="insertButton" noResource="true"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="insertButtonActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JButton" name="deleteButton">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Delete"/>
+            <Property name="toolTipText" type="java.lang.String" value="Delete the selected channels, the following channels move forward (Del key)"/>
+            <Property name="name" type="java.lang.String" value="deleteButton" noResource="true"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="deleteButtonActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JButton" name="moveUpButton">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Move up"/>
+            <Property name="toolTipText" type="java.lang.String" value="Move the selected channels up (Alt+Up)"/>
+            <Property name="name" type="java.lang.String" value="moveUpButton" noResource="true"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="moveUpButtonActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JButton" name="moveDownButton">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Move down"/>
+            <Property name="toolTipText" type="java.lang.String" value="Move the selected channels down (Alt+Down)"/>
+            <Property name="name" type="java.lang.String" value="moveDownButton" noResource="true"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="moveDownButtonActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JButton" name="undoButton">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Undo"/>
+            <Property name="toolTipText" type="java.lang.String" value="Undo the last change of the list (Ctrl+Z)"/>
+            <Property name="name" type="java.lang.String" value="undoButton" noResource="true"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="undoButtonActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JButton" name="redoButton">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Redo"/>
+            <Property name="toolTipText" type="java.lang.String" value="Redo the change undone last (Ctrl+Y)"/>
+            <Property name="name" type="java.lang.String" value="redoButton" noResource="true"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="redoButtonActionPerformed"/>
+          </Events>
+        </Component>
       </SubComponents>
     </Container>
     <Container class="javax.swing.JScrollPane" name="tableScroll">

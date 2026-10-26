@@ -242,6 +242,29 @@ public interface Controler {
     }
 
     /**
+     * VFO mode of the program: the frequencies were set with "R". The PRM80
+     * itself has no VFO mode; a channel key at the radio (or a scan started
+     * there) sets the channel frequency again.
+     * @return true if the state read last shows another channel number than
+     * when the VFO mode began (channel key or scan at the radio)
+     */
+    public default boolean hasLeftVfo() {
+        return false;
+    }
+
+    /** Forget the frequencies set with "R" (memory mode again). */
+    public default void clearVfo() {
+    }
+
+    /**
+     * The program changes to VFO mode: remember channel and frequencies of
+     * the radio now, so that a channel key pressed at the radio is noticed
+     * even before a VFO frequency is set.
+     */
+    public default void beginVfo() {
+    }
+
+    /**
      * @return true if the PRM was transmitting when the state was read the
      * last time, mode bit 3 of the "E" command
      */

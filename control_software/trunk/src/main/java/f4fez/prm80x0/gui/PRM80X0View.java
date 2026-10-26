@@ -389,6 +389,14 @@ public class PRM80X0View extends javax.swing.JFrame {
             ((PRMControler) controler).addSerialListener(this.serialSpy);
         this.worker.run(() -> {
             controler.connectPRM(address);
+            // the program uses the serial protocol of firmware V5
+            int major = controler.getMajorFirmwareVersion();
+            int minor = controler.getMinorFirmwareVersion();
+            if (!f4fez.prm80x0.AppVersion.isSupported(major, minor))
+                throw new IllegalStateException("The PRM80 has firmware V" + major + "." + minor
+                        + ", which is too old.\nThis program needs firmware "
+                        + f4fez.prm80x0.AppVersion.RECOMMENDED_FIRMWARE + " or newer:\n"
+                        + f4fez.prm80x0.AppVersion.FIRMWARE_HOMEPAGE);
             // read everything needed later now, so that the display can be
             // updated without waiting for the PRM80
             controler.getPLLStep();
@@ -415,6 +423,7 @@ public class PRM80X0View extends javax.swing.JFrame {
             this.lastStateValid = true;
             this.setStatus(this.connectedStatus);
             this.refreshDisplay();
+            this.warnOldFirmware(controler);
         }, ex -> {
             this.connecting = false;
             controler.setPRMStateChangeListener(null);
@@ -428,6 +437,33 @@ public class PRM80X0View extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Cannot connect to " + description + ":\n" + message(ex),
                     "Connection error", JOptionPane.ERROR_MESSAGE);
         });
+    }
+
+    /**
+     * Firmware V5.0 works with the program, but has errors that V5.1 corrects:
+     * tell the user once per connection.
+     */
+    private void warnOldFirmware(Controler c) {
+        int major, minor;
+        try {
+            major = c.getMajorFirmwareVersion();
+            minor = c.getMinorFirmwareVersion();
+        } catch (CommunicationException ex) {
+            return;
+        }
+        if (f4fez.prm80x0.AppVersion.isRecommended(major, minor))
+            return;
+        JOptionPane.showMessageDialog(this,
+                "The PRM80 has firmware V" + major + "." + minor + ". This program needs firmware "
+                + f4fez.prm80x0.AppVersion.RECOMMENDED_FIRMWARE + " or newer.\n\n"
+                + "With V" + major + "." + minor + " these functions do not work correctly:\n"
+                + "  - shift reverse (wrong frequency and shift)\n"
+                + "  - scan of the PRM80 (wrong channel, endless loop if all channels are locked)\n"
+                + "  - power switch in VFO mode (sets the channel frequency again)\n"
+                + "  - configuration: a new default shift or scan speed only works after a restart\n\n"
+                + "Firmware " + f4fez.prm80x0.AppVersion.RECOMMENDED_FIRMWARE + ": "
+                + f4fez.prm80x0.AppVersion.FIRMWARE_HOMEPAGE,
+                "Old firmware", JOptionPane.WARNING_MESSAGE);
     }
 
     private String describePrm() {
@@ -545,6 +581,8 @@ public class PRM80X0View extends javax.swing.JFrame {
             this.shownTx = c.getTxPLLFrequency();
             this.shownHighPower = this.vdf.isHighPower();
 
+            if (this.vfoToggleButton.isSelected() && c.hasLeftVfo())
+                this.radioLeftVfo();
             this.chanLabel.setText(formatChannel(this.shownChannel));
             this.showChannelComment(c);
             this.freqLabel.setText(formatFrequency(this.shownRx));
@@ -599,6 +637,21 @@ public class PRM80X0View extends javax.swing.JFrame {
             this.commentLabel.setText(comment);
             this.commentLabel.setToolTipText(comment.isEmpty() ? null : comment);
         }
+    }
+
+    /**
+     * A channel key was pressed at the radio (or its scan started) while the
+     * program was in VFO mode: the radio is on a channel again, so the
+     * program changes to memory mode too.
+     */
+    private void radioLeftVfo() {
+        this.scanner.stop();
+        this.vdf.leaveVfoMode();
+        this.memToggleButton.setSelected(true);
+        this.chanLabel.setVisible(true);
+        this.shownShiftKey = "";
+        this.updateModeControls();
+        this.setStatus("Channel changed at the radio - memory mode");
     }
 
     /** channel, state and frequencies the shift fields were last set for */
@@ -686,6 +739,7 @@ public class PRM80X0View extends javax.swing.JFrame {
             this.scanLabel.setVisible(false);
         }
         this.configurationMenuItem.setEnabled(enable);
+        this.updateModeControls();
     }
     
     private void setVisibleExpertControls(boolean enable) {
@@ -1427,6 +1481,7 @@ public class PRM80X0View extends javax.swing.JFrame {
     private void memToggleButtonActionPerformed(java.awt.event.ActionEvent evt) {                                                
         if (this.vdf == null)
             return;
+        this.setStatus(this.connectedStatus);
         this.chanLabel.setVisible(true);
         this.shownShiftKey = "";       // show the shift of the channel again
         this.updateModeControls();
@@ -1440,12 +1495,21 @@ public class PRM80X0View extends javax.swing.JFrame {
     private void vfoToggleButtonActionPerformed(java.awt.event.ActionEvent evt) {                                                
         if (this.vdf == null)
             return;
+        this.setStatus(this.connectedStatus);
         this.chanLabel.setVisible(false);
         this.appliedReverse = this.ShiftReverseCheckbox.isSelected();
         this.updateModeControls();
         final VirtualDeviceFirmware v = this.vdf;
+        final boolean alreadyVfo = v.isVfoMode();
         this.command(() -> {
             v.setVfoMode(true);
+            if (!alreadyVfo) {
+                // set the current frequencies with "R" at once: the radio then
+                // hides its channel number now (as the program does), not only
+                // when the frequency is changed the first time
+                Controler c = v.getPRMControler();
+                c.setFrequencies(c.getRxPLLFrequency(), c.getTxPLLFrequency());
+            }
             return null;
         });
     }                                                                                              
@@ -1697,7 +1761,31 @@ public class PRM80X0View extends javax.swing.JFrame {
 
     /** "Write to MEM" only in VFO mode. */
     private void updateModeControls() {
-        this.writeMemButton.setVisible(this.vdf != null && this.vfoToggleButton.isSelected());
+        boolean vfo = this.vdf != null && this.vfoToggleButton.isSelected();
+        this.writeMemButton.setVisible(vfo);
+        this.updateShiftControls(vfo);
+    }
+
+    private static final String REVERSE_TIP =
+            "Reverse: receive on the TX frequency of the repeater and transmit on its RX frequency";
+    private static final String MEM_SHIFT_TIP =
+            "Memory mode: shows the shift of the channel (change it in the channel manager)";
+
+    /**
+     * The shift fields only act in VFO mode. In memory mode (and without
+     * connection) they only show the shift of the channel and are greyed.
+     */
+    private void updateShiftControls(boolean vfo) {
+        this.ShiftEnabledCheckbox.setEnabled(vfo);
+        this.ShiftPositiveCheckbox.setEnabled(vfo);
+        this.ShiftReverseCheckbox.setEnabled(vfo);
+        this.ShiftFreqSpinner.setEnabled(vfo);
+        this.label1.setEnabled(vfo);
+        String tip = this.vdf != null && !vfo ? MEM_SHIFT_TIP : null;
+        this.ShiftEnabledCheckbox.setToolTipText(tip);
+        this.ShiftPositiveCheckbox.setToolTipText(tip);
+        this.ShiftReverseCheckbox.setToolTipText(tip != null ? tip : REVERSE_TIP);
+        this.ShiftFreqSpinner.setToolTipText(tip);
     }
 
     // ---- Scan -------------------------------------------------------------

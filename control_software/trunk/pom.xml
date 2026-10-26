@@ -6,7 +6,7 @@
 
     <groupId>f4fez.prm80x0</groupId>
     <artifactId>prm80-control-software</artifactId>
-    <version>2.1.0</version>
+    <version>3.0.0</version>
     <packaging>jar</packaging>
 
     <name>PRM80 control software</name>
@@ -49,6 +49,17 @@
     </dependencies>
 
     <build>
+        <!-- images and fonts unchanged, version.properties gets the version -->
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+            </resource>
+            <resource>
+                <directory>src/main/resources-filtered</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

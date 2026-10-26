@@ -133,6 +133,12 @@ public abstract class PRMControler implements Controler{
             rxfreq = (rxFreq - Controler.IF) / this.getPLLStep();
         }
         int txfreq = (txFreq) / this.getPLLStep();
+        // remember the channel of the radio, to see when it is changed there
+        // (channel keys); "R" does not change the channel number
+        if (!this.vfoSet) {
+            this.vfoChannel = this.channel;
+            this.vfoSet = true;
+        }
         this.send("r");
         this.waitChar(':', PRMControler.serialTimeout);
         String sFreq = Integer.toString(rxfreq, 16);
@@ -251,6 +257,7 @@ public abstract class PRMControler implements Controler{
 
     @Override
     public synchronized void setCurrentChannel(int channel) {
+        this.vfoSet = false;            // a channel is set: memory mode
         this.send("n");
         this.waitChar(':', PRMControler.serialTimeout);
         String sChan = Integer.toString(channel);
@@ -601,6 +608,29 @@ public abstract class PRMControler implements Controler{
         return this.channelState;
     }
 
+    // VFO mode of the program: channel number of the radio when it began.
+    // Only the channel number is compared, not the frequencies: they also
+    // change by the program itself (R), a state read just before could
+    // be mistaken for a change at the radio.
+    private volatile boolean vfoSet;
+    private volatile int vfoChannel;
+
+    @Override
+    public boolean hasLeftVfo() {
+        return this.vfoSet && this.stateValid && this.channel != this.vfoChannel;
+    }
+
+    @Override
+    public void clearVfo() {
+        this.vfoSet = false;
+    }
+
+    @Override
+    public void beginVfo() {
+        this.vfoChannel = this.channel;
+        this.vfoSet = true;
+    }
+
     @Override
     public boolean isSquelchOpen() {
         return (this.mode & 4) != 0;
@@ -938,9 +968,10 @@ public abstract class PRMControler implements Controler{
             if ("Lock".equals(chan.scanLock))
                 state = state | 8;
             
-            String stateStr = Integer.toString(state);
-            if (stateStr.length() == 1)
-                stateStr = "0" + stateStr;
+            // the firmware reads the state of the "P" command as hex number
+            // (as the "C" command shows it); decimal was wrong from 10 on,
+            // e.g. scan lock + positive shift (12) became 0x12
+            String stateStr = String.format("%02X", state);
             send(stateStr);
             // answer ends with ">" for an existing channel, with "?" when
             // the PRM80 asks whether a new channel shall be added

@@ -9,8 +9,8 @@ Needs PRM80 firmware **V5.1** or newer
   message, with V5.0 the program warns that some functions do not work
   correctly (reverse, scan of the PRM80, power switch in VFO mode, new
   configuration only after a restart) and recommends V5.1
-- About: version taken from pom.xml (was always "2.0"), DC0CM as vendor,
-  homepage on GitHub, credits
+- About: version taken from pom.xml (was always "2.0"), F4FEZ as vendor,
+  DC0CM as contributor (modernisation and new functions), homepage on GitHub
 - Virtual PRM80 simulates firmware V5.1
 - Channel manager: **Insert**, **Delete**, **Move up/down** (also with the keys
   Insert, Del, Alt+Up/Down), **Undo** (Ctrl+Z, up to 50 steps) and **Redo**

@@ -33,12 +33,14 @@
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Component id="versionLabel" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="vendorLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="contributorLabel" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="homepageLabel" alignment="0" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Component id="appVersionLabel" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="appVendorLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="appContributorLabel" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="appHomepageLabel" alignment="0" min="-2" max="-2" attributes="0"/>
                       </Group>
                   </Group>
@@ -67,6 +69,11 @@
               <Group type="103" groupAlignment="3" attributes="0">
                   <Component id="vendorLabel" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="appVendorLabel" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace min="-2" max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="contributorLabel" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="appContributorLabel" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
@@ -144,7 +151,30 @@
     </Component>
     <Component class="javax.swing.JLabel" name="appVendorLabel">
       <Properties>
-        <Property name="text" type="java.lang.String" value="DC0CM"/>
+        <Property name="text" type="java.lang.String" value="F4FEZ"/>
+      </Properties>
+      <AuxValues>
+        <AuxValue name="JavaCodeGenerator_VariableLocal" type="java.lang.Boolean" value="true"/>
+        <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="0"/>
+      </AuxValues>
+    </Component>
+    <Component class="javax.swing.JLabel" name="contributorLabel">
+      <Properties>
+        <Property name="font" type="java.awt.Font" noResource="true" editor="org.netbeans.modules.form.editors2.FontEditor">
+          <FontInfo relative="true">
+            <Font bold="true" component="contributorLabel" property="font" relativeSize="true" size="0"/>
+          </FontInfo>
+        </Property>
+        <Property name="text" type="java.lang.String" value="Contributor:"/>
+      </Properties>
+      <AuxValues>
+        <AuxValue name="JavaCodeGenerator_VariableLocal" type="java.lang.Boolean" value="true"/>
+        <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="0"/>
+      </AuxValues>
+    </Component>
+    <Component class="javax.swing.JLabel" name="appContributorLabel">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="DC0CM (modernisation and new functions)"/>
       </Properties>
       <AuxValues>
         <AuxValue name="JavaCodeGenerator_VariableLocal" type="java.lang.Boolean" value="true"/>
@@ -178,7 +208,7 @@
     </Component>
     <Component class="javax.swing.JLabel" name="appDescLabel">
       <Properties>
-        <Property name="text" type="java.lang.String" value="&lt;html&gt;An interface program to the PRM 80 family&lt;br&gt;Needs PRM80 firmware V5.1 or newer&lt;br&gt;&lt;br&gt;Original program 2007&amp;ndash;2008 by F4FEZ.&lt;br&gt;Modernisation and extensions 2021/2026 by DC0CM&lt;br&gt;(with the support of Claude, Anthropic)."/>
+        <Property name="text" type="java.lang.String" value="&lt;html&gt;An interface program to the PRM 80 family&lt;br&gt;Needs PRM80 firmware V5.1 or newer&lt;br&gt;&lt;br&gt;Original program 2007&amp;ndash;2008 by F4FEZ.&lt;br&gt;Modernisation and new functions 2021/2026 by DC0CM&lt;br&gt;(with the support of Claude, Anthropic)."/>
       </Properties>
       <AuxValues>
         <AuxValue name="JavaCodeGenerator_VariableLocal" type="java.lang.Boolean" value="true"/>

@@ -42,6 +42,8 @@ public class PRM80X0AboutBox extends javax.swing.JDialog {
         javax.swing.JLabel appVersionLabel = new javax.swing.JLabel();
         javax.swing.JLabel vendorLabel = new javax.swing.JLabel();
         javax.swing.JLabel appVendorLabel = new javax.swing.JLabel();
+        javax.swing.JLabel contributorLabel = new javax.swing.JLabel();
+        javax.swing.JLabel appContributorLabel = new javax.swing.JLabel();
         javax.swing.JLabel homepageLabel = new javax.swing.JLabel();
         javax.swing.JLabel appHomepageLabel = new javax.swing.JLabel();
         javax.swing.JLabel appDescLabel = new javax.swing.JLabel();
@@ -70,14 +72,19 @@ public class PRM80X0AboutBox extends javax.swing.JDialog {
         vendorLabel.setFont(vendorLabel.getFont().deriveFont(vendorLabel.getFont().getStyle() | java.awt.Font.BOLD));
         vendorLabel.setText("Vendor:"); // NOI18N
 
-        appVendorLabel.setText("DC0CM"); // NOI18N
+        appVendorLabel.setText("F4FEZ"); // NOI18N
+
+        contributorLabel.setFont(contributorLabel.getFont().deriveFont(contributorLabel.getFont().getStyle() | java.awt.Font.BOLD));
+        contributorLabel.setText("Contributor:"); // NOI18N
+
+        appContributorLabel.setText("DC0CM (modernisation and new functions)"); // NOI18N
 
         homepageLabel.setFont(homepageLabel.getFont().deriveFont(homepageLabel.getFont().getStyle() | java.awt.Font.BOLD));
         homepageLabel.setText("Homepage:"); // NOI18N
 
         appHomepageLabel.setText(f4fez.prm80x0.AppVersion.HOMEPAGE);
 
-        appDescLabel.setText("<html>An interface program to the PRM 80 family<br>Needs PRM80 firmware V5.1 or newer<br><br>Original program 2007&ndash;2008 by F4FEZ.<br>Modernisation and extensions 2021/2026 by DC0CM<br>(with the support of Claude, Anthropic)."); // NOI18N
+        appDescLabel.setText("<html>An interface program to the PRM 80 family<br>Needs PRM80 firmware V5.1 or newer<br><br>Original program 2007&ndash;2008 by F4FEZ.<br>Modernisation and new functions 2021/2026 by DC0CM<br>(with the support of Claude, Anthropic)."); // NOI18N
 
         imageLabel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/f4fez/prm80x0/gui/resources/about.png"))); // NOI18N
 
@@ -93,11 +100,13 @@ public class PRM80X0AboutBox extends javax.swing.JDialog {
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(versionLabel)
                             .addComponent(vendorLabel)
+                            .addComponent(contributorLabel)
                             .addComponent(homepageLabel))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(appVersionLabel)
                             .addComponent(appVendorLabel)
+                            .addComponent(appContributorLabel)
                             .addComponent(appHomepageLabel)))
                     .addComponent(appTitleLabel, javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(appDescLabel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 330, Short.MAX_VALUE)
@@ -120,6 +129,10 @@ public class PRM80X0AboutBox extends javax.swing.JDialog {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(vendorLabel)
                     .addComponent(appVendorLabel))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(contributorLabel)
+                    .addComponent(appContributorLabel))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(homepageLabel)

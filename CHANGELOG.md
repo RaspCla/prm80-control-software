@@ -2,6 +2,9 @@
 
 ## Not released yet
 
+- Channel manager: **Insert**, **Delete**, **Move up/down** (also with the keys
+  Insert, Del, Alt+Up/Down) and **Undo** (Ctrl+Z, up to 50 steps)
+
 - VFO mode: a channel key pressed at the radio (or a scan started there)
   brings the program back to memory mode with the channel of the radio.
   Before, the program stayed in VFO mode and "MEM" set the channel the

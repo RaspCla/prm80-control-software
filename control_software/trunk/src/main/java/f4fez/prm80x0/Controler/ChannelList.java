@@ -45,6 +45,39 @@ public class ChannelList{
         return this.list.get(channel);
     }
 
+    /** @return a copy of the list with copies of the channels (comments included) */
+    public ChannelList copy() {
+        ChannelList c = new ChannelList();
+        for (Channel chan : this.list)
+            c.list.add(chan.copy());
+        return c;
+    }
+
+    /** Insert a channel at index, the following channels move back. */
+    public void insertChannel(int index, Channel channel) {
+        this.list.add(index, channel);
+        this.renumber();
+    }
+
+    /** Remove the channel at index, the following channels move forward. */
+    public void removeChannel(int index) {
+        this.list.remove(index);
+        this.renumber();
+    }
+
+    /** Move the channel at index "from" to index "to". */
+    public void moveChannel(int from, int to) {
+        Channel chan = this.list.remove(from);
+        this.list.add(to, chan);
+        this.renumber();
+    }
+
+    /** Channel numbers = position in the list. */
+    private void renumber() {
+        for (int i = 0; i < this.list.size(); i++)
+            this.list.get(i).setId(i);
+    }
+
     /** Remove the last channel. */
     public void removeLast() {
         if (!this.list.isEmpty())

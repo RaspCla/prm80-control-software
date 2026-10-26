@@ -201,6 +201,13 @@ public class ChannelManager extends javax.swing.JDialog {
             }
         });
 
+        // "Undo": the list is remembered before every change
+        this.model.setBeforeEdit(() -> {
+            if (!this.busy && !this.applyingToSelection)
+                this.remember();
+        });
+        this.bindKeys();
+
         // first call: show the channel file used last time
         loadSessionList();
         this.showList(sessionList);
@@ -230,6 +237,12 @@ public class ChannelManager extends javax.swing.JDialog {
         saveAsButton = new javax.swing.JButton();
         exportA51Button = new javax.swing.JButton();
         closeButton = new javax.swing.JButton();
+        editButtonsPanel = new javax.swing.JPanel();
+        insertButton = new javax.swing.JButton();
+        deleteButton = new javax.swing.JButton();
+        moveUpButton = new javax.swing.JButton();
+        moveDownButton = new javax.swing.JButton();
+        undoButton = new javax.swing.JButton();
         tableScroll = new javax.swing.JScrollPane();
         table = new javax.swing.JTable();
         jMenuBar1 = new javax.swing.JMenuBar();
@@ -332,6 +345,61 @@ public class ChannelManager extends javax.swing.JDialog {
         bottomPanel.add(fileButtonsPanel, java.awt.BorderLayout.EAST);
 
         getContentPane().add(bottomPanel, java.awt.BorderLayout.PAGE_END);
+
+        editButtonsPanel.setName("editButtonsPanel"); // NOI18N
+        editButtonsPanel.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
+
+        insertButton.setText("Insert"); // NOI18N
+        insertButton.setToolTipText("Insert a copy of the selected channel before it (Insert key)"); // NOI18N
+        insertButton.setName("insertButton"); // NOI18N
+        insertButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                insertButtonActionPerformed(evt);
+            }
+        });
+        editButtonsPanel.add(insertButton);
+
+        deleteButton.setText("Delete"); // NOI18N
+        deleteButton.setToolTipText("Delete the selected channels, the following channels move forward (Del key)"); // NOI18N
+        deleteButton.setName("deleteButton"); // NOI18N
+        deleteButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                deleteButtonActionPerformed(evt);
+            }
+        });
+        editButtonsPanel.add(deleteButton);
+
+        moveUpButton.setText("Move up"); // NOI18N
+        moveUpButton.setToolTipText("Move the selected channels up (Alt+Up)"); // NOI18N
+        moveUpButton.setName("moveUpButton"); // NOI18N
+        moveUpButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                moveUpButtonActionPerformed(evt);
+            }
+        });
+        editButtonsPanel.add(moveUpButton);
+
+        moveDownButton.setText("Move down"); // NOI18N
+        moveDownButton.setToolTipText("Move the selected channels down (Alt+Down)"); // NOI18N
+        moveDownButton.setName("moveDownButton"); // NOI18N
+        moveDownButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                moveDownButtonActionPerformed(evt);
+            }
+        });
+        editButtonsPanel.add(moveDownButton);
+
+        undoButton.setText("Undo"); // NOI18N
+        undoButton.setToolTipText("Undo the last change of the list (Ctrl+Z)"); // NOI18N
+        undoButton.setName("undoButton"); // NOI18N
+        undoButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                undoButtonActionPerformed(evt);
+            }
+        });
+        editButtonsPanel.add(undoButton);
+
+        getContentPane().add(editButtonsPanel, java.awt.BorderLayout.PAGE_START);
 
         tableScroll.setName("tableScroll"); // NOI18N
 
@@ -594,12 +662,157 @@ public class ChannelManager extends javax.swing.JDialog {
         return fc;
     }
 
+    /** Show a new list (read from the PRM80 or a file): no "Undo" before it. */
     private void showList(ChannelList list) {
+        this.undoStack.clear();
+        this.showListKeepUndo(list);
+    }
+
+    private void showListKeepUndo(ChannelList list) {
         boolean wasBusy = this.busy;
         this.busy = true;               // no "modified" for the new list
         this.model.setChannels(list);
         this.busy = wasBusy;
         this.updateTitle();
+        this.updateButtons();
+    }
+
+    // ---- Insert, Delete, Move, Undo ------------------------------------------
+
+    /** lists before the last changes, newest first */
+    private final java.util.ArrayDeque<ChannelList> undoStack = new java.util.ArrayDeque<>();
+    private static final int UNDO_STEPS = 50;
+
+    /** Remember the list before a change. */
+    private void remember() {
+        this.undoStack.push(sessionList.copy());
+        while (this.undoStack.size() > UNDO_STEPS)
+            this.undoStack.removeLast();
+        this.undoButton.setEnabled(!this.busy);
+    }
+
+    /** The list was changed by Insert, Delete or Move: show it, mark it modified. */
+    private void listChanged(String message, int selectFrom, int selectTo) {
+        this.showListKeepUndo(sessionList);
+        sessionModified = true;
+        sessionSyncedWithPrm = false;       // the PRM80 still has the old order
+        sessionSource = message;
+        this.updateTitle();
+        if (selectFrom >= 0 && selectFrom < this.table.getRowCount()) {
+            this.table.setRowSelectionInterval(selectFrom, Math.min(selectTo, this.table.getRowCount() - 1));
+            this.table.scrollRectToVisible(this.table.getCellRect(selectFrom, 0, true));
+        }
+    }
+
+    /** @return selected rows that are channels (not the "*" row), ascending */
+    private int[] selectedChannels() {
+        return java.util.Arrays.stream(this.table.getSelectedRows())
+                .map(this.table::convertRowIndexToModel)
+                .filter(r -> r < sessionList.countChannel())
+                .sorted().toArray();
+    }
+
+    private void insertButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_insertButtonActionPerformed
+        this.stopEditing();
+        if (sessionList.countChannel() >= ChannelList.MAX_CHANNELS) {
+            JOptionPane.showMessageDialog(this, "The PRM80 has only " + ChannelList.MAX_CHANNELS + " channels.",
+                    "Insert", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        int[] rows = this.selectedChannels();
+        if (rows.length == 0) {
+            JOptionPane.showMessageDialog(this, "Please select the channel before which a channel shall be inserted.\n"
+                    + "A new channel at the end is entered in the row \"*\".", "Insert", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        int at = rows[0];
+        this.remember();
+        // a copy of the selected channel: it has a valid frequency, change it as needed
+        f4fez.prm80x0.Controler.Channel copy = sessionList.getChannel(at).copy();
+        sessionList.insertChannel(at, copy);
+        this.listChanged("Channel " + at + " inserted (copy of the next one) - change it as needed", at, at);
+    }//GEN-LAST:event_insertButtonActionPerformed
+
+    private void deleteButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteButtonActionPerformed
+        this.stopEditing();
+        int[] rows = this.selectedChannels();
+        if (rows.length == 0)
+            return;
+        if (rows.length >= sessionList.countChannel()) {
+            JOptionPane.showMessageDialog(this, "At least one channel must remain.", "Delete", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        this.remember();
+        for (int i = rows.length - 1; i >= 0; i--)
+            sessionList.removeChannel(rows[i]);
+        String which = rows.length == 1 ? "Channel " + rows[0] : rows.length + " channels";
+        this.listChanged(which + " deleted, the following channels moved forward (Undo possible)", rows[0], rows[0]);
+    }//GEN-LAST:event_deleteButtonActionPerformed
+
+    private void moveUpButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_moveUpButtonActionPerformed
+        this.move(-1);
+    }//GEN-LAST:event_moveUpButtonActionPerformed
+
+    private void moveDownButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_moveDownButtonActionPerformed
+        this.move(+1);
+    }//GEN-LAST:event_moveDownButtonActionPerformed
+
+    /** Move the selected channels (one block from the first to the last selected) by one. */
+    private void move(int direction) {
+        this.stopEditing();
+        int[] rows = this.selectedChannels();
+        if (rows.length == 0)
+            return;
+        int first = rows[0];
+        int last = rows[rows.length - 1];
+        if (direction < 0 && first == 0 || direction > 0 && last >= sessionList.countChannel() - 1)
+            return;
+        this.remember();
+        if (direction < 0)
+            sessionList.moveChannel(first - 1, last);       // channel above goes below the block
+        else
+            sessionList.moveChannel(last + 1, first);       // channel below goes above the block
+        this.listChanged((last > first ? "Channels " + first + "-" + last : "Channel " + first)
+                + " moved " + (direction < 0 ? "up" : "down"), first + direction, last + direction);
+    }
+
+    private void undoButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_undoButtonActionPerformed
+        this.stopEditing();
+        if (this.undoStack.isEmpty())
+            return;
+        sessionList = this.undoStack.pop();
+        this.showListKeepUndo(sessionList);
+        sessionModified = true;
+        sessionSyncedWithPrm = false;
+        sessionSource = "Last change undone" + (this.undoStack.isEmpty() ? "" : " (" + this.undoStack.size() + " more)");
+        this.updateTitle();
+    }//GEN-LAST:event_undoButtonActionPerformed
+
+    /** Del, Insert, Alt+Up, Alt+Down in the table, Ctrl+Z in the whole dialog. */
+    private void bindKeys() {
+        javax.swing.InputMap im = this.table.getInputMap(javax.swing.JComponent.WHEN_FOCUSED);
+        javax.swing.ActionMap am = this.table.getActionMap();
+        bind(im, am, "DELETE", "pm80delete", this.deleteButton);
+        bind(im, am, "INSERT", "pm80insert", this.insertButton);
+        bind(im, am, "alt UP", "pm80up", this.moveUpButton);
+        bind(im, am, "alt DOWN", "pm80down", this.moveDownButton);
+        javax.swing.JRootPane root = this.getRootPane();
+        bind(root.getInputMap(javax.swing.JComponent.WHEN_IN_FOCUSED_WINDOW), root.getActionMap(),
+                "ctrl Z", "pm80undo", this.undoButton);
+    }
+
+    private static void bind(javax.swing.InputMap im, javax.swing.ActionMap am, String key, String name,
+            final javax.swing.JButton button) {
+        im.put(javax.swing.KeyStroke.getKeyStroke(key), name);
+        am.put(name, new javax.swing.AbstractAction() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                if (button.isEnabled())
+                    button.doClick(0);
+            }
+        });
     }
 
     /** true while a value is copied to the selected rows */
@@ -631,6 +844,7 @@ public class ChannelManager extends javax.swing.JDialog {
                 this.getTitle(), JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
         if (answer != JOptionPane.YES_OPTION)
             return;
+        this.remember();                    // one "Undo" step for all rows
         this.applyingToSelection = true;
         try {
             for (int r : others)
@@ -676,6 +890,11 @@ public class ChannelManager extends javax.swing.JDialog {
         this.exportA51Button.setVisible(this.config.isExpertMode());
         this.closeButton.setEnabled(!busy);
         this.closeMenuItem.setEnabled(!busy);
+        this.insertButton.setEnabled(!busy);
+        this.deleteButton.setEnabled(!busy);
+        this.moveUpButton.setEnabled(!busy);
+        this.moveDownButton.setEnabled(!busy);
+        this.undoButton.setEnabled(!busy && !this.undoStack.isEmpty());
     }
 
     private void updateTitle() {
@@ -697,6 +916,12 @@ public class ChannelManager extends javax.swing.JDialog {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel bottomPanel;
     private javax.swing.JButton closeButton;
+    private javax.swing.JPanel editButtonsPanel;
+    private javax.swing.JButton insertButton;
+    private javax.swing.JButton deleteButton;
+    private javax.swing.JButton moveUpButton;
+    private javax.swing.JButton moveDownButton;
+    private javax.swing.JButton undoButton;
     private javax.swing.JButton exportA51Button;
     private javax.swing.JMenuItem closeMenuItem;
     private javax.swing.JPanel fileButtonsPanel;

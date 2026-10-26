@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.0.0 – not released yet
+## 3.0.0 – 2026-10-27
 
 Needs PRM80 firmware **V5.1** or newer
 ([RaspCla/prm80](https://github.com/RaspCla/prm80)).

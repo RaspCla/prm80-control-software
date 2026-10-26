@@ -60,13 +60,18 @@ Channel manager
 Tools > Channel manager. It shows the channel file used last time.
   Read from PRM80 / Write to PRM80   exchange the channels with the radio
   Read / Save / Save As              channel file (CSV, separator ";", UTF-8)
+  Verify                             compare the list shown with a channel file
 Insert / Delete / Move up / Move down (keys: Insert, Del, Alt+Up, Alt+Down)
 change the order of the channels; the following channels get new numbers,
 the comments move with them. The PRM80 has no gaps in its channel list (it
 only knows the number of channels), so "Write to PRM80" writes the whole list
 again. Insert adds a copy of the selected channel, change it as needed.
-Undo (Ctrl+Z) takes back the last changes (up to 50); reading a list from the
+Undo (Ctrl+Z) takes back the last changes (up to 50), Redo (Ctrl+Y or
+Ctrl+Shift+Z) does them again (until the next change); reading a list from the
 PRM80 or a file cannot be undone.
+Verify compares the list shown channel by channel with a file and lists the
+differences (settings and, separately, comments). To check the radio against
+a file: "Read from PRM80", then "Verify" with the file.
 Several channels can be changed at once: select the rows (Shift + click or
 Ctrl + click, the last click may open the value to change), change the value
 in one of them, then answer the question "... for all selected channels?"

@@ -162,6 +162,16 @@
               <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="saveAsButtonActionPerformed"/>
             </Events>
           </Component>
+          <Component class="javax.swing.JButton" name="verifyButton">
+            <Properties>
+              <Property name="text" type="java.lang.String" value="Verify"/>
+              <Property name="toolTipText" type="java.lang.String" value="Compare the list shown with a channel file (e.g. after Read from PRM80)"/>
+              <Property name="name" type="java.lang.String" value="verifyButton" noResource="true"/>
+            </Properties>
+            <Events>
+              <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="verifyButtonActionPerformed"/>
+            </Events>
+          </Component>
           <Component class="javax.swing.JButton" name="exportA51Button">
             <Properties>
               <Property name="text" type="java.lang.String" value="Export A51"/>
@@ -247,6 +257,16 @@
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="undoButtonActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JButton" name="redoButton">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Redo"/>
+            <Property name="toolTipText" type="java.lang.String" value="Redo the change undone last (Ctrl+Y)"/>
+            <Property name="name" type="java.lang.String" value="redoButton" noResource="true"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="redoButtonActionPerformed"/>
           </Events>
         </Component>
       </SubComponents>

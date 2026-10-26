@@ -20,7 +20,8 @@ e.g. macOS or a Raspberry Pi).
 - **Write to MEM**: store the VFO setting in a memory channel (with Undo)
 - **Scan** of the memory channels (channels with scan lock are skipped) or of
   a frequency range in VFO mode, stops on a signal and continues after a hold time
-- **Channel manager**: read/write all channels from/to the PRM80, edit them,
+- **Channel manager**: read/write all channels from/to the PRM80, edit them
+  (insert, delete, move, undo/redo), verify against a file,
   save as CSV file (with comments), **export as firmware configuration
   (A51 file)** for building the firmware with your own default channels
 - Configuration: PLL step, default shift, scan speed

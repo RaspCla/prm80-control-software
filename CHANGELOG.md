@@ -3,7 +3,12 @@
 ## Not released yet
 
 - Channel manager: **Insert**, **Delete**, **Move up/down** (also with the keys
-  Insert, Del, Alt+Up/Down) and **Undo** (Ctrl+Z, up to 50 steps)
+  Insert, Del, Alt+Up/Down), **Undo** (Ctrl+Z, up to 50 steps) and **Redo**
+  (Ctrl+Y or Ctrl+Shift+Z)
+- Channel manager: **Verify** compares the list shown with a channel file
+  (channel by channel: frequency, shift, scan lock, shift +/-, reverse,
+  enabled; comments separately). "Read from PRM80" first, then Verify,
+  checks the radio against a file.
 
 - VFO mode: a channel key pressed at the radio (or a scan started there)
   brings the program back to memory mode with the channel of the radio.

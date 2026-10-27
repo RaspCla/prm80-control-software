@@ -1,5 +1,10 @@
 # Changelog
 
+## Not released yet
+
+- Tooltips: "Shift Freq." 0 with "Shift Enabled" means the default shift of
+  the configuration (channel manager column and cells, configuration dialog)
+
 ## 3.0.0 – 2026-10-27
 
 Needs PRM80 firmware **V5.1** or newer

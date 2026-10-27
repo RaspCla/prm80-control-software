@@ -57,7 +57,7 @@
         <Component class="javax.swing.JLabel" name="jLabel2">
           <Properties>
             <Property name="text" type="java.lang.String" value="Shift (kHz):"/>
-            <Property name="toolTipText" type="java.lang.String" value="Default shift, used for channels without their own shift"/>
+            <Property name="toolTipText" type="java.lang.String" value="&lt;html&gt;Default shift of the PRM80.&lt;br&gt;It is used for every channel with &quot;Shift Enabled&quot; and&lt;br&gt;&quot;Shift Freq.&quot; 0 (channel without its own shift).&lt;br&gt;A change here applies to all these channels at once.&lt;/html&gt;"/>
             <Property name="name" type="java.lang.String" value="jLabel2" noResource="true"/>
           </Properties>
           <Constraints>
@@ -106,6 +106,7 @@
                 <StringItem index="2" value="7600"/>
               </StringArray>
             </Property>
+            <Property name="toolTipText" type="java.lang.String" value="&lt;html&gt;Default shift of the PRM80.&lt;br&gt;It is used for every channel with &quot;Shift Enabled&quot; and&lt;br&gt;&quot;Shift Freq.&quot; 0 (channel without its own shift).&lt;br&gt;A change here applies to all these channels at once.&lt;/html&gt;"/>
             <Property name="name" type="java.lang.String" value="shiftComboBox" noResource="true"/>
           </Properties>
           <Constraints>

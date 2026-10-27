@@ -183,6 +183,7 @@ public class ChannelManager extends javax.swing.JDialog {
         for (int i = 0; i < widths.length; i++)
             this.table.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
         this.table.setPreferredScrollableViewportSize(new java.awt.Dimension(765, 320));
+        this.installShiftTooltips();
         this.table.putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
         this.model.addTableModelListener(e -> {
             if (!busy) {
@@ -828,6 +829,41 @@ public class ChannelManager extends javax.swing.JDialog {
         sessionSource = "Change done again" + (this.redoStack.isEmpty() ? "" : " (" + this.redoStack.size() + " more)");
         this.updateTitle();
     }//GEN-LAST:event_redoButtonActionPerformed
+
+    private static final String DEFAULT_SHIFT_TIP =
+            "<html>0 with \"Shift Enabled\" = default shift of the PRM80<br>"
+            + "(Configuration, Shift). Another value is the own shift of the channel.</html>";
+
+    /** Tooltips: "Shift Freq." 0 means the default shift of the configuration. */
+    private void installShiftTooltips() {
+        final javax.swing.table.JTableHeader header = this.table.getTableHeader();
+        header.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(java.awt.event.MouseEvent e) {
+                int col = header.columnAtPoint(e.getPoint());
+                int modelCol = col < 0 ? -1 : table.convertColumnIndexToModel(col);
+                header.setToolTipText(modelCol == ChannelModel.COL_SHIFTFREQ ? DEFAULT_SHIFT_TIP : null);
+            }
+        });
+        this.table.getColumnModel().getColumn(ChannelModel.COL_SHIFTFREQ).setCellRenderer(
+                new javax.swing.table.DefaultTableCellRenderer() {
+            @Override
+            public java.awt.Component getTableCellRendererComponent(javax.swing.JTable t, Object value,
+                    boolean selected, boolean focus, int row, int col) {
+                java.awt.Component c = super.getTableCellRendererComponent(t, value, selected, focus, row, col);
+                boolean isDefault = false;
+                int r = t.convertRowIndexToModel(row);
+                if (r < sessionList.countChannel()) {
+                    f4fez.prm80x0.Controler.Channel ch = sessionList.getChannel(r);
+                    isDefault = ch.isShiftEnabled() && hz(ch.getShiftFreq()) == 0;
+                }
+                this.setToolTipText(isDefault
+                        ? "<html>Default shift of the PRM80 (Configuration, Shift)</html>"
+                        : null);
+                return c;
+            }
+        });
+    }
 
     // ---- Verify ----------------------------------------------------------------
 

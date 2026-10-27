@@ -18,7 +18,9 @@ set TYPE=app-image
 if not "%~1"=="" set TYPE=%~1
 
 set EXTRA=
-if not "%TYPE%"=="app-image" set EXTRA=--win-menu --win-menu-group PRM80 --win-shortcut --win-dir-chooser
+rem fixed upgrade code: a new version replaces the installed one (do not change)
+set UPGRADE_UUID=b01a3249-bb30-47bd-a72b-51498d72a3df
+if not "%TYPE%"=="app-image" set EXTRA=--win-menu --win-menu-group PRM80 --win-shortcut --win-dir-chooser --win-upgrade-uuid %UPGRADE_UUID%
 
 rem jpackage of JAVA_HOME, if JAVA_HOME is a JDK (an old JRE in JAVA_HOME,
 rem e.g. Java 8, has no jpackage: then the one in the PATH is used)

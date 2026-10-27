@@ -1,5 +1,14 @@
 # Changelog
 
+## Not released yet
+
+- Tooltips: "Shift Freq." 0 with "Shift Enabled" means the default shift of
+  the configuration (channel manager column and cells, configuration dialog)
+- Configuration dialog: "Shift" renamed to "Default shift"
+- Windows installer: fixed upgrade code, a new version replaces the installed
+  one (before, every version was a separate program and had to be uninstalled
+  first). Versions up to 3.0.0 still have to be uninstalled once.
+
 ## 3.0.0 – 2026-10-27
 
 Needs PRM80 firmware **V5.1** or newer

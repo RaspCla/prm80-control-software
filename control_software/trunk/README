@@ -67,6 +67,9 @@ Tools > Channel manager. It shows the channel file used last time.
   Read from PRM80 / Write to PRM80   exchange the channels with the radio
   Read / Save / Save As              channel file (CSV, separator ";", UTF-8)
   Verify                             compare the list shown with a channel file
+"Shift Freq." 0 with "Shift Enabled" means: the channel uses the default shift
+of the PRM80 (Configuration, Default shift). A change of the default shift applies to
+all these channels at once; another value is the own shift of the channel.
 Insert / Delete / Move up / Move down (keys: Insert, Del, Alt+Up, Alt+Down)
 change the order of the channels; the following channels get new numbers,
 the comments move with them. The PRM80 has no gaps in its channel list (it

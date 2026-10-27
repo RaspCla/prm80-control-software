@@ -138,7 +138,7 @@ public class ConfigurationDialog extends javax.swing.JDialog {
         jLabel1.setName("jLabel1"); // NOI18N
         jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 65, -1, -1));
 
-        jLabel2.setText("Shift (kHz):");
+        jLabel2.setText("Default shift (kHz):");
         jLabel2.setToolTipText("<html>Default shift of the PRM80.<br>It is used for every channel with \"Shift Enabled\" and<br>\"Shift Freq.\" 0 (channel without its own shift).<br>A change here applies to all these channels at once.</html>"); // NOI18N
         jLabel2.setName("jLabel2"); // NOI18N
         jPanel1.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 105, -1, -1));
@@ -151,18 +151,18 @@ public class ConfigurationDialog extends javax.swing.JDialog {
         pllStepComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "6.25", "12.5", "25" }));
         pllStepComboBox.setSelectedIndex(1);
         pllStepComboBox.setName("pllStepComboBox"); // NOI18N
-        jPanel1.add(pllStepComboBox, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 60, 100, -1));
+        jPanel1.add(pllStepComboBox, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 60, 100, -1));
 
         shiftComboBox.setEditable(true);
         shiftComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "600", "1600", "7600" }));
         shiftComboBox.setToolTipText("<html>Default shift of the PRM80.<br>It is used for every channel with \"Shift Enabled\" and<br>\"Shift Freq.\" 0 (channel without its own shift).<br>A change here applies to all these channels at once.</html>"); // NOI18N
         shiftComboBox.setName("shiftComboBox"); // NOI18N
-        jPanel1.add(shiftComboBox, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 100, 100, -1));
+        jPanel1.add(shiftComboBox, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 100, 100, -1));
 
         scanSpeedSpinner.setModel(new javax.swing.SpinnerNumberModel(400, 50, 12750, 50));
         scanSpeedSpinner.setToolTipText("Time per channel while scanning (steps of 50 ms)"); // NOI18N
         scanSpeedSpinner.setName("scanSpeedSpinner"); // NOI18N
-        jPanel1.add(scanSpeedSpinner, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 140, 100, -1));
+        jPanel1.add(scanSpeedSpinner, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 140, 100, -1));
 
         jButton1.setText("Save"); // NOI18N
         jButton1.setName("jButton1"); // NOI18N
@@ -180,7 +180,7 @@ public class ConfigurationDialog extends javax.swing.JDialog {
                 jButton2ActionPerformed(evt);
             }
         });
-        jPanel1.add(jButton2, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 200, 100, -1));
+        jPanel1.add(jButton2, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 200, 100, -1));
 
         jLabel4.setText("Version :"); // NOI18N
         jLabel4.setName("versionLabel"); // NOI18N

@@ -832,7 +832,7 @@ public class ChannelManager extends javax.swing.JDialog {
 
     private static final String DEFAULT_SHIFT_TIP =
             "<html>0 with \"Shift Enabled\" = default shift of the PRM80<br>"
-            + "(Configuration, Shift). Another value is the own shift of the channel.</html>";
+            + "(Configuration, Default shift). Another value is the own shift of the channel.</html>";
 
     /** Tooltips: "Shift Freq." 0 means the default shift of the configuration. */
     private void installShiftTooltips() {
@@ -858,7 +858,7 @@ public class ChannelManager extends javax.swing.JDialog {
                     isDefault = ch.isShiftEnabled() && hz(ch.getShiftFreq()) == 0;
                 }
                 this.setToolTipText(isDefault
-                        ? "<html>Default shift of the PRM80 (Configuration, Shift)</html>"
+                        ? "<html>Default shift of the PRM80 (Configuration, Default shift)</html>"
                         : null);
                 return c;
             }

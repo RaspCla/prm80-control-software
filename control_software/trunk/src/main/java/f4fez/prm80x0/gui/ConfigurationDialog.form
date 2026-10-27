@@ -56,7 +56,7 @@
         </Component>
         <Component class="javax.swing.JLabel" name="jLabel2">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Shift (kHz):"/>
+            <Property name="text" type="java.lang.String" value="Default shift (kHz):"/>
             <Property name="toolTipText" type="java.lang.String" value="&lt;html&gt;Default shift of the PRM80.&lt;br&gt;It is used for every channel with &quot;Shift Enabled&quot; and&lt;br&gt;&quot;Shift Freq.&quot; 0 (channel without its own shift).&lt;br&gt;A change here applies to all these channels at once.&lt;/html&gt;"/>
             <Property name="name" type="java.lang.String" value="jLabel2" noResource="true"/>
           </Properties>
@@ -92,7 +92,7 @@
           </Properties>
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-              <AbsoluteConstraints x="140" y="60" width="100" height="-1"/>
+              <AbsoluteConstraints x="160" y="60" width="100" height="-1"/>
             </Constraint>
           </Constraints>
         </Component>
@@ -111,7 +111,7 @@
           </Properties>
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-              <AbsoluteConstraints x="140" y="100" width="100" height="-1"/>
+              <AbsoluteConstraints x="160" y="100" width="100" height="-1"/>
             </Constraint>
           </Constraints>
         </Component>
@@ -125,7 +125,7 @@
           </Properties>
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-              <AbsoluteConstraints x="140" y="140" width="100" height="-1"/>
+              <AbsoluteConstraints x="160" y="140" width="100" height="-1"/>
             </Constraint>
           </Constraints>
         </Component>
@@ -153,7 +153,7 @@
           </Events>
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-              <AbsoluteConstraints x="140" y="200" width="100" height="-1"/>
+              <AbsoluteConstraints x="160" y="200" width="100" height="-1"/>
             </Constraint>
           </Constraints>
         </Component>

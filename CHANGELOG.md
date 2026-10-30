@@ -1,6 +1,6 @@
 # Changelog
 
-## Not released yet
+## 3.1.0 – 2026-10-31
 
 - Tooltips: "Shift Freq." 0 with "Shift Enabled" means the default shift of
   the configuration (channel manager column and cells, configuration dialog)

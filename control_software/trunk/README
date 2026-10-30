@@ -64,7 +64,8 @@ The state of the PRM80 is read every 1.5 s (changes made at the radio).
 Channel manager
 ---------------
 Tools > Channel manager. It shows the channel file used last time.
-  Read from PRM80 / Write to PRM80   exchange the channels with the radio
+  Read from PRM80 / Write to PRM80   exchange the channels with the RAM of
+                                     the radio (see "RAM and EEPROM")
   Read / Save / Save As              channel file (CSV, separator ";", UTF-8)
   Verify                             compare the list shown with a channel file
 "Shift Freq." 0 with "Shift Enabled" means: the channel uses the default shift
@@ -104,13 +105,49 @@ without connection the defaults of the firmware are used (V5, 12.5 kHz,
 600 kHz / 7.6 MHz, 400 ms). Frequencies and shifts must be multiples of the
 PLL step.
 
+Configuration
+-------------
+Tools > Configuration: PLL step, default shift, PRM80 scan speed (scan of the
+radio itself, not the software scan) and squelch
+(the same squelch as in the main window). It works like the channel manager:
+  Read from PRM80 / Write to PRM80   exchange the values with the RAM of
+                                     the radio (see "RAM and EEPROM")
+  Read / Save / Save As              configuration file (*.cfg, text)
+The values are only sent to the PRM80 with "Write to PRM80"; the dialog shows
+whether the values shown differ from those in the PRM80. Save As proposes the
+name of the channel list of the channel manager with ".cfg", so a channel
+list (CSV) and its configuration (cfg) belong together. A file of another band
+is only used after a question.
+
+RAM and EEPROM
+--------------
+The PRM80 works with the channels and settings in its RAM. The RAM keeps
+them for some weeks without power. The EEPROM holds a permanent copy, which
+the PRM80 loads when the content of the RAM is lost.
+"Read from PRM80" and "Write to PRM80" (channel manager and configuration)
+only use the RAM. Tools > Memory:
+  Copy RAM -> EEPROM (save permanently)   copies the whole RAM to the EEPROM:
+        all channels AND all settings (PLL step, default shift, scan speed,
+        squelch, mode, current channel), not only the channel list.
+        The previous content of the EEPROM is lost.
+  Copy EEPROM -> RAM (restore)            replaces the whole RAM by the
+        EEPROM. Save the channel list and the configuration in files first if
+        you may need the current state again.
+Both ask first and take some seconds. The usual way to change the channels
+permanently: Channel manager > Read from PRM80, change, Write to PRM80, then
+Tools > Memory > Copy RAM -> EEPROM.
+
 VFO mode
 --------
 In VFO mode "Shift enabled", "Shift positive", "Shift reverse" and "Shift
 Frequency" set the frequencies at once: TX = RX +/- shift, with reverse RX and
 TX are swapped (as the firmware does it for channels).
 In memory mode the fields only show the shift of the current channel and are
-greyed (the shift of a channel is changed in the channel manager).
+greyed (the shift of a channel is changed in the channel manager). Only
+"Shift reverse" can be used in memory mode, as the reverse key of the radio,
+if the channel has shift enabled. With firmware V5.2 this reverse ends when
+another channel is selected (the reverse stored in the channel is kept), with
+V5.1 it is stored in the channel.
 
 "Write to MEM" (VFO mode) stores the VFO setting in a memory channel. The
 channel list of the channel manager is used; it is only read from the PRM80
@@ -129,13 +166,21 @@ to MEM ...) stops the scan as well; volume, squelch and power do not.
              the channel manager) are skipped without delay; if the list is
              not known to be the one in the PRM80, it is read at the start
              (a few seconds)
-  VFO mode   a frequency range with a step: Tools > Scan settings
+  VFO mode   a frequency range with a step: Tools > Software scan settings
              (asked for at the first VFO scan, stored separately for 144 and
              430 MHz); the shift fields are applied as in VFO mode
-On every channel the scan waits the scan speed of the PRM80 (Tools >
-Configuration, time per channel), then reads the squelch. Squelch open: the
+On every channel the scan waits its time per channel (Tools > Software scan
+settings, default 400 ms), then reads the squelch. Squelch open: the
 scan stays there ("HOLD" in the display) while the signal is received and the
-hold time after it (Tools > Scan settings, default 3 s), then continues.
+hold time after it (Tools > Software scan settings, default 3 s), then continues.
+A click on "HOLD" skips the signal: the scan goes on with the next channel /
+frequency at once.
+The software scan settings are stored on this PC (user settings of Java, under
+Windows in the registry: HKEY_CURRENT_USER\Software\JavaSoft\Prefs\f4fez\prm80),
+the VFO range separately for 144 and 430 MHz. They are not in the PRM80.
+The "PRM80 scan speed" of Tools > Configuration is only used by the scan of the
+radio itself (started with the key at the radio): time per channel, and the
+time it waits after a signal.
 Transmitting stops the scan. The display shows "SCAN" while scanning.
 The scan is done by the program (the firmware V5 has no serial command to start
 its own scan), so it runs only while the PRM80 is connected. Squelch 0 (always
@@ -143,14 +188,14 @@ open) stops the scan on every channel.
 
 Expert mode
 -----------
-Tools > Expert mode shows the functions for experts (restart, RAM/EEPROM,
+Tools > Expert mode shows the functions for experts (restart,
 serial monitor, A51 export in the channel manager, TCP server connection,
 virtual PRM for tests).
 
 The virtual PRM (File > Connect virtual PRM (test)) simulates a PRM8060 144 MHz with
-firmware V5.1: factory channels of src/inc_144.a51,
+firmware V5.2: factory channels of src/inc_144.a51,
 shift per channel, reverse, scan lock, default shift, scan duration, RAM with
-checksums and EEPROM (restart, Reload RAM, RAM <-> EEPROM). Known errors of the
+checksums and EEPROM (restart, RAM <-> EEPROM). Known errors of the
 firmware are not simulated (reverse uses the channel in RAM and its own shift,
 configuration changes update the checksum).
 

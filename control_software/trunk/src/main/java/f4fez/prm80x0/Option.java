@@ -128,6 +128,15 @@ public class Option {
         this.prefs.putInt("scanStep", step);
     }
 
+    /** @return time per channel / frequency of the software scan in ms */
+    public int getScanDwell() {
+        return this.prefs.getInt("scanDwell", 400);
+    }
+
+    public void setScanDwell(int ms) {
+        this.prefs.putInt("scanDwell", ms);
+    }
+
     /** @return time in ms the scan waits after a signal has ended */
     public int getScanHold() {
         return this.prefs.getInt("scanHold", 3000);

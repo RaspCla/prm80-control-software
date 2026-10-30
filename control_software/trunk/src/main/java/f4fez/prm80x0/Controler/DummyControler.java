@@ -24,7 +24,7 @@ package f4fez.prm80x0.Controler;
 /**
  * Virtual PRM80 for tests without a radio (Tools > Connect virtual PRM, expert mode).
  * <p>
- * Simulates a PRM8060 144 MHz with firmware V5.1 (F4FEZ/F8EGQ/DC0CM),
+ * Simulates a PRM8060 144 MHz with firmware V5.2 (F4FEZ/F8EGQ/DC0CM),
  * as the firmware is meant to work, without the errors of V5.0:
  * <ul>
  * <li>external RAM with the V5 layout (config, frequency, shift and state
@@ -36,6 +36,9 @@ package f4fez.prm80x0.Controler;
  *     the channel in RAM with its own shift (the firmware V5 takes the
  *     frequency from the factory list in program memory and always the
  *     default shift)</li>
+ * <li>reverse with the "T" command (as the reverse key, V5.2): only for the
+ *     current channel, the reverse bit stored in the channel is not changed,
+ *     it ends when another channel is selected</li>
  * <li>configuration changes (squelch, shift, PLL, scan duration) update the
  *     checksum (the "M" command of the firmware does not)</li>
  * </ul>
@@ -59,6 +62,8 @@ public class DummyControler implements Controler {
     protected PRMStateChangeListener changeListener;
 
     private MemoryImageV5 image;
+    /** V5.2: reverse toggled for the current channel only (not stored) */
+    private boolean revToggle;
 
     // ------------------------------------------------------------ connection
 
@@ -127,7 +132,7 @@ public class DummyControler implements Controler {
 
     @Override
     public int getMinorFirmwareVersion() {
-        return 1;
+        return 2;
     }
 
     @Override
@@ -259,13 +264,6 @@ public class DummyControler implements Controler {
         this.setCurrentChannel(chan);
     }
 
-    /** Reload RAM: factory defaults. */
-    @Override
-    public void reloadRAM() {
-        this.loadFactoryDefaults();
-        this.setCurrentChannel(0);
-    }
-
     @Override
     public void RAM2EEPROM() {
         this.updateChecksums();
@@ -327,22 +325,39 @@ public class DummyControler implements Controler {
 
     @Override
     public int getChannelState() {
-        return this.state(this.getCurrentChannel());
+        return this.effectiveState(this.getCurrentChannel());
+    }
+
+    /** state of a channel with the temporary reverse of the current channel */
+    private int effectiveState(int chan) {
+        int state = this.state(chan);
+        if (this.revToggle && chan == this.getCurrentChannel())
+            state ^= 2;
+        return state;
     }
 
     @Override
     public void setCurrentChannel(int channel) {
         if (channel < 0 || channel > this.getMaxChan())
             return;                         // the firmware ignores unknown channels
+        this.revToggle = false;             // V5.2: new channel, stored reverse
         setConfig(MemoryImageV5.RAM_ADRESS_CHAN, channel);
         this.tune(channel);
+    }
+
+    @Override
+    public void setChannelReverse(boolean reverse) {
+        // "T" of V5.2: the reverse bit only toggles reverse for the current channel
+        int chan = this.getCurrentChannel();
+        this.revToggle = reverse != ((this.state(chan) & 2) != 0);
+        this.tune(chan);
     }
 
     /** RX and TX frequency of a channel (get_freq of the firmware). */
     private void tune(int chan) {
         int step = this.getPLLStep();
         int base = word(MemoryImageV5.RAM_AREA_ADRESS_FREQ, chan) * step;
-        int state = this.state(chan);
+        int state = this.effectiveState(chan);
         this.rxFreq = base;
         this.txFreq = base;
         if ((state & 1) != 0) {

@@ -518,6 +518,18 @@ public class PRM80X0View extends javax.swing.JFrame {
         this.commandWhileScanning(task);
     }
 
+    /** Run a command, then done in the event thread (not after an error). */
+    private <T> void command(PrmWorker.Task<T> task, Consumer<T> done) {
+        this.scanner.stop();
+        if (this.vdf == null)
+            return;
+        this.worker.run(task, done, ex -> {
+            this.setStatus("Error: " + message(ex));
+            JOptionPane.showMessageDialog(this, "Communication error:\n" + message(ex),
+                    "PRM80", JOptionPane.ERROR_MESSAGE);
+        });
+    }
+
     /** Run a command that does not stop the scan (volume, squelch, power). */
     private void commandWhileScanning(PrmWorker.Task<?> task) {
         if (this.vdf == null)
@@ -679,6 +691,7 @@ public class PRM80X0View extends javax.swing.JFrame {
         this.ShiftPositiveCheckbox.setSelected((state & 4) != 0);
         this.ShiftReverseCheckbox.setSelected((state & 2) != 0);
         this.appliedReverse = (state & 2) != 0;
+        this.updateShiftControls(false);
         int shift = Math.abs(tx - rx);
         if (enabled && shift > 0)
             this.setShiftSpinner(shift);
@@ -717,7 +730,6 @@ public class PRM80X0View extends javax.swing.JFrame {
         this.vfoToggleButton.setEnabled(enable);
         this.memToggleButton.setEnabled(enable);
         this.resetMenuItem.setEnabled(enable);
-        this.razMenuItem.setEnabled(enable);
         this.memoryMenu.setEnabled(enable);
         this.freqLabel.setVisible(enable);
         this.txFreqLabel.setVisible(enable);
@@ -745,8 +757,6 @@ public class PRM80X0View extends javax.swing.JFrame {
     private void setVisibleExpertControls(boolean enable) {
         this.connectVirtualMenuItem.setVisible(enable);
         this.resetMenuItem.setVisible(enable);
-        this.razMenuItem.setVisible(enable);
-        this.memoryMenu.setVisible(enable);
         this.ramExtMenuItem.setVisible(false);
         this.ramIntMenuItem.setVisible(false);
         this.eepromMenuItem.setVisible(false);
@@ -811,7 +821,6 @@ public class PRM80X0View extends javax.swing.JFrame {
         scanSettingsMenuItem = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JSeparator();
         resetMenuItem = new javax.swing.JMenuItem();
-        razMenuItem = new javax.swing.JMenuItem();
         memoryMenu = new javax.swing.JMenu();
         ramIntMenuItem = new javax.swing.JMenuItem();
         ramExtMenuItem = new javax.swing.JMenuItem();
@@ -969,6 +978,11 @@ public class PRM80X0View extends javax.swing.JFrame {
         scanLabel.setText("SCAN"); // NOI18N
         scanLabel.setName("scanLabel"); // NOI18N
         scanLabel.setOpaque(true);
+        scanLabel.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                scanLabelMouseClicked(evt);
+            }
+        });
         jPanel1.add(scanLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 70, 90, 16));
 
         mainPanel.add(jPanel1);
@@ -1197,6 +1211,7 @@ public class PRM80X0View extends javax.swing.JFrame {
         ToolsMenu.add(channelManagerMenuItem);
 
         configurationMenuItem.setText("Configuration ..."); // NOI18N
+        configurationMenuItem.setToolTipText("<html>Settings stored in the <b>PRM80</b> (its RAM): PLL step, default shift,<br>squelch and the scan speed of the scan of the radio (key at the radio).<br>Read / write from / to the PRM80, save in a file (*.cfg).</html>"); // NOI18N
         configurationMenuItem.setEnabled(false);
         configurationMenuItem.setName("configurationMenuItem"); // NOI18N
         configurationMenuItem.addActionListener(new java.awt.event.ActionListener() {
@@ -1206,7 +1221,47 @@ public class PRM80X0View extends javax.swing.JFrame {
         });
         ToolsMenu.add(configurationMenuItem);
 
-        scanSettingsMenuItem.setText("Scan settings ..."); // NOI18N
+        memoryMenu.setText("Memory"); // NOI18N
+        memoryMenu.setToolTipText("<html>The PRM80 works with the channels and settings in its <b>RAM</b>.<br>The RAM keeps them for some weeks without power.<br>The <b>EEPROM</b> holds a permanent copy, loaded when the RAM content is lost.</html>"); // NOI18N
+        memoryMenu.setEnabled(false);
+        memoryMenu.setName("memoryMenu"); // NOI18N
+
+        ramIntMenuItem.setText("RAM intern 80c552"); // NOI18N
+        ramIntMenuItem.setName("ramIntMenuItem"); // NOI18N
+        memoryMenu.add(ramIntMenuItem);
+
+        ramExtMenuItem.setText("RAM extern"); // NOI18N
+        ramExtMenuItem.setName("ramExtMenuItem"); // NOI18N
+        memoryMenu.add(ramExtMenuItem);
+
+        eepromMenuItem.setText("EEPROM"); // NOI18N
+        eepromMenuItem.setName("eepromMenuItem"); // NOI18N
+        memoryMenu.add(eepromMenuItem);
+
+        ram2eepromMenuItem.setText("Copy RAM -> EEPROM (save permanently) ..."); // NOI18N
+        ram2eepromMenuItem.setToolTipText("<html>Copy the whole RAM to the EEPROM, so that it is kept permanently:<br>all channels <b>and</b> all settings (PLL step, default shift, scan speed,<br>squelch, mode, current channel), not only the channel list.<br>The previous content of the EEPROM is overwritten.</html>"); // NOI18N
+        ram2eepromMenuItem.setName("ram2eepromMenuItem"); // NOI18N
+        ram2eepromMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ram2eepromMenuItemActionPerformed(evt);
+            }
+        });
+        memoryMenu.add(ram2eepromMenuItem);
+
+        eeprom2ramMenuItem.setText("Copy EEPROM -> RAM (restore) ..."); // NOI18N
+        eeprom2ramMenuItem.setToolTipText("<html>Replace the RAM with the copy in the EEPROM:<br>all channels <b>and</b> all settings in the RAM are overwritten.<br>Save the channel list and the configuration in files first<br>if you may need the current state again.</html>"); // NOI18N
+        eeprom2ramMenuItem.setName("eeprom2ramMenuItem"); // NOI18N
+        eeprom2ramMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                eeprom2ramMenuItemActionPerformed(evt);
+            }
+        });
+        memoryMenu.add(eeprom2ramMenuItem);
+
+        ToolsMenu.add(memoryMenu);
+
+        scanSettingsMenuItem.setText("Software scan settings ..."); // NOI18N
+        scanSettingsMenuItem.setToolTipText("<html>Settings of the <b>software scan</b> (Scan button of this program):<br>VFO range, step, time per channel, hold time.<br>Stored on this PC, not in the PRM80.</html>"); // NOI18N
         scanSettingsMenuItem.setName("scanSettingsMenuItem"); // NOI18N
         scanSettingsMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1227,52 +1282,6 @@ public class PRM80X0View extends javax.swing.JFrame {
             }
         });
         ToolsMenu.add(resetMenuItem);
-
-        razMenuItem.setText("Reload RAM"); // NOI18N
-        razMenuItem.setEnabled(false);
-        razMenuItem.setName("razMenuItem"); // NOI18N
-        razMenuItem.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                razMenuItemActionPerformed(evt);
-            }
-        });
-        ToolsMenu.add(razMenuItem);
-
-        memoryMenu.setText("Memory"); // NOI18N
-        memoryMenu.setEnabled(false);
-        memoryMenu.setName("memoryMenu"); // NOI18N
-
-        ramIntMenuItem.setText("RAM intern 80c552"); // NOI18N
-        ramIntMenuItem.setName("ramIntMenuItem"); // NOI18N
-        memoryMenu.add(ramIntMenuItem);
-
-        ramExtMenuItem.setText("RAM extern"); // NOI18N
-        ramExtMenuItem.setName("ramExtMenuItem"); // NOI18N
-        memoryMenu.add(ramExtMenuItem);
-
-        eepromMenuItem.setText("EEPROM"); // NOI18N
-        eepromMenuItem.setName("eepromMenuItem"); // NOI18N
-        memoryMenu.add(eepromMenuItem);
-
-        ram2eepromMenuItem.setText("Copy RAM -> EEPROM"); // NOI18N
-        ram2eepromMenuItem.setName("ram2eepromMenuItem"); // NOI18N
-        ram2eepromMenuItem.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                ram2eepromMenuItemActionPerformed(evt);
-            }
-        });
-        memoryMenu.add(ram2eepromMenuItem);
-
-        eeprom2ramMenuItem.setText("Copy EEPROM -> RAM"); // NOI18N
-        eeprom2ramMenuItem.setName("eeprom2ramMenuItem"); // NOI18N
-        eeprom2ramMenuItem.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                eeprom2ramMenuItemActionPerformed(evt);
-            }
-        });
-        memoryMenu.add(eeprom2ramMenuItem);
-
-        ToolsMenu.add(memoryMenu);
 
         serialSpyMenuItem.setText("Serial monitor"); // NOI18N
         serialSpyMenuItem.setName("serialSpyMenuItem"); // NOI18N
@@ -1620,7 +1629,20 @@ public class PRM80X0View extends javax.swing.JFrame {
     }//GEN-LAST:event_ShiftPositiveCheckboxActionPerformed
 
     private void ShiftReverseCheckboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ShiftReverseCheckboxActionPerformed
-        this.applyVfoShift();
+        if (this.vfoToggleButton.isSelected()) {
+            this.applyVfoShift();
+            return;
+        }
+        // memory mode: reverse of the channel, as the reverse key of the radio
+        if (this.vdf == null || this.updatingDisplay)
+            return;
+        final boolean reverse = this.ShiftReverseCheckbox.isSelected();
+        final Controler c = this.vdf.getPRMControler();
+        this.shownShiftKey = "";        // show the state of the radio afterwards
+        this.command(() -> {
+            c.setChannelReverse(reverse);
+            return null;
+        });
     }//GEN-LAST:event_ShiftReverseCheckboxActionPerformed
 
     private void ShiftFreqSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_ShiftFreqSpinnerStateChanged
@@ -1770,6 +1792,12 @@ public class PRM80X0View extends javax.swing.JFrame {
             "Reverse: receive on the TX frequency of the repeater and transmit on its RX frequency";
     private static final String MEM_SHIFT_TIP =
             "Memory mode: shows the shift of the channel (change it in the channel manager)";
+    private static final String MEM_REVERSE_TIP =
+            "<html>Reverse for this channel, as the reverse key of the radio<br>"
+            + "(firmware V5.2: ends when another channel is selected)</html>";
+    private static final String MEM_REVERSE_OFF_TIP =
+            "<html>Reverse needs a channel with shift enabled<br>"
+            + "(change the shift in the channel manager)</html>";
 
     /**
      * The shift fields only act in VFO mode. In memory mode (and without
@@ -1778,14 +1806,22 @@ public class PRM80X0View extends javax.swing.JFrame {
     private void updateShiftControls(boolean vfo) {
         this.ShiftEnabledCheckbox.setEnabled(vfo);
         this.ShiftPositiveCheckbox.setEnabled(vfo);
-        this.ShiftReverseCheckbox.setEnabled(vfo);
         this.ShiftFreqSpinner.setEnabled(vfo);
         this.label1.setEnabled(vfo);
         String tip = this.vdf != null && !vfo ? MEM_SHIFT_TIP : null;
         this.ShiftEnabledCheckbox.setToolTipText(tip);
         this.ShiftPositiveCheckbox.setToolTipText(tip);
-        this.ShiftReverseCheckbox.setToolTipText(tip != null ? tip : REVERSE_TIP);
         this.ShiftFreqSpinner.setToolTipText(tip);
+        // reverse is an operating function: also in memory mode, as the
+        // reverse key of the radio, if the channel has shift enabled
+        boolean memReverse = false;
+        if (this.vdf != null && !vfo) {
+            int state = this.vdf.getPRMControler().getChannelState();
+            memReverse = state >= 0 && (state & 1) != 0;
+        }
+        this.ShiftReverseCheckbox.setEnabled(vfo || memReverse);
+        this.ShiftReverseCheckbox.setToolTipText(vfo || this.vdf == null ? REVERSE_TIP
+                : memReverse ? MEM_REVERSE_TIP : MEM_REVERSE_OFF_TIP);
     }
 
     // ---- Scan -------------------------------------------------------------
@@ -1844,9 +1880,11 @@ public class PRM80X0View extends javax.swing.JFrame {
         boolean hold = this.scanner.isHolding();
         this.scanLabel.setText(hold ? "HOLD" : "SCAN");
         this.scanLabel.setBackground(hold ? new java.awt.Color(255, 204, 0) : new java.awt.Color(0, 204, 0));
+        this.scanLabel.setToolTipText(hold ? "Click: skip this signal, the scan goes on" : null);
+        this.scanLabel.setCursor(hold ? java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR) : null);
         if (hold) {
             this.setStatus("Signal - the scan continues " + Math.round(this.config.getScanHold() / 1000f)
-                    + " s after its end");
+                    + " s after its end (click HOLD to skip it)");
         } else if (this.scanner.isVfoScan()) {
             this.setStatus("Scanning " + mhz(this.scanner.getFrom()) + " - " + mhz(this.scanner.getTo())
                     + " MHz, step " + new java.math.BigDecimal(this.scanner.getStep()).movePointLeft(3)
@@ -1937,63 +1975,137 @@ private void configurationMenuItemActionPerformed(java.awt.event.ActionEvent evt
     final VirtualDeviceFirmware v = this.vdf;
     final Controler pc = v.getPRMControler();
     // read the configuration values in the background, then show the dialog
-    this.worker.run(() -> {
-        pc.getPLLStep();
-        if (pc.supportsTxShift())
-            pc.getTxFrequencyShift();
-        if (pc.supportsScanSpeed())
-            pc.getScanSpeed();
-        return null;
-    }, r -> this.showConfiguration(v), ex -> {
+    this.worker.run(() -> readConfiguration(pc),
+            values -> this.showConfiguration(v, values), ex -> {
         this.setStatus("Error: " + message(ex));
         JOptionPane.showMessageDialog(this, "The configuration could not be read:\n" + message(ex),
                 "PRM80", JOptionPane.ERROR_MESSAGE);
     });
 }//GEN-LAST:event_configurationMenuItemActionPerformed
 
-private void showConfiguration(VirtualDeviceFirmware v) {
+/** Configuration values of the PRM80 (remembered values or read now), in the worker thread. */
+private static PrmConfiguration readConfiguration(Controler c) throws Exception {
+    return new PrmConfiguration(c.getPRMFrequencyCode(), c.getPLLStep(),
+            c.supportsTxShift() ? c.getTxFrequencyShift() : -1,
+            c.supportsScanSpeed() ? c.getScanSpeed() : -1,
+            c.readSquelch());
+}
+
+private void showConfiguration(final VirtualDeviceFirmware v, PrmConfiguration values) {
     if (this.vdf != v)
         return;     // disconnected meanwhile
-    final ConfigurationDialog cd = new ConfigurationDialog(this, this.vdf);
-    this.showDialog(cd);
-    if (cd.isSaved()) {
-        final Controler c = this.vdf.getPRMControler();
-        this.command(() -> {
-            if (cd.getPllStep() != c.getPLLStep())
-                c.setPLLStep(cd.getPllStep());
-            if (c.supportsTxShift() && cd.getTxShift() != c.getTxFrequencyShift())
-                c.setTxFrequencyShift(cd.getTxShift());
-            if (c.supportsScanSpeed() && cd.getScanSpeed() != c.getScanSpeed())
-                c.setScanSpeed(cd.getScanSpeed());
-            c.refreshState();
-            return null;
-        });
+    final Controler c = v.getPRMControler();
+    String device;
+    int band;
+    boolean txShift, scanSpeed;
+    try {
+        band = c.getPRMFrequencyCode();
+        device = (c.getPRMType() == Controler.PRM8060 ? "PRM8060" : "PRM8070")
+                + " V" + c.getMajorFirmwareVersion() + "." + c.getMinorFirmwareVersion()
+                + "  " + c.getPRMFrequencyCode() + " MHz";
+        txShift = c.supportsTxShift();
+        scanSpeed = c.supportsScanSpeed();
+    } catch (CommunicationException ex) {
+        this.setStatus("Error: " + message(ex));
+        return;
     }
+    ConfigurationDialog cd = new ConfigurationDialog(this, new ConfigurationDialog.PrmAccess() {
+        @Override
+        public boolean isConnected() {
+            return vdf == v;
+        }
+
+        @Override
+        public void readConfiguration(Consumer<PrmConfiguration> done, Consumer<String> error) {
+            if (vdf != v) {
+                error.accept("Not connected");
+                return;
+            }
+            worker.run(() -> {
+                c.forgetConfiguration();        // really read, not the values known
+                c.refreshState();               // squelch
+                return PRM80X0View.readConfiguration(c);
+            }, done, ex -> error.accept(message(ex)));
+        }
+
+        @Override
+        public void writeConfiguration(PrmConfiguration cfg, Consumer<PrmConfiguration> done, Consumer<String> error) {
+            if (vdf != v) {
+                error.accept("Not connected");
+                return;
+            }
+            worker.run(() -> {
+                // PLL step first: the default shift is stored in PLL steps
+                if (cfg.pllStep > 0 && cfg.pllStep != c.getPLLStep())
+                    c.setPLLStep(cfg.pllStep);
+                if (c.supportsTxShift() && cfg.txShift >= 0 && cfg.txShift != c.getTxFrequencyShift())
+                    c.setTxFrequencyShift(cfg.txShift);
+                if (c.supportsScanSpeed() && cfg.scanSpeed >= 0 && cfg.scanSpeed != c.getScanSpeed())
+                    c.setScanSpeed(cfg.scanSpeed);
+                if (cfg.squelch >= 0 && cfg.squelch != c.readSquelch())
+                    c.writeSquelch(cfg.squelch);
+                // read back what the PRM80 has now
+                c.forgetConfiguration();
+                c.refreshState();
+                return PRM80X0View.readConfiguration(c);
+            }, done, ex -> error.accept(message(ex)));
+        }
+    }, device, band, txShift, scanSpeed, values);
+    this.showDialog(cd);
 }
 
 private void ram2eepromMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ram2eepromMenuItemActionPerformed
     final VirtualDeviceFirmware v = this.vdf;
+    if (v == null)
+        return;
+    int answer = JOptionPane.showConfirmDialog(this,
+            "Copy the whole RAM of the PRM80 to the EEPROM (save permanently)?\n\n"
+            + "This saves ALL values in the RAM of the PRM80, not only the channel list:\n"
+            + "  - the channels (frequencies, shifts, reverse, scan lock)\n"
+            + "  - the configuration (PLL step, default shift, scan speed)\n"
+            + "  - squelch, VFO/MEM mode and the current channel\n\n"
+            + "The previous content of the EEPROM is overwritten and cannot be restored.\n"
+            + "The PRM80 loads the EEPROM when the content of the RAM is lost.",
+            "Copy RAM -> EEPROM", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+    if (answer != JOptionPane.OK_OPTION)
+        return;
+    this.setStatus("Copying RAM -> EEPROM ...");
     this.command(() -> {
         v.getPRMControler().RAM2EEPROM();
         return null;
-    });
+    }, r -> this.setStatus("RAM copied to the EEPROM: all settings and channels are saved permanently"));
 }//GEN-LAST:event_ram2eepromMenuItemActionPerformed
 
 private void eeprom2ramMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_eeprom2ramMenuItemActionPerformed
     final VirtualDeviceFirmware v = this.vdf;
+    if (v == null)
+        return;
+    int answer = JOptionPane.showConfirmDialog(this,
+            "Replace the RAM of the PRM80 with the content of the EEPROM?\n\n"
+            + "ALL values in the RAM are overwritten: the channels, the configuration\n"
+            + "(PLL step, default shift, scan speed), squelch, mode and current channel.\n"
+            + "Changes not yet copied to the EEPROM are lost.\n\n"
+            + "If you may need the current state again: click Cancel and save it first,\n"
+            + "  - the channel list: Tools > Channel manager, Read from PRM80, Save As\n"
+            + "  - the configuration: Tools > Configuration, Save As",
+            "Copy EEPROM -> RAM", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+    if (answer != JOptionPane.OK_OPTION)
+        return;
+    this.setStatus("Copying EEPROM -> RAM ...");
     this.command(() -> {
         v.getPRMControler().EEPROM2RAM();
         return null;
+    }, r -> {
+        ChannelManager.prmMemoryReplaced();
+        this.setStatus("EEPROM copied to the RAM: the PRM80 uses the saved channels and settings now");
     });
 }//GEN-LAST:event_eeprom2ramMenuItemActionPerformed
 
-private void razMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_razMenuItemActionPerformed
-    final VirtualDeviceFirmware v = this.vdf;
-    this.command(() -> {
-        v.getPRMControler().reloadRAM();
-        return null;
-    });
-}//GEN-LAST:event_razMenuItemActionPerformed
+private void scanLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_scanLabelMouseClicked
+    // HOLD: skip this signal, the scan goes on at once
+    if (evt.getButton() == MouseEvent.BUTTON1 && this.scanner.isHolding())
+        this.scanner.skip();
+}//GEN-LAST:event_scanLabelMouseClicked
 
 private void chanLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_chanLabelMouseClicked
     if (this.vdf == null || evt.getButton() != MouseEvent.BUTTON1)
@@ -2100,7 +2212,6 @@ private void freqLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:e
     private javax.swing.JMenuItem ram2eepromMenuItem;
     private javax.swing.JMenuItem ramExtMenuItem;
     private javax.swing.JMenuItem ramIntMenuItem;
-    private javax.swing.JMenuItem razMenuItem;
     private javax.swing.JMenuItem resetMenuItem;
     private javax.swing.JMenuItem serialSpyMenuItem;
     private javax.swing.JLabel squelchLabel;

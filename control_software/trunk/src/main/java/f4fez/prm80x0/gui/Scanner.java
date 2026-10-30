@@ -239,8 +239,12 @@ public class Scanner {
         this.listener.scanStopped(reason);
     }
 
-    private static int dwellOf(Controler c) throws Exception {
-        int ms = c.supportsScanSpeed() ? c.getScanSpeed() : 400;
+    /**
+     * Time per channel of the software scan (Tools > Software scan settings),
+     * not the scan speed of the PRM80 (that one is for the scan of the radio).
+     */
+    private static int dwellOf(Controler c) {
+        int ms = new f4fez.prm80x0.Option().getScanDwell();
         return Math.max(50, Math.min(ms, 12750));
     }
 
@@ -355,6 +359,21 @@ public class Scanner {
                 this.next();
             }
         }, this.failed());
+    }
+
+    /**
+     * Skip the signal the scan holds on: go on with the next channel /
+     * frequency at once (click on HOLD). Does nothing if not holding.
+     */
+    public void skip() {
+        if (!this.running || !this.holding)
+            return;
+        this.generation++;          // answers and timer of the hold are ignored
+        this.timer.stop();
+        this.timerAction = null;
+        this.holdUntil = 0;
+        this.setHolding(false);
+        this.next();
     }
 
     private void next() {

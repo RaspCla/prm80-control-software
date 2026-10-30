@@ -48,6 +48,7 @@ public class ScanSettingsDialog extends javax.swing.JDialog {
         this.fromField.setText(mhz(range[0]));
         this.toField.setText(mhz(range[1]));
         this.stepComboBox.setSelectedItem(khz(step(this.config, pllStep)));
+        this.dwellSpinner.setValue(Math.max(50, Math.min(12750, this.config.getScanDwell() / 50 * 50)));
         this.holdSpinner.setValue(Math.round(this.config.getScanHold() / 1000f));
         this.getRootPane().setDefaultButton(this.okButton);
         Zoom.install(this);
@@ -119,6 +120,8 @@ public class ScanSettingsDialog extends javax.swing.JDialog {
         toField = new javax.swing.JTextField();
         stepLabel = new javax.swing.JLabel();
         stepComboBox = new javax.swing.JComboBox();
+        dwellLabel = new javax.swing.JLabel();
+        dwellSpinner = new javax.swing.JSpinner();
         holdLabel = new javax.swing.JLabel();
         holdSpinner = new javax.swing.JSpinner();
         noteLabel = new javax.swing.JLabel();
@@ -126,13 +129,13 @@ public class ScanSettingsDialog extends javax.swing.JDialog {
         okButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        setTitle("Scan settings"); // NOI18N
+        setTitle("Software scan"); // NOI18N
         setName("ScanSettings"); // NOI18N
         setResizable(false);
         getContentPane().setLayout(new javax.swing.BoxLayout(getContentPane(), javax.swing.BoxLayout.LINE_AXIS));
 
         jPanel1.setName("jPanel1"); // NOI18N
-        jPanel1.setPreferredSize(new java.awt.Dimension(360, 285));
+        jPanel1.setPreferredSize(new java.awt.Dimension(360, 325));
         jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         titleLabel.setText("Range of the VFO scan:"); // NOI18N
@@ -146,7 +149,7 @@ public class ScanSettingsDialog extends javax.swing.JDialog {
         fromField.setText("145.000"); // NOI18N
         fromField.setToolTipText("First frequency of the VFO scan"); // NOI18N
         fromField.setName("fromField"); // NOI18N
-        jPanel1.add(fromField, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 45, 120, -1));
+        jPanel1.add(fromField, new org.netbeans.lib.awtextra.AbsoluteConstraints(195, 45, 120, -1));
 
         toLabel.setText("To (MHz):"); // NOI18N
         toLabel.setName("toLabel"); // NOI18N
@@ -155,7 +158,7 @@ public class ScanSettingsDialog extends javax.swing.JDialog {
         toField.setText("145.800"); // NOI18N
         toField.setToolTipText("Last frequency of the VFO scan"); // NOI18N
         toField.setName("toField"); // NOI18N
-        jPanel1.add(toField, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 80, 120, -1));
+        jPanel1.add(toField, new org.netbeans.lib.awtextra.AbsoluteConstraints(195, 80, 120, -1));
 
         stepLabel.setText("Step (kHz):"); // NOI18N
         stepLabel.setName("stepLabel"); // NOI18N
@@ -166,20 +169,30 @@ public class ScanSettingsDialog extends javax.swing.JDialog {
         stepComboBox.setSelectedIndex(1);
         stepComboBox.setToolTipText("Step of the VFO scan, a multiple of the PLL step"); // NOI18N
         stepComboBox.setName("stepComboBox"); // NOI18N
-        jPanel1.add(stepComboBox, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 115, 120, -1));
+        jPanel1.add(stepComboBox, new org.netbeans.lib.awtextra.AbsoluteConstraints(195, 115, 120, -1));
+
+        dwellLabel.setText("Time per channel (ms):"); // NOI18N
+        dwellLabel.setToolTipText("Time the software scan stays on every channel / frequency before it reads the squelch (steps of 50 ms)"); // NOI18N
+        dwellLabel.setName("dwellLabel"); // NOI18N
+        jPanel1.add(dwellLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 165, -1, -1));
+
+        dwellSpinner.setModel(new javax.swing.SpinnerNumberModel(400, 50, 12750, 50));
+        dwellSpinner.setToolTipText("Time the software scan stays on every channel / frequency before it reads the squelch (steps of 50 ms)"); // NOI18N
+        dwellSpinner.setName("dwellSpinner"); // NOI18N
+        jPanel1.add(dwellSpinner, new org.netbeans.lib.awtextra.AbsoluteConstraints(195, 160, 120, -1));
 
         holdLabel.setText("Hold time (s):"); // NOI18N
         holdLabel.setName("holdLabel"); // NOI18N
-        jPanel1.add(holdLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 165, -1, -1));
+        jPanel1.add(holdLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 205, -1, -1));
 
         holdSpinner.setModel(new javax.swing.SpinnerNumberModel(3, 0, 60, 1));
         holdSpinner.setToolTipText("Time the scan stays on a channel after the signal has ended (memory and VFO scan)"); // NOI18N
         holdSpinner.setName("holdSpinner"); // NOI18N
-        jPanel1.add(holdSpinner, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 160, 120, -1));
+        jPanel1.add(holdSpinner, new org.netbeans.lib.awtextra.AbsoluteConstraints(195, 200, 120, -1));
 
-        noteLabel.setText("Time per channel: see Tools > Configuration"); // NOI18N
+        noteLabel.setText("Stored on this PC, not in the PRM80."); // NOI18N
         noteLabel.setName("noteLabel"); // NOI18N
-        jPanel1.add(noteLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 200, -1, -1));
+        jPanel1.add(noteLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 240, -1, -1));
 
         cancelButton.setText("Cancel"); // NOI18N
         cancelButton.setName("cancelButton"); // NOI18N
@@ -188,7 +201,7 @@ public class ScanSettingsDialog extends javax.swing.JDialog {
                 cancelButtonActionPerformed(evt);
             }
         });
-        jPanel1.add(cancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 240, 100, -1));
+        jPanel1.add(cancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 280, 100, -1));
 
         okButton.setText("OK"); // NOI18N
         okButton.setName("okButton"); // NOI18N
@@ -197,7 +210,7 @@ public class ScanSettingsDialog extends javax.swing.JDialog {
                 okButtonActionPerformed(evt);
             }
         });
-        jPanel1.add(okButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 240, 100, -1));
+        jPanel1.add(okButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 280, 100, -1));
 
         getContentPane().add(jPanel1);
 
@@ -238,6 +251,7 @@ public class ScanSettingsDialog extends javax.swing.JDialog {
         }
         this.config.setScanRange(this.band, from, to);
         this.config.setScanStep(step);
+        this.config.setScanDwell(((Number) this.dwellSpinner.getValue()).intValue());
         this.config.setScanHold(((Number) this.holdSpinner.getValue()).intValue() * 1000);
         this.saved = true;
         this.dispose();
@@ -249,6 +263,8 @@ public class ScanSettingsDialog extends javax.swing.JDialog {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton cancelButton;
+    private javax.swing.JLabel dwellLabel;
+    private javax.swing.JSpinner dwellSpinner;
     private javax.swing.JTextField fromField;
     private javax.swing.JLabel fromLabel;
     private javax.swing.JLabel holdLabel;

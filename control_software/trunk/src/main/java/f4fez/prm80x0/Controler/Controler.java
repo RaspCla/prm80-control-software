@@ -169,11 +169,6 @@ public interface Controler {
     public void setPower(int power) throws CommunicationException;
        
     /**
-     * Force RAM and configuration reset
-     */
-    public void reloadRAM() throws CommunicationException;
-    
-    /**
      * Restart the PRM firmware
      */
     public void resetPRM() throws CommunicationException;
@@ -196,9 +191,19 @@ public interface Controler {
     public void RAM2EEPROM() throws CommunicationException;
     
     /**
-     * Copy the EEPROM to the RAM
+     * Copy the EEPROM to the RAM. The configuration values read before
+     * (default shift, scan speed, PLL step, number of channels) are read
+     * again when they are used next.
      */
     public void EEPROM2RAM() throws CommunicationException;
+
+    /**
+     * Forget the configuration values read before (default shift, scan speed,
+     * PLL step, number of channels): they are read from the PRM80 again when
+     * they are used next.
+     */
+    public default void forgetConfiguration() {
+    }
     
     /** 
      * Get a copy of the PRM memory
@@ -278,6 +283,17 @@ public interface Controler {
      */
     public default boolean isStateValid() {
         return true;
+    }
+
+    /**
+     * Switch reverse of the current channel on or off, as the reverse key of
+     * the radio does ("T" command). With firmware V5.2 this reverse is only
+     * temporary (it ends when another channel is selected), with V5.1 it is
+     * stored in the channel. A running scan of the radio is stopped first.
+     * @param reverse true: reverse on
+     */
+    public default void setChannelReverse(boolean reverse) throws CommunicationException {
+        throw new UnsupportedOperationException("Reverse of the channel is not supported");
     }
 
     /**

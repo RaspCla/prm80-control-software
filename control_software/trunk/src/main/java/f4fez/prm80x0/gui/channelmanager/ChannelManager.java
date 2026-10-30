@@ -144,6 +144,22 @@ public class ChannelManager extends javax.swing.JDialog {
         sessionSyncedWithPrm = false;
     }
 
+    /** The RAM of the PRM80 was replaced by the EEPROM: the list shown may be old. */
+    public static void prmMemoryReplaced() {
+        loadSessionList();
+        sessionSyncedWithPrm = false;
+        sessionSource = "The PRM80 has loaded its EEPROM: \"Read from PRM80\" for its channels";
+    }
+
+    /** @return the channel file shown (or used last), null if none */
+    public static String currentFile() {
+        loadSessionList();
+        if (sessionFile != null)
+            return sessionFile;
+        String file = new Option().getChannelFile();
+        return file.isEmpty() ? null : file;
+    }
+
     /** First use: show the channel file used last time. */
     private static void loadSessionList() {
         if (sessionList != null)
@@ -165,6 +181,14 @@ public class ChannelManager extends javax.swing.JDialog {
         sessionModified = false;
         sessionSyncedWithPrm = false;
     }
+    static final String READ_PRM_TIP = "<html>Read the channels from the <b>RAM</b> of the PRM80 (the channels in use now).<br>"
+            + "The EEPROM (permanent copy) is not read.</html>";
+    static final String WRITE_PRM_TIP = "<html>Write the channels to the <b>RAM</b> of the PRM80.<br>"
+            + "The RAM keeps them for some weeks without power.<br>"
+            + "To keep them permanently: main window, Tools &gt; Memory &gt; Copy RAM -&gt; EEPROM<br>"
+            + "(this copies the channel list <b>and all</b> settings).</html>";
+    private static final String EEPROM_HINT = "To keep them permanently: Tools > Memory > Copy RAM -> EEPROM";
+
     private final PrmAccess prm;
     private final Option config = new Option();
     private boolean busy;
@@ -277,6 +301,7 @@ public class ChannelManager extends javax.swing.JDialog {
         prmButtonsPanel.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
 
         readPrmButton.setText("Read from PRM80"); // NOI18N
+        readPrmButton.setToolTipText(READ_PRM_TIP);
         readPrmButton.setName("readPrmButton"); // NOI18N
         readPrmButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -286,6 +311,7 @@ public class ChannelManager extends javax.swing.JDialog {
         prmButtonsPanel.add(readPrmButton);
 
         writePrmButton.setText("Write to PRM80"); // NOI18N
+        writePrmButton.setToolTipText(WRITE_PRM_TIP);
         writePrmButton.setName("writePrmButton"); // NOI18N
         writePrmButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -464,7 +490,7 @@ public class ChannelManager extends javax.swing.JDialog {
             // the PRM80 has no memory for comments: keep those of the list shown before
             list.takeCommentsFrom(before);
             sessionList = list;
-            sessionSource = "Read from PRM80: " + list.countChannel() + " channels";
+            sessionSource = "Read from the RAM of the PRM80: " + list.countChannel() + " channels (not from the EEPROM)";
             this.showList(list);
             sessionModified = true;     // not saved in a file yet
             sessionSyncedWithPrm = true;
@@ -486,12 +512,15 @@ public class ChannelManager extends javax.swing.JDialog {
             return;
         }
         if (!this.confirm("Write " + sessionList.countChannel() + " channels to the PRM80?\n"
-                + "The channels in the PRM80 will be replaced."))
+                + "The channels in the PRM80 will be replaced.\n\n"
+                + "They are written to the RAM of the PRM80, which keeps them for some weeks without power.\n"
+                + EEPROM_HINT + "\n(this copies all settings and the channel list)."))
             return;
         this.setBusy(true, "Writing " + sessionList.countChannel() + " channels to PRM80 ...");
         this.prm.writeChannels(sessionList, () -> {
             sessionSyncedWithPrm = true;
-            this.setBusy(false, "Written to PRM80: " + sessionList.countChannel() + " channels");
+            this.setBusy(false, "Written to the RAM of the PRM80: " + sessionList.countChannel()
+                    + " channels - permanently: Tools > Memory > Copy RAM -> EEPROM");
         }, error -> {
             this.setBusy(false, "Writing to PRM80 failed: " + error);
         });

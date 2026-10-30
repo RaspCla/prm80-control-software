@@ -25,9 +25,13 @@ e.g. macOS or a Raspberry Pi).
   (insert, delete, move, undo/redo), verify against a file,
   save as CSV file (with comments), **export as firmware configuration
   (A51 file)** for building the firmware with your own default channels
-- Configuration: PLL step, default shift, scan speed
-- Expert mode: restart, RAM/EEPROM functions, serial monitor,
-  remote control over TCP, **virtual PRM80** (simulates firmware V5.1) for
+- **Configuration**: PLL step, default shift, scan speed, squelch – read/write
+  from/to the PRM80, save as file (*.cfg)
+- **RAM and EEPROM**: the PRM80 works with its RAM (kept some weeks without
+  power); Tools > Memory > Copy RAM -> EEPROM saves all channels and settings
+  permanently, Copy EEPROM -> RAM restores them
+- Expert mode: restart, serial monitor,
+  remote control over TCP, **virtual PRM80** (simulates firmware V5.2) for
   tests without a radio
 
 User documentation: [control_software/trunk/README](control_software/trunk/README)  

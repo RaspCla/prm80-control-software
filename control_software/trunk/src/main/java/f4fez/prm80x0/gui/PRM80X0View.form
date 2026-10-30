@@ -94,43 +94,10 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="configurationMenuItemActionPerformed"/>
               </Events>
             </MenuItem>
-            <MenuItem class="javax.swing.JMenuItem" name="scanSettingsMenuItem">
-              <Properties>
-                <Property name="text" type="java.lang.String" value="Scan settings ..."/>
-                <Property name="name" type="java.lang.String" value="scanSettingsMenuItem" noResource="true"/>
-              </Properties>
-              <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="scanSettingsMenuItemActionPerformed"/>
-              </Events>
-            </MenuItem>
-            <MenuItem class="javax.swing.JSeparator" name="jSeparator1">
-              <Properties>
-                <Property name="name" type="java.lang.String" value="jSeparator1" noResource="true"/>
-              </Properties>
-            </MenuItem>
-            <MenuItem class="javax.swing.JMenuItem" name="resetMenuItem">
-              <Properties>
-                <Property name="text" type="java.lang.String" value="Restart PRM80"/>
-                <Property name="enabled" type="boolean" value="false"/>
-                <Property name="name" type="java.lang.String" value="resetMenuItem" noResource="true"/>
-              </Properties>
-              <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="resetMenuItemActionPerformed"/>
-              </Events>
-            </MenuItem>
-            <MenuItem class="javax.swing.JMenuItem" name="razMenuItem">
-              <Properties>
-                <Property name="text" type="java.lang.String" value="Reload RAM"/>
-                <Property name="enabled" type="boolean" value="false"/>
-                <Property name="name" type="java.lang.String" value="razMenuItem" noResource="true"/>
-              </Properties>
-              <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="razMenuItemActionPerformed"/>
-              </Events>
-            </MenuItem>
             <Menu class="javax.swing.JMenu" name="memoryMenu">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Memory"/>
+                <Property name="toolTipText" type="java.lang.String" value="&lt;html&gt;The PRM80 works with the channels and settings in its &lt;b&gt;RAM&lt;/b&gt;.&lt;br&gt;The RAM keeps them for some weeks without power.&lt;br&gt;The &lt;b&gt;EEPROM&lt;/b&gt; holds a permanent copy, loaded when the RAM content is lost.&lt;/html&gt;"/>
                 <Property name="enabled" type="boolean" value="false"/>
                 <Property name="name" type="java.lang.String" value="memoryMenu" noResource="true"/>
               </Properties>
@@ -155,7 +122,8 @@
                 </MenuItem>
                 <MenuItem class="javax.swing.JMenuItem" name="ram2eepromMenuItem">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="Copy RAM -&gt; EEPROM"/>
+                    <Property name="text" type="java.lang.String" value="Copy RAM -&gt; EEPROM (save permanently) ..."/>
+                    <Property name="toolTipText" type="java.lang.String" value="&lt;html&gt;Copy the whole RAM to the EEPROM, so that it is kept permanently:&lt;br&gt;all channels &lt;b&gt;and&lt;/b&gt; all settings (PLL step, default shift, scan speed,&lt;br&gt;squelch, mode, current channel), not only the channel list.&lt;br&gt;The previous content of the EEPROM is overwritten.&lt;/html&gt;"/>
                     <Property name="name" type="java.lang.String" value="ram2eepromMenuItem" noResource="true"/>
                   </Properties>
                   <Events>
@@ -164,7 +132,8 @@
                 </MenuItem>
                 <MenuItem class="javax.swing.JMenuItem" name="eeprom2ramMenuItem">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="Copy EEPROM -&gt; RAM"/>
+                    <Property name="text" type="java.lang.String" value="Copy EEPROM -&gt; RAM (restore) ..."/>
+                    <Property name="toolTipText" type="java.lang.String" value="&lt;html&gt;Replace the RAM with the copy in the EEPROM:&lt;br&gt;all channels &lt;b&gt;and&lt;/b&gt; all settings in the RAM are overwritten.&lt;br&gt;Save the channel list and the configuration in files first&lt;br&gt;if you may need the current state again.&lt;/html&gt;"/>
                     <Property name="name" type="java.lang.String" value="eeprom2ramMenuItem" noResource="true"/>
                   </Properties>
                   <Events>
@@ -173,6 +142,30 @@
                 </MenuItem>
               </SubComponents>
             </Menu>
+            <MenuItem class="javax.swing.JMenuItem" name="scanSettingsMenuItem">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Scan settings ..."/>
+                <Property name="name" type="java.lang.String" value="scanSettingsMenuItem" noResource="true"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="scanSettingsMenuItemActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JSeparator" name="jSeparator1">
+              <Properties>
+                <Property name="name" type="java.lang.String" value="jSeparator1" noResource="true"/>
+              </Properties>
+            </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="resetMenuItem">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Restart PRM80"/>
+                <Property name="enabled" type="boolean" value="false"/>
+                <Property name="name" type="java.lang.String" value="resetMenuItem" noResource="true"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="resetMenuItemActionPerformed"/>
+              </Events>
+            </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="serialSpyMenuItem">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Serial monitor"/>

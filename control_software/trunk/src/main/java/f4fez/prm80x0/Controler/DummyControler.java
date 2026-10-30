@@ -264,13 +264,6 @@ public class DummyControler implements Controler {
         this.setCurrentChannel(chan);
     }
 
-    /** Reload RAM: factory defaults. */
-    @Override
-    public void reloadRAM() {
-        this.loadFactoryDefaults();
-        this.setCurrentChannel(0);
-    }
-
     @Override
     public void RAM2EEPROM() {
         this.updateChecksums();

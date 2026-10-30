@@ -13,6 +13,23 @@
 - Windows installer: fixed upgrade code, a new version replaces the installed
   one (before, every version was a separate program and had to be uninstalled
   first). Versions up to 3.0.0 still have to be uninstalled once.
+- RAM and EEPROM made clear: "Read from PRM80" / "Write to PRM80" (channel
+  manager and configuration) use the RAM of the PRM80. Tooltips, the
+  confirmation and the status line say that the values are kept permanently
+  only with Tools > Memory > Copy RAM -> EEPROM, and that this copies all
+  settings and the channel list.
+- Configuration dialog works like the channel manager: Read from PRM80,
+  Write to PRM80, Read / Save / Save As of a configuration file (*.cfg,
+  proposed name: that of the channel list). New: squelch. The values are only
+  written with "Write to PRM80" (before: "Save" wrote them to the PRM80).
+- Tools > Memory moved below Configuration and shown without expert mode:
+  "Copy RAM -> EEPROM (save permanently)" and "Copy EEPROM -> RAM (restore)"
+  ask first and explain what is overwritten; the answer of the PRM80 is
+  checked (EEPROM error), the copy may take some seconds.
+- After "Copy EEPROM -> RAM" the configuration values are read again (before,
+  the old default shift, scan speed and channel count were shown and could be
+  written back).
+- "Reload RAM" removed (did nothing with a real PRM80)
 
 ## 3.0.0 – 2026-10-27
 

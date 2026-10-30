@@ -42,6 +42,8 @@ public abstract class PRMControler implements Controler{
      * Number of retry for each command
      */
     protected final static int RETRY = 5;
+    /** [X] / [S]: 2 KB between RAM and EEPROM (I2C), in ms */
+    protected final static int MEMORY_COPY_TIMEOUT = 15000;
     
     /**
      * Hold Memory dump
@@ -318,11 +320,6 @@ public abstract class PRMControler implements Controler{
     }
 
     @Override
-    public void reloadRAM() {
-        
-    }
-
-    @Override
     public void resetPRM() {
         this.sendCommand("0");
     }
@@ -338,13 +335,47 @@ public abstract class PRMControler implements Controler{
     }
     
     @Override
-    public void RAM2EEPROM() {
-        this.sendCommand("x");
+    public synchronized void RAM2EEPROM() throws CommunicationException {
+        this.copyMemory("x", "Copy RAM -> EEPROM");
     }
 
     @Override
-    public void EEPROM2RAM() {
-        this.sendCommand("s");
+    public synchronized void EEPROM2RAM() throws CommunicationException {
+        try {
+            this.copyMemory("s", "Copy EEPROM -> RAM");
+        } finally {
+            this.forgetConfiguration();     // the RAM may have new values now
+            this.updateState();
+        }
+    }
+
+    /**
+     * Send [X] or [S] and check the answer "EE PP": I2C error code (00 = ok)
+     * and the page reached (80 = all 128 pages of 16 bytes).
+     * Sent only once: copying 2 KB takes some time, a repeated command would
+     * start again.
+     */
+    private void copyMemory(String command, String name) throws CommunicationException {
+        String answer = this.sendCommand(command, PRMControler.MEMORY_COPY_TIMEOUT);
+        if (answer == null)
+            throw new SerialPortException(name + ": no answer from the PRM80");
+        java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("([0-9A-F]{2}) ([0-9A-F]{2})\\s*$").matcher(answer.trim());
+        if (!m.find())
+            throw new SerialPortException(name + ": unexpected answer \"" + answer.trim() + "\"");
+        int error = Integer.parseInt(m.group(1), 16);
+        int page = Integer.parseInt(m.group(2), 16);
+        if (error != 0)
+            throw new SerialPortException(name + ": EEPROM error " + error + " at page " + page
+                    + " (of 128)");
+    }
+
+    @Override
+    public synchronized void forgetConfiguration() {
+        this.maxChan = -1;
+        this.txShift = -1;
+        this.scanSpeed = -1;
+        this.pllStep = 0;
     }    
     
     /**

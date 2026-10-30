@@ -679,6 +679,7 @@ public class PRM80X0View extends javax.swing.JFrame {
         this.ShiftPositiveCheckbox.setSelected((state & 4) != 0);
         this.ShiftReverseCheckbox.setSelected((state & 2) != 0);
         this.appliedReverse = (state & 2) != 0;
+        this.updateShiftControls(false);
         int shift = Math.abs(tx - rx);
         if (enabled && shift > 0)
             this.setShiftSpinner(shift);
@@ -1620,7 +1621,20 @@ public class PRM80X0View extends javax.swing.JFrame {
     }//GEN-LAST:event_ShiftPositiveCheckboxActionPerformed
 
     private void ShiftReverseCheckboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ShiftReverseCheckboxActionPerformed
-        this.applyVfoShift();
+        if (this.vfoToggleButton.isSelected()) {
+            this.applyVfoShift();
+            return;
+        }
+        // memory mode: reverse of the channel, as the reverse key of the radio
+        if (this.vdf == null || this.updatingDisplay)
+            return;
+        final boolean reverse = this.ShiftReverseCheckbox.isSelected();
+        final Controler c = this.vdf.getPRMControler();
+        this.shownShiftKey = "";        // show the state of the radio afterwards
+        this.command(() -> {
+            c.setChannelReverse(reverse);
+            return null;
+        });
     }//GEN-LAST:event_ShiftReverseCheckboxActionPerformed
 
     private void ShiftFreqSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_ShiftFreqSpinnerStateChanged
@@ -1770,6 +1784,12 @@ public class PRM80X0View extends javax.swing.JFrame {
             "Reverse: receive on the TX frequency of the repeater and transmit on its RX frequency";
     private static final String MEM_SHIFT_TIP =
             "Memory mode: shows the shift of the channel (change it in the channel manager)";
+    private static final String MEM_REVERSE_TIP =
+            "<html>Reverse for this channel, as the reverse key of the radio<br>"
+            + "(firmware V5.2: ends when another channel is selected)</html>";
+    private static final String MEM_REVERSE_OFF_TIP =
+            "<html>Reverse needs a channel with shift enabled<br>"
+            + "(change the shift in the channel manager)</html>";
 
     /**
      * The shift fields only act in VFO mode. In memory mode (and without
@@ -1778,14 +1798,22 @@ public class PRM80X0View extends javax.swing.JFrame {
     private void updateShiftControls(boolean vfo) {
         this.ShiftEnabledCheckbox.setEnabled(vfo);
         this.ShiftPositiveCheckbox.setEnabled(vfo);
-        this.ShiftReverseCheckbox.setEnabled(vfo);
         this.ShiftFreqSpinner.setEnabled(vfo);
         this.label1.setEnabled(vfo);
         String tip = this.vdf != null && !vfo ? MEM_SHIFT_TIP : null;
         this.ShiftEnabledCheckbox.setToolTipText(tip);
         this.ShiftPositiveCheckbox.setToolTipText(tip);
-        this.ShiftReverseCheckbox.setToolTipText(tip != null ? tip : REVERSE_TIP);
         this.ShiftFreqSpinner.setToolTipText(tip);
+        // reverse is an operating function: also in memory mode, as the
+        // reverse key of the radio, if the channel has shift enabled
+        boolean memReverse = false;
+        if (this.vdf != null && !vfo) {
+            int state = this.vdf.getPRMControler().getChannelState();
+            memReverse = state >= 0 && (state & 1) != 0;
+        }
+        this.ShiftReverseCheckbox.setEnabled(vfo || memReverse);
+        this.ShiftReverseCheckbox.setToolTipText(vfo || this.vdf == null ? REVERSE_TIP
+                : memReverse ? MEM_REVERSE_TIP : MEM_REVERSE_OFF_TIP);
     }
 
     // ---- Scan -------------------------------------------------------------

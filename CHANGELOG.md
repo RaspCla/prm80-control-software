@@ -4,6 +4,11 @@
 
 - Tooltips: "Shift Freq." 0 with "Shift Enabled" means the default shift of
   the configuration (channel manager column and cells, configuration dialog)
+- Main window: "Shift reverse" can also be used in memory mode, as the
+  reverse key of the radio (channel with shift enabled). A running scan is
+  stopped first; while the radio scans, the reverse is set on the channel
+  being received.
+- Virtual PRM80 simulates firmware V5.2 (temporary reverse)
 - Configuration dialog: "Shift" renamed to "Default shift"
 - Windows installer: fixed upgrade code, a new version replaces the installed
   one (before, every version was a separate program and had to be uninstalled

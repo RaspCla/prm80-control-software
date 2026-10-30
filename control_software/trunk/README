@@ -110,7 +110,11 @@ In VFO mode "Shift enabled", "Shift positive", "Shift reverse" and "Shift
 Frequency" set the frequencies at once: TX = RX +/- shift, with reverse RX and
 TX are swapped (as the firmware does it for channels).
 In memory mode the fields only show the shift of the current channel and are
-greyed (the shift of a channel is changed in the channel manager).
+greyed (the shift of a channel is changed in the channel manager). Only
+"Shift reverse" can be used in memory mode, as the reverse key of the radio,
+if the channel has shift enabled. With firmware V5.2 this reverse ends when
+another channel is selected (the reverse stored in the channel is kept), with
+V5.1 it is stored in the channel.
 
 "Write to MEM" (VFO mode) stores the VFO setting in a memory channel. The
 channel list of the channel manager is used; it is only read from the PRM80

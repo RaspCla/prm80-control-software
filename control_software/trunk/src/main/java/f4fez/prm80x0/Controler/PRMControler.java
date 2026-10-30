@@ -256,6 +256,29 @@ public abstract class PRMControler implements Controler{
     }
 
     @Override
+    public synchronized void setChannelReverse(boolean reverse) throws CommunicationException {
+        this.updateState();
+        if (!this.stateValid)
+            throw new SerialPortException("No answer from the PRM80");
+        // While the radio scans, "E" reports the channel being received, but
+        // "T" of firmware V5.1 writes to the channel the scan started on:
+        // select the channel reported first ("N" stops the scan), then
+        // read its state again and write it back with the reverse bit
+        // (as Hamlib does). Firmware V5.2: "T" stops the scan itself.
+        this.setCurrentChannel(this.channel);
+        if (!this.stateValid)
+            throw new SerialPortException("No answer from the PRM80");
+        int state = reverse ? this.channelState | 2 : this.channelState & ~2;
+        this.send("t");
+        if (this.waitChar('$', PRMControler.serialTimeout) == null)
+            throw new SerialPortException("No answer from the PRM80 to \"T\"");
+        this.send(String.format("%02d", state & 0x0f));    // "T" reads a decimal number
+        this.waitChar('>', PRMControler.serialTimeout);
+        this.holdStateString = null;                       // read the state again
+        this.updateState();
+    }
+
+    @Override
     public synchronized void setCurrentChannel(int channel) {
         this.vfoSet = false;            // a channel is set: memory mode
         this.send("n");

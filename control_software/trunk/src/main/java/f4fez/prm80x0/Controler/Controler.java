@@ -281,6 +281,17 @@ public interface Controler {
     }
 
     /**
+     * Switch reverse of the current channel on or off, as the reverse key of
+     * the radio does ("T" command). With firmware V5.2 this reverse is only
+     * temporary (it ends when another channel is selected), with V5.1 it is
+     * stored in the channel. A running scan of the radio is stopped first.
+     * @param reverse true: reverse on
+     */
+    public default void setChannelReverse(boolean reverse) throws CommunicationException {
+        throw new UnsupportedOperationException("Reverse of the channel is not supported");
+    }
+
+    /**
      * @return true if the default TX shift can be read and written
      */
     public default boolean supportsTxShift() {

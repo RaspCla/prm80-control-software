@@ -359,10 +359,15 @@ public abstract class PRMControler implements Controler{
         String answer = this.sendCommand(command, PRMControler.MEMORY_COPY_TIMEOUT);
         if (answer == null)
             throw new SerialPortException(name + ": no answer from the PRM80");
+        // the answer ends with the prompt ">" (waitChar includes it)
+        String text = answer.trim();
+        if (text.endsWith(">"))
+            text = text.substring(0, text.length() - 1).trim();
         java.util.regex.Matcher m = java.util.regex.Pattern
-                .compile("([0-9A-F]{2}) ([0-9A-F]{2})\\s*$").matcher(answer.trim());
+                .compile("([0-9A-Fa-f]{2})\\s*([0-9A-Fa-f]{2})$").matcher(text);
         if (!m.find())
-            throw new SerialPortException(name + ": unexpected answer \"" + answer.trim() + "\"");
+            throw new SerialPortException(name + ": unexpected answer \""
+                    + answer.trim().replace("\r", "").replace("\n", " ") + "\"");
         int error = Integer.parseInt(m.group(1), 16);
         int page = Integer.parseInt(m.group(2), 16);
         if (error != 0)

@@ -361,6 +361,21 @@ public class Scanner {
         }, this.failed());
     }
 
+    /**
+     * Skip the signal the scan holds on: go on with the next channel /
+     * frequency at once (click on HOLD). Does nothing if not holding.
+     */
+    public void skip() {
+        if (!this.running || !this.holding)
+            return;
+        this.generation++;          // answers and timer of the hold are ignored
+        this.timer.stop();
+        this.timerAction = null;
+        this.holdUntil = 0;
+        this.setHolding(false);
+        this.next();
+    }
+
     private void next() {
         if (this.vfo)
             this.nextFrequency();

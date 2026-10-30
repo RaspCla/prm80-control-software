@@ -978,6 +978,11 @@ public class PRM80X0View extends javax.swing.JFrame {
         scanLabel.setText("SCAN"); // NOI18N
         scanLabel.setName("scanLabel"); // NOI18N
         scanLabel.setOpaque(true);
+        scanLabel.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                scanLabelMouseClicked(evt);
+            }
+        });
         jPanel1.add(scanLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 70, 90, 16));
 
         mainPanel.add(jPanel1);
@@ -1875,9 +1880,11 @@ public class PRM80X0View extends javax.swing.JFrame {
         boolean hold = this.scanner.isHolding();
         this.scanLabel.setText(hold ? "HOLD" : "SCAN");
         this.scanLabel.setBackground(hold ? new java.awt.Color(255, 204, 0) : new java.awt.Color(0, 204, 0));
+        this.scanLabel.setToolTipText(hold ? "Click: skip this signal, the scan goes on" : null);
+        this.scanLabel.setCursor(hold ? java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR) : null);
         if (hold) {
             this.setStatus("Signal - the scan continues " + Math.round(this.config.getScanHold() / 1000f)
-                    + " s after its end");
+                    + " s after its end (click HOLD to skip it)");
         } else if (this.scanner.isVfoScan()) {
             this.setStatus("Scanning " + mhz(this.scanner.getFrom()) + " - " + mhz(this.scanner.getTo())
                     + " MHz, step " + new java.math.BigDecimal(this.scanner.getStep()).movePointLeft(3)
@@ -2093,6 +2100,12 @@ private void eeprom2ramMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
         this.setStatus("EEPROM copied to the RAM: the PRM80 uses the saved channels and settings now");
     });
 }//GEN-LAST:event_eeprom2ramMenuItemActionPerformed
+
+private void scanLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_scanLabelMouseClicked
+    // HOLD: skip this signal, the scan goes on at once
+    if (evt.getButton() == MouseEvent.BUTTON1 && this.scanner.isHolding())
+        this.scanner.skip();
+}//GEN-LAST:event_scanLabelMouseClicked
 
 private void chanLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_chanLabelMouseClicked
     if (this.vdf == null || evt.getButton() != MouseEvent.BUTTON1)

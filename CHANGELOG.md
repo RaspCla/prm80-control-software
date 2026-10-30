@@ -34,6 +34,8 @@
   scan settings, default 400 ms); before, it used the scan speed of the PRM80.
   The configuration calls that one "PRM80 scan speed" (scan of the radio
   itself). Tooltips of both menu items say where the values are stored.
+- Software scan: a click on "HOLD" in the display skips the signal, the scan
+  goes on at once (before: stop and start the scan again).
 
 ## 3.0.0 – 2026-10-27
 

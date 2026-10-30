@@ -173,6 +173,8 @@ On every channel the scan waits its time per channel (Tools > Software scan
 settings, default 400 ms), then reads the squelch. Squelch open: the
 scan stays there ("HOLD" in the display) while the signal is received and the
 hold time after it (Tools > Software scan settings, default 3 s), then continues.
+A click on "HOLD" skips the signal: the scan goes on with the next channel /
+frequency at once.
 The software scan settings are stored on this PC (user settings of Java, under
 Windows in the registry: HKEY_CURRENT_USER\Software\JavaSoft\Prefs\f4fez\prm80),
 the VFO range separately for 144 and 430 MHz. They are not in the PRM80.

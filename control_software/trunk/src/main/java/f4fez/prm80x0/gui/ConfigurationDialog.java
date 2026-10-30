@@ -339,7 +339,7 @@ public class ConfigurationDialog extends javax.swing.JDialog {
         versionTextField.setText("PRM8060 144 V3.0"); // NOI18N
         versionTextField.setEnabled(false);
         versionTextField.setName("versionTextField"); // NOI18N
-        jPanel1.add(versionTextField, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 20, 290, -1));
+        jPanel1.add(versionTextField, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 20, 250, -1));
 
         jLabel1.setText("PLL step (kHz):"); // NOI18N
         jLabel1.setName("jLabel1"); // NOI18N
@@ -350,7 +350,8 @@ public class ConfigurationDialog extends javax.swing.JDialog {
         jLabel2.setName("jLabel2"); // NOI18N
         jPanel1.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 105, -1, -1));
 
-        jLabel3.setText("Scan speed (ms):"); // NOI18N
+        jLabel3.setText("PRM80 scan speed (ms):"); // NOI18N
+        jLabel3.setToolTipText("<html>Scan speed of the <b>PRM80</b>: time per channel of the scan of the radio<br>(started with the key at the radio), also the time it waits after a signal.<br>The software scan (Scan button) has its own setting: Tools &gt; Software scan settings.</html>"); // NOI18N
         jLabel3.setName("jLabel3"); // NOI18N
         jPanel1.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 145, -1, -1));
 
@@ -364,23 +365,23 @@ public class ConfigurationDialog extends javax.swing.JDialog {
         pllStepComboBox.setSelectedIndex(1);
         pllStepComboBox.setToolTipText("Frequency step of the PLL in kHz"); // NOI18N
         pllStepComboBox.setName("pllStepComboBox"); // NOI18N
-        jPanel1.add(pllStepComboBox, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 60, 100, -1));
+        jPanel1.add(pllStepComboBox, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 60, 100, -1));
 
         shiftComboBox.setEditable(true);
         shiftComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "600", "1600", "7600" }));
         shiftComboBox.setToolTipText("<html>Default shift of the PRM80.<br>It is used for every channel with \"Shift Enabled\" and<br>\"Shift Freq.\" 0 (channel without its own shift).<br>A change here applies to all these channels at once.</html>"); // NOI18N
         shiftComboBox.setName("shiftComboBox"); // NOI18N
-        jPanel1.add(shiftComboBox, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 100, 100, -1));
+        jPanel1.add(shiftComboBox, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 100, 100, -1));
 
         scanSpeedSpinner.setModel(new javax.swing.SpinnerNumberModel(400, 50, 12750, 50));
-        scanSpeedSpinner.setToolTipText("Time per channel while scanning (steps of 50 ms)"); // NOI18N
+        scanSpeedSpinner.setToolTipText("<html>Scan speed of the <b>PRM80</b>: time per channel of the scan of the radio<br>(started with the key at the radio), also the time it waits after a signal.<br>The software scan (Scan button) has its own setting: Tools &gt; Software scan settings.</html>"); // NOI18N
         scanSpeedSpinner.setName("scanSpeedSpinner"); // NOI18N
-        jPanel1.add(scanSpeedSpinner, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 140, 100, -1));
+        jPanel1.add(scanSpeedSpinner, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 140, 100, -1));
 
         squelchSpinner.setModel(new javax.swing.SpinnerNumberModel(5, 0, 15, 1));
         squelchSpinner.setToolTipText("Squelch level 0 to 15, the same value as in the main window"); // NOI18N
         squelchSpinner.setName("squelchSpinner"); // NOI18N
-        jPanel1.add(squelchSpinner, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 180, 100, -1));
+        jPanel1.add(squelchSpinner, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 180, 100, -1));
 
         statusLabel.setText("Read from PRM80"); // NOI18N
         statusLabel.setVerticalAlignment(javax.swing.SwingConstants.TOP);

@@ -87,6 +87,7 @@
             <MenuItem class="javax.swing.JMenuItem" name="configurationMenuItem">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Configuration ..."/>
+                <Property name="toolTipText" type="java.lang.String" value="&lt;html&gt;Settings stored in the &lt;b&gt;PRM80&lt;/b&gt; (its RAM): PLL step, default shift,&lt;br&gt;squelch and the scan speed of the scan of the radio (key at the radio).&lt;br&gt;Read / write from / to the PRM80, save in a file (*.cfg).&lt;/html&gt;"/>
                 <Property name="enabled" type="boolean" value="false"/>
                 <Property name="name" type="java.lang.String" value="configurationMenuItem" noResource="true"/>
               </Properties>
@@ -144,7 +145,8 @@
             </Menu>
             <MenuItem class="javax.swing.JMenuItem" name="scanSettingsMenuItem">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Scan settings ..."/>
+                <Property name="text" type="java.lang.String" value="Software scan settings ..."/>
+                <Property name="toolTipText" type="java.lang.String" value="&lt;html&gt;Settings of the &lt;b&gt;software scan&lt;/b&gt; (Scan button of this program):&lt;br&gt;VFO range, step, time per channel, hold time.&lt;br&gt;Stored on this PC, not in the PRM80.&lt;/html&gt;"/>
                 <Property name="name" type="java.lang.String" value="scanSettingsMenuItem" noResource="true"/>
               </Properties>
               <Events>

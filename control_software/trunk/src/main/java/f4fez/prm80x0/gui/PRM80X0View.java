@@ -1206,6 +1206,7 @@ public class PRM80X0View extends javax.swing.JFrame {
         ToolsMenu.add(channelManagerMenuItem);
 
         configurationMenuItem.setText("Configuration ..."); // NOI18N
+        configurationMenuItem.setToolTipText("<html>Settings stored in the <b>PRM80</b> (its RAM): PLL step, default shift,<br>squelch and the scan speed of the scan of the radio (key at the radio).<br>Read / write from / to the PRM80, save in a file (*.cfg).</html>"); // NOI18N
         configurationMenuItem.setEnabled(false);
         configurationMenuItem.setName("configurationMenuItem"); // NOI18N
         configurationMenuItem.addActionListener(new java.awt.event.ActionListener() {
@@ -1254,7 +1255,8 @@ public class PRM80X0View extends javax.swing.JFrame {
 
         ToolsMenu.add(memoryMenu);
 
-        scanSettingsMenuItem.setText("Scan settings ..."); // NOI18N
+        scanSettingsMenuItem.setText("Software scan settings ..."); // NOI18N
+        scanSettingsMenuItem.setToolTipText("<html>Settings of the <b>software scan</b> (Scan button of this program):<br>VFO range, step, time per channel, hold time.<br>Stored on this PC, not in the PRM80.</html>"); // NOI18N
         scanSettingsMenuItem.setName("scanSettingsMenuItem"); // NOI18N
         scanSettingsMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {

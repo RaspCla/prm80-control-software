@@ -239,8 +239,12 @@ public class Scanner {
         this.listener.scanStopped(reason);
     }
 
-    private static int dwellOf(Controler c) throws Exception {
-        int ms = c.supportsScanSpeed() ? c.getScanSpeed() : 400;
+    /**
+     * Time per channel of the software scan (Tools > Software scan settings),
+     * not the scan speed of the PRM80 (that one is for the scan of the radio).
+     */
+    private static int dwellOf(Controler c) {
+        int ms = new f4fez.prm80x0.Option().getScanDwell();
         return Math.max(50, Math.min(ms, 12750));
     }
 

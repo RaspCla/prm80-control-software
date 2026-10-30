@@ -30,6 +30,10 @@
   the old default shift, scan speed and channel count were shown and could be
   written back).
 - "Reload RAM" removed (did nothing with a real PRM80)
+- Software scan (Scan button) has its own time per channel (Tools > Software
+  scan settings, default 400 ms); before, it used the scan speed of the PRM80.
+  The configuration calls that one "PRM80 scan speed" (scan of the radio
+  itself). Tooltips of both menu items say where the values are stored.
 
 ## 3.0.0 – 2026-10-27
 
